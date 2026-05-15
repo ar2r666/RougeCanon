@@ -40,7 +40,8 @@ export const HELMETS = [
     make16(["                ", "     FFFFF      ", "     RRRRR      ", "    RRRRRRR     "], 1), // 10: Wróg (Czerwony Standard)
     make16(["                ", "     PPPPP      ", "    PPOOOPP     ", "    PPPPPff     "], 1), // 11: Elitarne Zombie (Fioletowy Mutant)
     make16(["                ", "     NNNNN      ", "    NRRRRRN     ", "    NNNNNNN     "], 1), // 12: Hełm Dowódcy Wroga
-    make16(["                ", "     fffff      ", "    fYYYYYf     ", "    fffffff     "], 1)  // 13: Pancerz Głowy Bossa
+    make16(["                ", "     fffff      ", "    fYYYYYf     ", "    fffffff     "], 1), // 13: Pancerz Głowy Bossa
+    make16(["                "], 1) // 14: Bez Kasku / Łysa Głowa (pusta warstwa)
 ];
 
 export const FACES = [
@@ -124,7 +125,8 @@ export const WEAPON_LAYERS = [
     make16(["         B      ", "   BBBgggggg    ", "    h    Bh     "], 9), // 8: Piła Spalinowa
     make16(["          MMMMM ", "          h  MMR"], 10), // 9: Przepychacz do rur
     make16(["       P        ", "  BBBBccccPPPPPf", "    c h   h     "], 9), // 10: Miotacz Plazmy
-    make16(["        GG      ", "  BBBBBBGGGGGGf ", "      h GGh     "], 9)  // 11: Ciężkie Działo Obcych
+    make16(["        GG      ", "  BBBBBBGGGGGGf ", "      h GGh     "], 9),  // 11: Ciężkie Działo Obcych
+    make16(["                "], 10) // 12: Bez Broni (pusta warstwa)
 ];
 
 export const ACCESSORIES = [
@@ -145,7 +147,7 @@ export const CATEGORY_NAMES = {
         "Standardowy", "Czerwony Beret", "Niebieski (ONZ)", "Bandana Rambo", 
         "Czapka z Daszkiem", "Czapka Oficera", "Hełm Samuraja", "Różowy Irokez", 
         "Hełm Kosmiczny", "Brak (Włosy)", "Wróg (Standard)", "Elitarne Zombie",
-        "Hełm Dowódcy Wroga", "Pancerz Głowy Bossa"
+        "Hełm Dowódcy Wroga", "Pancerz Głowy Bossa", "Bez Kasku (Łysa Głowa)"
     ],
     face: [
         "Normalna", "Blada Cera", "Ciemna Cera", "Zakażony Zombie", 
@@ -162,7 +164,7 @@ export const CATEGORY_NAMES = {
     weapon: [
         "Karabin Szturmowy", "Strzelba Pompka", "Karabin Snajperski", "Karabin Maszynowy", 
         "Pistolet", "Wyrzutnia Rakiet", "Nóż Bojowy", "Miotacz Ognia", 
-        "Piła Spalinowa", "Przepychacz do rur", "Miotacz Plazmy", "Ciężkie Działo Obcych"
+        "Piła Spalinowa", "Przepychacz do rur", "Miotacz Plazmy", "Ciężkie Działo Obcych", "Bez Broni"
     ],
     accessory: [
         "Brak Dodatku", "Plecak Wojskowy", "Plecak Odrzutowy", "Czerwona Peleryna", 
