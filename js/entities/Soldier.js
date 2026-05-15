@@ -436,8 +436,9 @@ export class Soldier {
                     }
                 }
                 
-                // Warstwa 1: Zewnętrzna bryła
+                // Warstwa 1: Zewnętrzna bryła (stałe alpha dla optymalnego batchingu GPU)
                 ctx.fillStyle = '#ff3300';
+                ctx.globalAlpha = 0.85;
                 for (let d = 0; d < maxDist; d += step) {
                     let p = d / maxDist;
                     let envelope = p < 0.65 ? Math.sin((p / 0.65) * Math.PI / 2) : Math.sin((1 - (p - 0.65) / 0.35) * Math.PI / 2);
@@ -457,12 +458,12 @@ export class Soldier {
                     let px = Math.floor(cx / 4) * 4;
                     let py = Math.floor(cy / 4) * 4;
                     
-                    ctx.globalAlpha = Math.max(0, Math.min(1, p > 0.7 ? (1 - p) * 3.3 : 1.0));
                     ctx.fillRect(px - size/2, py - size/2, size, size);
                 }
                 
                 // Warstwa 2: Złocisto-pomarańczowy rdzeń
                 ctx.fillStyle = '#ff8800';
+                ctx.globalAlpha = 0.95;
                 let midDist = maxDist * 0.85;
                 for (let d = 0; d < midDist; d += step) {
                     let p = d / midDist;
@@ -482,7 +483,6 @@ export class Soldier {
                     let px = Math.floor(cx / 4) * 4;
                     let py = Math.floor(cy / 4) * 4;
                     
-                    ctx.globalAlpha = Math.max(0, Math.min(1, p > 0.65 ? (1 - p) * 2.8 : 1.0));
                     ctx.fillRect(px - size/2, py - size/2, size, size);
                 }
                 
@@ -506,6 +506,7 @@ export class Soldier {
                 
                 // Warstwa 4: Iskry plazmy retro
                 ctx.fillStyle = '#ffffaa';
+                ctx.globalAlpha = 0.9;
                 for (let i = 0; i < 4; i++) {
                     let phase = (t * 0.4 + i * 1.33) % 1.0;
                     let fd = Math.floor((phase * maxDist) / step) * step;
@@ -519,7 +520,6 @@ export class Soldier {
                     let px = Math.floor(cx / 4) * 4;
                     let py = Math.floor(cy / 4) * 4;
                     
-                    ctx.globalAlpha = Math.max(0, Math.min(1, phase > 0.5 ? (1 - phase) * 2.0 : 1.0));
                     ctx.fillRect(px - 2, py - 2, 4, 4);
                 }
                 ctx.globalAlpha = 1.0;
