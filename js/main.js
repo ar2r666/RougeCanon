@@ -165,7 +165,13 @@ function draw() {
 
     // Draw Blood & Corpses layer
     if (bloodCanvas) {
-        ctx.drawImage(bloodCanvas, 0, 0);
+        // Optymalizacja VRAM: zamiast przesyłać całą 576MB teksturę 12000x12000 co klatkę, renderujemy tylko widoczny obszar kamery
+        let vpW = window.innerWidth + 200;
+        let vpH = window.innerHeight + 200;
+        let sx = Math.max(0, Math.min(bloodCanvas.width - vpW, Math.floor(state.camera.x - window.innerWidth / 2 - 100)));
+        let sy = Math.max(0, Math.min(bloodCanvas.height - vpH, Math.floor(state.camera.y - window.innerHeight / 2 - 100)));
+        
+        ctx.drawImage(bloodCanvas, sx, sy, vpW, vpH, sx, sy, vpW, vpH);
     }
 
     // Zastąpienie celownika dyskretnym wskaźnikiem ruchu
