@@ -415,7 +415,9 @@ export class Soldier {
             let t = Date.now() / 40;
             this.flameStreamDist = this.flameStreamDist || 0;
             
-            if (this.flameStreamDist > 15) {
+            let isFlameAnimationEnabled = false; // Tymczasowo wyłączona animacja płomienia do testów wydajnościowych
+            
+            if (isFlameAnimationEnabled && this.flameStreamDist > 15) {
                 let maxDist = this.flameStreamDist;
                 let step = 4; // Precyzyjny krok 4px budujący zwartą wiązkę w skali retro pixel art
                 

@@ -34,10 +34,16 @@ window.adminSpawnCrate = (type) => {
     if (!state.crates) state.crates = [];
     let leader = state.squad[0] || { x: state.camera.x, y: state.camera.y };
     let ang = Math.random() * Math.PI * 2;
-    let dist = stats.range + 20 + Math.random() * 60;
+    let dist = stats.range * 0.5 + Math.random() * 30; // Bliżej gracza
     let cr = new Crate(leader.x + Math.cos(ang)*dist, leader.y + Math.sin(ang)*dist);
     if (type === 'PLASMA') cr.droppedWeapon = WEAPONS.SPECIAL_PLASMA;
     if (type === 'FLAME') cr.droppedWeapon = WEAPONS.SPECIAL_FLAMETHROWER;
+    
+    // Zgodnie z wytycznymi: broń leży bezpośrednio na ziemi bez fizycznej skrzynki
+    cr.isDestroyed = true;
+    cr.isWeaponDropped = true;
+    cr.hp = 0;
+    
     state.crates.push(cr);
 };
 
