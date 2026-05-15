@@ -312,9 +312,9 @@ export class Enemy {
                 bloodCtx.translate(this.x, this.y + 4);
                 bloodCtx.rotate((Math.random() - 0.5) * 1.2);
                 let drawScale = this.type === 'boss' ? 48 : 32;
-                let customDead = (typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin) ? customSquadDesign.enemyDeadSkin : this.customImageSkin;
+                let customDead = (typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin && customSquadDesign.enemyDeadSkin.complete && customSquadDesign.enemyDeadSkin.width > 0) ? customSquadDesign.enemyDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null);
                 
-                if (customDead) {
+                if (customDead && customDead.height > 0) {
                     let fh = customDead.height;
                     bloodCtx.drawImage(customDead, 0, 0, fh, fh, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
                     bloodCtx.save();
@@ -358,9 +358,9 @@ export class Enemy {
                 bloodCtx.translate(this.x, this.y + 4);
                 bloodCtx.rotate((Math.random() - 0.5) * 1.2);
                 let drawScale = this.type === 'boss' ? 48 : 32;
-                let customDead = (typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin) ? customSquadDesign.enemyDeadSkin : this.customImageSkin;
+                let customDead = (typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin && customSquadDesign.enemyDeadSkin.complete && customSquadDesign.enemyDeadSkin.width > 0) ? customSquadDesign.enemyDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null);
                 
-                if (customDead) {
+                if (customDead && customDead.height > 0) {
                     let fh = customDead.height;
                     bloodCtx.drawImage(customDead, 0, 0, fh, fh, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
                 } else if (baseSprite) {
