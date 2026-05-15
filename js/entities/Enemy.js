@@ -89,26 +89,7 @@ export class Enemy {
             if (d < minDist) { minDist = d; closest = s; }
         }
 
-        if (this.isPanicking && this.panicTimer > 0) {
-            this.panicTimer -= dt;
-            let panicSpeed = this.speed * 2.8;
-            let moveX = Math.cos(this.panicAngle) * panicSpeed * dt;
-            this.x += moveX;
-            this.y += Math.sin(this.panicAngle) * panicSpeed * dt;
-            
-            if (Math.abs(moveX) > 0.1) {
-                this.facingLeft = moveX < 0;
-            }
-            
-            // W trakcie paniki utrzymujemy wroga przy 1 punkcie życia, aby zdążył widowiskowo przebiec w płomieniach!
-            if (this.hp <= 1) this.hp = 1;
-            
-            if (this.panicTimer <= 0) {
-                this.isPanicking = false;
-                this.hp = 0;
-                this.die('flame');
-            }
-        } else if (closest) {
+        if (closest) {
             let angle = Math.atan2(closest.y - this.y, closest.x - this.x);
             let moveX = Math.cos(angle) * this.speed * dt;
             this.x += moveX;
@@ -269,16 +250,6 @@ export class Enemy {
         
         if (shooter && shooter.weapon && shooter.weapon.type === 'flame') {
             this.onFireTimer = 0.5;
-            if (!this.isPanicking && Math.random() < 0.65 && shooter.x !== undefined) {
-                this.isPanicking = true;
-                this.panicAngle = Math.atan2(this.y - shooter.y, this.x - shooter.x);
-                this.panicTimer = 1.2;
-            }
-        }
-        
-        if (this.isPanicking && this.panicTimer > 0) {
-            this.hp = Math.max(1, this.hp - amount);
-            return;
         }
         
         this.hp -= amount;
