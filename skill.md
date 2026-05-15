@@ -25,3 +25,5 @@ Plik dokumentuje standardy techniczne, wypracowane wzorce oraz unikalne rozwiąz
    - Wdrożono wzorzec **Developer Drawer Overlay** – zwijaną z lewej strony boczną szufladę ułatwiającą testy w locie bez trwałego zaśmiecania małych ekranów mobilnych.
 5. **Aktywna Pauza Silnika (Active Pause)**:
    - Pętla `update(dt)` pomija przeliczanie logiki ruchu i kolizji, gdy ustawiona jest flaga `state.isPaused = true`, ale silnik nadal wykonuje funkcję `draw()`. Pozwala to graczom i deweloperom na swobodny podgląd zamrożonego pola bitwy.
+6. **Rygorystyczny Cykl Archiwizacji i Wersjonowania (Git/GitHub Workflow)**:
+   - **BEZWZGLĘDNA REGUŁA PROCESOWA**: Po każdych większych zmianach architektonicznych, dodaniu mechanik lub pomyślnym ukończeniu sesji roboczej, agent prowadzący repozytorium ma obowiązek zaktualizować lokalne repozytorium (`git add . && git commit -m "..."`), zaoferować wypchnięcie zmian do GitHuba (`git push origin main`) oraz przypomnieć o tym użytkownikowi.
