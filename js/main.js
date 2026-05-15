@@ -308,6 +308,15 @@ function loop(timestamp) {
     requestAnimationFrame(loop);
 }
 
-// Zgodnie z wytycznymi: gra uruchamia się natychmiastowo po załadowaniu strony
-startGame();
-requestAnimationFrame(loop);
+// Zgodnie z wytycznymi: gra uruchamia się natychmiastowo, ale dopiero po pełnym załadowaniu struktury DOM
+function initApp() {
+    if (typeof resize === 'function') resize();
+    startGame();
+    requestAnimationFrame(loop);
+}
+
+if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
