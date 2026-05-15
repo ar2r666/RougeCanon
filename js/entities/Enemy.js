@@ -182,7 +182,7 @@ export class Enemy {
         let drawScale = this.type === 'boss' ? 48 : 32;
         let offsetXY = this.type === 'boss' ? -24 : -16;
 
-        if (this.customImageSkin) {
+        if (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 && this.customImageSkin.height > 0) {
             let fh = this.customImageSkin.height;
             let totalFrames = Math.max(1, Math.round(this.customImageSkin.width / fh));
             if (totalFrames > 1) {
