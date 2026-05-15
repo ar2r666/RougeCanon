@@ -384,9 +384,10 @@ export class Soldier {
             ctx.imageSmoothingEnabled = false;
             
             if (this.specialWeaponTimer > 0) {
-                // Cybernetyczny blask superbroni
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = '#00ffff';
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.25)';
+                ctx.beginPath();
+                ctx.arc(0, 0, 16, 0, Math.PI*2);
+                ctx.fill();
             }
             
             ctx.drawImage(this.weaponSprite, -16, -16, 32, 32);

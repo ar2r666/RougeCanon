@@ -12,6 +12,15 @@
     
     <!-- Touch capture layer to prevent UI selection issues -->
     <div id="joystickZone"></div>
+    <!-- ONSCREEN ERROR CONSOLE HUD (Błyskawiczny podgląd błędów w grze) -->
+    <div id="errorConsoleHUD" style="display: none; position: fixed; top: 20px; left: 20px; z-index: 9999999; background: rgba(139, 0, 0, 0.95); color: #fff; border: 3px solid #ff3300; padding: 15px; font-family: monospace; font-size: 12px; width: 80vw; max-height: 40vh; overflow-y: auto; box-shadow: 0 0 30px #000; pointer-events: auto;">
+        <div style="display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px solid #ff8800; padding-bottom: 8px; margin-bottom: 10px;">
+            <span style="color: #ffff00;">KONSOLA BŁĘDÓW (WYKRYTO WYJĄTEK JS):</span>
+            <button onclick="document.getElementById('errorConsoleHUD').style.display='none'" style="background: #000; color: #fff; border: 1px solid #fff; padding: 2px 8px; cursor: pointer;">ZAMKNIJ [X]</button>
+        </div>
+        <div id="errorLogContent" style="white-space: pre-wrap;"></div>
+    </div>
+
     <!-- Shadery ekranowe -->
     <div id="fxLayer"></div>
     <div id="scanlines"></div>

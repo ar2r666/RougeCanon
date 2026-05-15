@@ -7,6 +7,34 @@ import { gameOver, showUpgrades, updateHUD } from './ui.js';
 import { initInput } from './input.js';
 import './creator.js';
 
+window.addEventListener('error', function(e) {
+    const hud = document.getElementById('errorConsoleHUD');
+    const log = document.getElementById('errorLogContent');
+    if (hud && log) {
+        hud.style.display = 'block';
+        const div = document.createElement('div');
+        div.style.marginBottom = '10px';
+        div.style.borderBottom = '1px dashed #ffaa00';
+        div.style.paddingBottom = '5px';
+        div.innerHTML = `<strong style="color:#ffcc00">${e.message}</strong><br><span style="color:#aaa">Plik: ${e.filename}:${e.lineno}:${e.colno}</span>`;
+        log.prepend(div);
+    }
+});
+
+window.addEventListener('unhandledrejection', function(e) {
+    const hud = document.getElementById('errorConsoleHUD');
+    const log = document.getElementById('errorLogContent');
+    if (hud && log) {
+        hud.style.display = 'block';
+        const div = document.createElement('div');
+        div.style.marginBottom = '10px';
+        div.style.borderBottom = '1px dashed #ffaa00';
+        div.style.paddingBottom = '5px';
+        div.innerHTML = `<strong style="color:#ffcc00">PROMISE ERROR: ${e.reason}</strong>`;
+        log.prepend(div);
+    }
+});
+
 const afterBurningImg = new Image();
 afterBurningImg.src = 'img/after_burning.png';
 
