@@ -282,7 +282,16 @@ export class Soldier {
             }
         }
         
-        // Emisja dymu z popalonych zwłok (wykonujemy raz na klatkę z poziomu lidera)
+        // Płynna ewolucja długości strumienia ognia (stopniowe wydłużanie i płynne, realistyczne dogasanie do lufy)
+        if (this.weapon && this.weapon.type === 'flame') {
+            this.flameStreamDist = this.flameStreamDist || 0;
+            if (this.lastShot > 0 && closestForAim) {
+                this.flameStreamDist = Math.min(stats.range, this.flameStreamDist + 1200 * dt);
+            } else {
+                this.flameStreamDist = Math.max(0, this.flameStreamDist - 900 * dt);
+            }
+        }
+        
         if (this === state.squad[0]) {
             for (let c of corpses) {
                 if (c.smokeTimer > 0) {
@@ -414,9 +423,10 @@ export class Soldier {
             
             ctx.globalCompositeOperation = 'lighter';
             let t = Date.now() / 40;
+            this.flameStreamDist = this.flameStreamDist || 0;
             
-            if (this.lastShot > 0 && closestForAim) {
-                let maxDist = stats.range;
+            if (this.flameStreamDist > 15) {
+                let maxDist = this.flameStreamDist;
                 let step = 4; // Precyzyjny krok 4px budujący zwartą wiązkę w skali retro pixel art
                 
                 // Tworzenie małych dogasających płomieni na ziemi, które zostawiają po sobie trwałe, czarne plamy wypalenia

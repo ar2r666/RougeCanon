@@ -189,29 +189,28 @@ function draw() {
     if (typeof corpses !== 'undefined' && corpses) {
         corpses.forEach(c => {
             if (c.deathType === 'flame' && c.animTimer !== undefined) {
-                let maxDuration = 2.0;
+                let maxDuration = 3.5; // Zgodnie z instrukcją: długie dopalanie przez 3.5 sekundy
                 if (c.animTimer < maxDuration) {
                     let fade = 1.0 - (c.animTimer / maxDuration);
                     ctx.globalAlpha = fade;
                     
-                    // Rysujemy zbiór drobnych 2-pikselowych iskierek na ciele
                     for (let i = 0; i < 6; i++) {
-                        let fx = c.x - 6 + i * 2 + Math.sin(t + i) * 3;
-                        let wave = Math.abs(Math.sin(t * 1.3 + i * 2.1)) * 8;
-                        let fy = c.y + 4 - wave;
+                        let fx = c.x - 12 + (i * 5);
+                        let wave = Math.abs(Math.sin(t + (i * 1.3))) * (16 * fade);
+                        let fy = c.y + 6 - wave;
                         
-                        let px = Math.floor(fx / 2) * 2;
-                        let py = Math.floor(fy / 2) * 2;
+                        let px = Math.floor(fx / 4) * 4;
+                        let py = Math.floor(fy / 4) * 4;
                         
                         ctx.fillStyle = '#ff3300';
-                        ctx.fillRect(px, py, 2, 2);
-                        if (wave > 2) {
+                        ctx.fillRect(px, py, 4, 4);
+                        if (wave > 4) {
                             ctx.fillStyle = '#ff8800';
-                            ctx.fillRect(px, py + 2, 2, 2);
+                            ctx.fillRect(px, py + 4, 4, 4);
                         }
-                        if (i % 2 === 0 && wave > 5) {
+                        if (i % 2 === 0 && wave > 8) {
                             ctx.fillStyle = '#ffffff';
-                            ctx.fillRect(px, py + 4, 2, 2);
+                            ctx.fillRect(px, py + 8, 4, 4);
                         }
                     }
                 }

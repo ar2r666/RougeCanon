@@ -228,21 +228,29 @@ export class Enemy {
             ctx.restore();
         }
 
-        // Efekt małych płomieni pixel art bezpośrednio na ciele płonącego wroga
-        if (this.onFireTimer > 0) {
+        // Potężne, gęste płomienie trawiące całą sylwetkę wroga (w biegu paniki lub przed śmiercią)
+        if (this.onFireTimer > 0 || this.isPanicking) {
             ctx.save();
-            let t = Date.now() / 50;
-            for (let i = 0; i < 3; i++) {
-                let fx = this.x - 8 + (i * 6) + Math.sin(t + i * 2) * 3;
-                let fy = this.y - this.bobY + 4 - Math.abs(Math.cos(t * 1.2 + i)) * 8;
+            ctx.globalCompositeOperation = 'lighter';
+            let t = Date.now() / 40;
+            for (let i = 0; i < 8; i++) {
+                let fx = this.x - 12 + (i * 3) + Math.sin(t + i) * 4;
+                let wave = Math.abs(Math.sin(t * 1.4 + i * 2.1)) * 16;
+                let fy = this.y - this.bobY + 12 - wave;
                 
                 let px = Math.floor(fx / 2) * 2;
                 let py = Math.floor(fy / 2) * 2;
                 
                 ctx.fillStyle = '#ff3300';
                 ctx.fillRect(px, py, 4, 4);
-                ctx.fillStyle = '#ffcc00';
-                ctx.fillRect(px + 1, py + 1, 2, 2);
+                if (wave > 4) {
+                    ctx.fillStyle = '#ff8800';
+                    ctx.fillRect(px + 1, py + 2, 2, 4);
+                }
+                if (i % 2 === 0 && wave > 8) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(px + 1, py + 6, 2, 2);
+                }
             }
             ctx.restore();
         }
