@@ -317,18 +317,13 @@ export class Enemy {
                 if (customDead && customDead.height > 0) {
                     let fh = customDead.height;
                     bloodCtx.drawImage(customDead, 0, 0, fh, fh, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
-                    bloodCtx.save();
-                    bloodCtx.globalCompositeOperation = 'source-atop';
-                    bloodCtx.fillStyle = 'rgba(15, 7, 0, 0.85)';
-                    bloodCtx.fillRect(-drawScale / 2, -drawScale / 2, drawScale, drawScale);
-                    bloodCtx.restore();
+                    // Optymalizacja: rysowanie półprzezroczystego zwęglenia w natywnym trybie source-over bez jakichkolwiek zmian globalCompositeOperation
+                    bloodCtx.fillStyle = 'rgba(15, 7, 0, 0.75)';
+                    bloodCtx.fillRect(-drawScale / 4, -drawScale / 4, drawScale / 2, drawScale / 2);
                 } else if (baseSprite) {
                     bloodCtx.drawImage(baseSprite, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
-                    bloodCtx.save();
-                    bloodCtx.globalCompositeOperation = 'source-atop';
-                    bloodCtx.fillStyle = 'rgba(15, 7, 0, 0.85)';
-                    bloodCtx.fillRect(-drawScale / 2, -drawScale / 2, drawScale, drawScale);
-                    bloodCtx.restore();
+                    bloodCtx.fillStyle = 'rgba(15, 7, 0, 0.75)';
+                    bloodCtx.fillRect(-drawScale / 4, -drawScale / 4, drawScale / 2, drawScale / 2);
                 }
                 
                 bloodCtx.fillStyle = deathType === 'beam' ? '#00ffff' : '#ff5500';
