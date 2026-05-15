@@ -164,8 +164,7 @@ export class Soldier {
                     let startBeamY = this.y - this.bobY + 3;
                     state.bullets.push(new PlasmaBeam(startBeamX, startBeamY, closest, dmg, this));
                 } else if (this.weapon.type === 'flame') {
-                    // Zgodnie z wytycznymi: tymczasowo wyciszony dźwięk Miotacza Ognia do testów
-                    // playSound('sfx_shoot_fire', 0.12);
+                    playSound('sfx_shoot_fire', 0.12); // Włączamy z powrotem dźwięk miotacza
                     
                     // Stożkowe rażenie wrogów
                     let flameRange = stats.range * 0.9;
@@ -277,7 +276,8 @@ export class Soldier {
         // Płynna ewolucja długości strumienia ognia (stopniowe wydłużanie i płynne, realistyczne dogasanie do lufy)
         if (this.weapon && this.weapon.type === 'flame') {
             this.flameStreamDist = this.flameStreamDist || 0;
-            if (this.lastShot > 0 && closestForAim) {
+            let hasTarget = state.enemies.some(e => e.hp > 0 && Math.hypot(e.x - this.x, e.y - this.y) < stats.range);
+            if (this.lastShot > 0 && hasTarget) {
                 this.flameStreamDist = Math.min(stats.range, this.flameStreamDist + 1200 * dt);
             } else {
                 this.flameStreamDist = Math.max(0, this.flameStreamDist - 900 * dt);
@@ -418,7 +418,7 @@ export class Soldier {
             let t = Date.now() / 40;
             this.flameStreamDist = this.flameStreamDist || 0;
             
-            let isFlameAnimationEnabled = false; // Tymczasowo wyłączona animacja płomienia do testów wydajnościowych
+            let isFlameAnimationEnabled = true; // Włączamy w pełni zoptymalizowaną, przepiękną animację ognia!
             
             if (isFlameAnimationEnabled && this.flameStreamDist > 15) {
                 let maxDist = this.flameStreamDist;
