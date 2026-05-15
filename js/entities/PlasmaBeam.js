@@ -13,8 +13,8 @@ export class PlasmaBeam {
         this.damage = damage;
         this.shooter = shooter;
         
-        // Dźwięk dedykowany dla wiązki plazmowej
-        playSound('sfx_shoot_plasma', 0.4);
+        // Dźwięk dedykowany dla wiązki plazmowej (ściszony zgodnie z dyspozycją)
+        playSound('sfx_shoot_plasma', 0.12);
         
         let currentTarget = initialTarget;
         let hitEnemies = new Set();

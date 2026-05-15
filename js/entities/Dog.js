@@ -109,7 +109,7 @@ export class Dog {
                 this.dogState = 'ATTACK';
                 this.barkCooldown = this.barkCooldown || 0;
                 if (this.barkCooldown <= 0) {
-                    this.barkCooldown = 2.5 + Math.random() * 1.5; // 2.5..4 sekundy przerwy przed kolejnym szczeknięciem
+                    this.barkCooldown = 0.8 + Math.random() * 0.6; // Zwiększona częstotliwość szczekania w szarży (~1s odstępu)
                     let variant = Math.floor(Math.random() * 3) + 1;
                     playSound(`sfx_dog_bark#${variant}`, 0.12); // Dyskretne szczekanie cichsze od strzału podstawowego
                 }

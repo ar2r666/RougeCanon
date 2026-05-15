@@ -169,7 +169,7 @@ export class Soldier {
                     let startBeamY = shoulderY + dirY * 16 + normY * 3;
                     state.bullets.push(new PlasmaBeam(startBeamX, startBeamY, closest, dmg, this));
                 } else if (this.weapon.type === 'flame') {
-                    playSound('sfx_shoot_fire', 0.12); // Włączamy z powrotem dźwięk miotacza
+                    playSound('sfx_shoot_fire', 0.28); // Podbicie głośności Miotacza Ognia
                     
                     // Stożkowe rażenie wrogów
                     let flameRange = stats.range * 0.9;
@@ -212,7 +212,8 @@ export class Soldier {
                 } else {
                     angle += (Math.random() - 0.5) * (this.weapon.type === 'rapid' ? 0.3 : 0.1); 
                     state.bullets.push(new Bullet(this, this.x, this.y, angle, false, dmg, this.weapon));
-                    playSound(this.weapon.type === 'rapid' ? 'sfx_shoot_machinegun' : (this.weapon.type === 'explosive' ? 'sfx_shoot_bazooka' : 'sfx_shoot_default'));
+                    let vol = this.weapon.type === 'rapid' ? 0.15 : (this.weapon.type === 'explosive' ? 0.3 : 0.08);
+                    playSound(this.weapon.type === 'rapid' ? 'sfx_shoot_machinegun' : (this.weapon.type === 'explosive' ? 'sfx_shoot_bazooka' : 'sfx_shoot_default'), vol);
                 }
                 
                 this.lastShot = fireRate;
