@@ -160,8 +160,13 @@ export class Soldier {
                 let dmg = stats.damage * this.weapon.damageMult;
                 
                 if (this.weapon.type === 'beam') {
-                    let startBeamX = this.x + (this.facingLeft ? -10 : 10);
-                    let startBeamY = this.y - this.bobY + 3;
+                    let dirX = Math.cos(angle);
+                    let dirY = Math.sin(angle);
+                    let normX = -Math.sin(angle);
+                    let normY = Math.cos(angle);
+                    let shoulderY = this.y - this.bobY + ((this.animFrame === 1 || this.animFrame === 3) ? 3 : 2);
+                    let startBeamX = this.x + dirX * 16 + normX * 3;
+                    let startBeamY = shoulderY + dirY * 16 + normY * 3;
                     state.bullets.push(new PlasmaBeam(startBeamX, startBeamY, closest, dmg, this));
                 } else if (this.weapon.type === 'flame') {
                     playSound('sfx_shoot_fire', 0.12); // Włączamy z powrotem dźwięk miotacza
@@ -383,13 +388,6 @@ export class Soldier {
             }
             ctx.imageSmoothingEnabled = false;
             
-            if (this.specialWeaponTimer > 0) {
-                ctx.fillStyle = 'rgba(0, 255, 255, 0.25)';
-                ctx.beginPath();
-                ctx.arc(0, 0, 16, 0, Math.PI*2);
-                ctx.fill();
-            }
-            
             ctx.drawImage(this.weaponSprite, -16, -16, 32, 32);
             ctx.restore();
         }
@@ -410,9 +408,9 @@ export class Soldier {
             let normX = -Math.sin(aimAngle);
             let normY = Math.cos(aimAngle);
             
-            // Wylot lufy Miotacza Ognia przesunięty o 15 pikseli wzdłuż wektora celowania od osi ramienia
-            let tipX = pivotX + dirX * 15;
-            let tipY = shoulderY + dirY * 15;
+            // Wylot lufy Miotacza Ognia precyzyjnie umiejscowiony w dłoniach bohatera (offset lufy trzymanej w rękach)
+            let tipX = pivotX + dirX * 16 + normX * 3;
+            let tipY = shoulderY + dirY * 16 + normY * 3;
             
             ctx.globalCompositeOperation = 'lighter';
             let t = Date.now() / 40;

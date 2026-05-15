@@ -56,10 +56,10 @@ export class Bullet {
                         t.takeDamage(this.damage, this.shooter);
                         createParticles(t.x, t.y, '#ffaa00', 2, 35);
                         
-                        // Zgodnie z wytycznymi: potężny odrzut kinetyczny (knockback) dla ocalałych wrogów
+                        // Zgodnie z wytycznymi: zbalansowany, realistyczny odrzut dla strzelby
                         if (t.hp > 0 && typeof t.applyKnockback === 'function') {
                             let bAng = Math.atan2(this.vy, this.vx);
-                            t.applyKnockback(Math.cos(bAng) * 350, Math.sin(bAng) * 350);
+                            t.applyKnockback(Math.cos(bAng) * 120, Math.sin(bAng) * 120);
                         }
                     }
                 } else {

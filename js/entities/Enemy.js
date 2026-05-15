@@ -91,7 +91,7 @@ export class Enemy {
 
         if (this.isPanicking && this.panicTimer > 0) {
             this.panicTimer -= dt;
-            let panicSpeed = this.speed * 2.8;
+            let panicSpeed = this.speed * 1.8;
             let moveX = Math.cos(this.panicAngle) * panicSpeed * dt;
             this.x += moveX;
             this.y += Math.sin(this.panicAngle) * panicSpeed * dt;
@@ -242,22 +242,22 @@ export class Enemy {
             ctx.globalCompositeOperation = 'lighter';
             let t = Date.now() / 40;
             for (let i = 0; i < 8; i++) {
-                let fx = this.x - 12 + (i * 3) + Math.sin(t + i) * 4;
-                let wave = Math.abs(Math.sin(t * 1.4 + i * 2.1)) * 16;
-                let fy = this.y - this.bobY + 12 - wave;
+                let fx = this.x - 8 + (i * 2) + Math.sin(t + i) * 2;
+                let wave = Math.abs(Math.sin(t * 1.5 + i * 2.1)) * 14;
+                let fy = this.y - this.bobY + 8 - wave;
                 
                 let px = Math.floor(fx / 2) * 2;
                 let py = Math.floor(fy / 2) * 2;
                 
                 ctx.fillStyle = '#ff3300';
-                ctx.fillRect(px, py, 4, 4);
-                if (wave > 4) {
+                ctx.fillRect(px, py, 2, 2);
+                if (wave > 3) {
                     ctx.fillStyle = '#ff8800';
-                    ctx.fillRect(px + 1, py + 2, 2, 4);
+                    ctx.fillRect(px, py + 2, 2, 2);
                 }
-                if (i % 2 === 0 && wave > 8) {
+                if (i % 2 === 0 && wave > 6) {
                     ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(px + 1, py + 6, 2, 2);
+                    ctx.fillRect(px, py + 4, 2, 2);
                 }
             }
             ctx.restore();
@@ -285,7 +285,7 @@ export class Enemy {
             if (!this.isPanicking && Math.random() < 0.65 && shooter.x !== undefined) {
                 this.isPanicking = true;
                 this.panicAngle = Math.atan2(this.y - shooter.y, this.x - shooter.x);
-                this.panicTimer = 1.2;
+                this.panicTimer = 0.5; // Zredukowany czas ucieczki (krótki, widowiskowy zryw)
             }
         }
         
