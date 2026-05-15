@@ -26,6 +26,13 @@ export function playSound(soundKey, volume = 0.25) {
     const now = Date.now();
     let effectiveVolume = volume;
     
+    // Blokada zalewania miksera i dławienia wątku audio dla odgłosów strzelających seryjnie w ułamkach sekund
+    if (lastPrimaryPlayTime[soundKey] && now - lastPrimaryPlayTime[soundKey] < 85) {
+        if (soundKey === 'sfx_shoot_fire' || soundKey === 'sfx_shoot_machinegun') {
+            return;
+        }
+    }
+    
     // Utrzymanie zasady maskowania echa dla spójności pola walki
     if (volume > 0.02) {
         if (lastPrimaryPlayTime[soundKey] && now - lastPrimaryPlayTime[soundKey] < 120) {

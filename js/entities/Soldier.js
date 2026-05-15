@@ -165,16 +165,6 @@ export class Soldier {
                 } else if (this.weapon.type === 'flame') {
                     playSound('sfx_shoot_fire', 0.12);
                     
-                    // Ciągły strumień płomieni w postaci zagęszczonych cząsteczek ognia
-                    for (let p = 0; p < 4; p++) {
-                        let pAng = angle + (Math.random() - 0.5) * 0.5;
-                        let pDist = 10 + Math.random() * 8;
-                        let px = this.x + Math.cos(pAng) * pDist;
-                        let py = this.y - this.bobY + Math.sin(pAng) * pDist;
-                        let pColor = Math.random() < 0.15 ? '#ffffff' : (Math.random() < 0.55 ? '#ffaa00' : '#ff3300');
-                        createParticles(px, py, pColor, 2, 35);
-                    }
-                    
                     // Stożkowe rażenie wrogów
                     let flameRange = stats.range * 0.9;
                     for (let e of state.enemies) {
