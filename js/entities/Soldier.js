@@ -163,7 +163,8 @@ export class Soldier {
                     let startBeamY = this.y - this.bobY + 3;
                     state.bullets.push(new PlasmaBeam(startBeamX, startBeamY, closest, dmg, this));
                 } else if (this.weapon.type === 'flame') {
-                    playSound('sfx_shoot_fire', 0.12);
+                    // Zgodnie z wytycznymi: tymczasowo wyciszony dźwięk Miotacza Ognia do testów
+                    // playSound('sfx_shoot_fire', 0.12);
                     
                     // Stożkowe rażenie wrogów
                     let flameRange = stats.range * 0.9;
