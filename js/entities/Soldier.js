@@ -194,10 +194,13 @@ export class Soldier {
                         }
                     }
                 } else if (this.weapon.type === 'spread') {
-                    state.bullets.push(new Bullet(this, this.x, this.y, angle, false, dmg, this.weapon));
-                    state.bullets.push(new Bullet(this, this.x, this.y, angle - 0.25, false, dmg, this.weapon));
-                    state.bullets.push(new Bullet(this, this.x, this.y, angle + 0.25, false, dmg, this.weapon));
-                    playSound('sfx_shoot_default');
+                    // Zgodnie z dyspozycją: potężny wachlarz 7 śrucin tworzący ścianę ognia
+                    const spreadAngles = [-0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45];
+                    for (let angOffset of spreadAngles) {
+                        let bAng = angle + angOffset + (Math.random() - 0.5) * 0.08;
+                        state.bullets.push(new Bullet(this, this.x, this.y, bAng, false, dmg, this.weapon));
+                    }
+                    playSound('sfx_shoot_shotgun');
                 } else {
                     angle += (Math.random() - 0.5) * (this.weapon.type === 'rapid' ? 0.3 : 0.1); 
                     state.bullets.push(new Bullet(this, this.x, this.y, angle, false, dmg, this.weapon));
