@@ -397,49 +397,46 @@ export class Soldier {
         if (this.weapon && this.weapon.type === 'flame' && this.weaponSprite) {
             ctx.save();
             let shoulderY = this.y - this.bobY + ((this.animFrame === 1 || this.animFrame === 3) ? 3 : 2) + recoilY;
-            let pivotX = this.x + recoilX;
-            let aimAngle = isEffectivelyFacingLeft ? Math.PI : 0;
+            ctx.translate(this.x + recoilX, shoulderY);
+            
+            let rotAngle = isEffectivelyFacingLeft ? Math.PI : 0;
             if (closestForAim) {
-                aimAngle = Math.atan2(closestForAim.y - shoulderY, closestForAim.x - pivotX);
+                rotAngle = Math.atan2(closestForAim.y - shoulderY, closestForAim.x - (this.x + recoilX));
             }
             
-            let dirX = Math.cos(aimAngle);
-            let dirY = Math.sin(aimAngle);
-            let normX = -Math.sin(aimAngle);
-            let normY = Math.cos(aimAngle);
-            
-            // Wylot lufy Miotacza Ognia precyzyjnie umiejscowiony w dłoniach bohatera (offset lufy trzymanej w rękach)
-            let tipX = pivotX + dirX * 16 + normX * 3;
-            let tipY = shoulderY + dirY * 16 + normY * 3;
+            ctx.rotate(rotAngle);
+            if (Math.abs(rotAngle) > Math.PI / 2) {
+                ctx.scale(1, -1);
+            }
             
             ctx.globalCompositeOperation = 'lighter';
             let t = Date.now() / 40;
             this.flameStreamDist = this.flameStreamDist || 0;
             
-            let isFlameAnimationEnabled = true; // Włączamy w pełni zoptymalizowaną, przepiękną animację ognia!
+            // Lufa w lokalnym układzie odniesienia znajduje się dokładnie w punkcie (12, 2.5)
+            let tipX = 12;
+            let tipY = 2.5;
             
-            if (isFlameAnimationEnabled && this.flameStreamDist > 15) {
+            if (this.flameStreamDist > 15) {
                 let maxDist = this.flameStreamDist;
                 let step = 2; // Precyzyjny krok 2px budujący zwartą wiązkę w skali retro 2x2 pixel art
                 
-                // Tworzenie małych dogasających płomieni na ziemi, które zostawiają po sobie trwałe, czarne plamy wypalenia
+                // Tworzenie małych dogasających płomieni na ziemi w koordynatach świata
                 if (typeof bloodCtx !== 'undefined' && bloodCtx && Math.random() < 0.12) {
                     let dropD = maxDist * (0.25 + Math.random() * 0.7);
-                    let dropX = Math.floor((tipX + dirX * dropD + (Math.random() - 0.5) * 24) / 2) * 2;
-                    let dropY = Math.floor((tipY + dirY * dropD + (Math.random() - 0.5) * 24) / 2) * 2;
+                    let worldAngle = rotAngle;
+                    let dropX = Math.floor((this.x + recoilX + Math.cos(worldAngle) * dropD + (Math.random() - 0.5) * 24) / 2) * 2;
+                    let dropY = Math.floor((shoulderY + Math.sin(worldAngle) * dropD + (Math.random() - 0.5) * 24) / 2) * 2;
                     
-                    // Wypalamy trwale wyłącznie czarną, zwęgloną dziurę w murawie
                     bloodCtx.fillStyle = '#0d0600';
                     bloodCtx.fillRect(dropX - 2, dropY - 2, 4, 4);
-                    
-                    // Dodajemy animowany płomyk dogasający na wierzchu
                     if (!state.fuelPools) state.fuelPools = [];
                     if (state.fuelPools.length < 60) {
                         state.fuelPools.push({ x: dropX, y: dropY, life: 1.5, maxLife: 1.5 });
                     }
                 }
                 
-                // Warstwa 1: Zewnętrzna bryła (mniejsze piksele 2x2 px dla wyśrubowanej estetyki retro)
+                // Warstwa 1: Zewnętrzna bryła w lokalnych koordynatach obróconej broni
                 ctx.fillStyle = '#ff3300';
                 ctx.globalAlpha = 0.85;
                 for (let d = 0; d < maxDist; d += step) {
@@ -455,11 +452,8 @@ export class Soldier {
                     
                     if (p > 0.75 && Math.sin(d * 1.0 + t * 2.7) > 0.1) continue;
                     
-                    let cx = tipX + dirX * d + normX * wave;
-                    let cy = tipY + dirY * d + normY * wave;
-                    
-                    let px = Math.floor(cx / 2) * 2;
-                    let py = Math.floor(cy / 2) * 2;
+                    let px = Math.floor((tipX + d) / 2) * 2;
+                    let py = Math.floor((tipY + wave) / 2) * 2;
                     
                     ctx.fillRect(px - size/2, py - size/2, size, size);
                 }
@@ -480,11 +474,8 @@ export class Soldier {
                     
                     if (p > 0.7 && Math.cos(d * 1.3 + t * 2.0) > 0.25) continue;
                     
-                    let cx = tipX + dirX * d + normX * wave;
-                    let cy = tipY + dirY * d + normY * wave;
-                    
-                    let px = Math.floor(cx / 2) * 2;
-                    let py = Math.floor(cy / 2) * 2;
+                    let px = Math.floor((tipX + d) / 2) * 2;
+                    let py = Math.floor((tipY + wave) / 2) * 2;
                     
                     ctx.fillRect(px - size/2, py - size/2, size, size);
                 }
@@ -498,11 +489,8 @@ export class Soldier {
                     let size = 2;
                     let wave = Math.sin(d * 0.18 - t * 1.8) * (p * 2);
                     
-                    let cx = tipX + dirX * d + normX * wave;
-                    let cy = tipY + dirY * d + normY * wave;
-                    
-                    let px = Math.floor(cx / 2) * 2;
-                    let py = Math.floor(cy / 2) * 2;
+                    let px = Math.floor((tipX + d) / 2) * 2;
+                    let py = Math.floor((tipY + wave) / 2) * 2;
                     
                     ctx.fillRect(px - size/2, py - size/2, size, size);
                 }
@@ -517,27 +505,22 @@ export class Soldier {
                     let w2 = Math.cos(fd * 0.3 + t * 1.5) * 0.5;
                     let wave = (w1 + w2) * (phase * 15) + (i % 2 === 0 ? -4 : 4);
                     
-                    let cx = tipX + dirX * fd + normX * wave;
-                    let cy = tipY + dirY * fd + normY * wave;
-                    
-                    let px = Math.floor(cx / 2) * 2;
-                    let py = Math.floor(cy / 2) * 2;
+                    let px = Math.floor((tipX + fd) / 2) * 2;
+                    let py = Math.floor((tipY + wave) / 2) * 2;
                     
                     ctx.fillRect(px - 1, py - 1, 2, 2);
                 }
                 ctx.globalAlpha = 1.0;
             } else {
-                // Ciągły, mały płomyk pilotowy ("pilot light") migoczący w spoczynku na krawędzi dyszy
+                // Płomyk pilotowy
                 let flicker = Math.sin(t * 3.5) * 2;
-                let px = Math.floor((tipX + normX * flicker) / 4) * 4;
-                let py = Math.floor((tipY + normY * flicker) / 4) * 4;
+                let px = Math.floor((tipX + flicker) / 2) * 2;
+                let py = Math.floor(tipY / 2) * 2;
                 
                 ctx.fillStyle = '#0088ff';
-                ctx.fillRect(px - 2, py - 2, 4, 4);
-                let ptx = Math.floor((px + dirX * 4) / 2) * 2;
-                let pty = Math.floor((py + dirY * 4) / 2) * 2;
+                ctx.fillRect(px - 1, py - 1, 2, 2);
                 ctx.fillStyle = '#ffff00';
-                ctx.fillRect(ptx - 1, pty - 1, 2, 2);
+                ctx.fillRect(px, py, 1, 1);
             }
             ctx.restore();
         } else if (this.lastShot > 0 && this.weapon && this.weapon.type !== 'beam' && this.weapon.type !== 'flame' && gunFireImg && gunFireImg.complete && gunFireImg.width > 0) {
