@@ -143,6 +143,15 @@ export class Enemy {
             }
         }
 
+        this.kbX = this.kbX || 0;
+        this.kbY = this.kbY || 0;
+        if (Math.abs(this.kbX) > 1 || Math.abs(this.kbY) > 1) {
+            this.x += this.kbX * dt;
+            this.y += this.kbY * dt;
+            this.kbX *= Math.pow(0.02, dt);
+            this.kbY *= Math.pow(0.02, dt);
+        }
+
         if (this.lastShot > 0) this.lastShot -= dt;
         if (this.onFireTimer > 0) this.onFireTimer -= dt;
 
@@ -261,6 +270,11 @@ export class Enemy {
             ctx.fillStyle = '#7cfc00';
             ctx.fillRect(this.x - 10, this.y - 12 - this.bobY, 20 * (this.hp/this.maxHp), 3);
         }
+    }
+
+    applyKnockback(vx, vy) {
+        this.kbX = (this.kbX || 0) + vx;
+        this.kbY = (this.kbY || 0) + vy;
     }
 
     takeDamage(amount, shooter) {

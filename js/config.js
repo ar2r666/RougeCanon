@@ -178,7 +178,7 @@ export const NAMES = ['Jools', 'Jops', 'Stoo', 'RJ', 'Ubik', 'CJ', 'Biker', 'Phi
 
 export const WEAPONS = {
     DEFAULT: { name: 'Karabin', fireRateMult: 1, damageMult: 1, color: '#ffff00', type: 'normal', visualIdx: 0 },
-    SHOTGUN: { name: 'Strzelba', fireRateMult: 4.0, damageMult: 2.0, color: '#ffaa00', type: 'spread', visualIdx: 1 }, // Podwojona moc obrażeń
+    SHOTGUN: { name: 'Strzelba', fireRateMult: 1.5, damageMult: 2.0, color: '#ffaa00', type: 'spread', visualIdx: 1 }, // Błyskawiczne przeładowanie (1.2s przy bazowym 800ms)
     MACHINEGUN: { name: 'Karabin Masz.', fireRateMult: 0.12, damageMult: 0.75, color: '#ffdd00', type: 'rapid', visualIdx: 3 },
     BAZOOKA: { name: 'Bazooka', fireRateMult: 3.0, damageMult: 4, color: '#ff5500', type: 'explosive', visualIdx: 5 },
     SPECIAL_PLASMA: { name: 'Plazma', fireRateMult: 0.35, damageMult: 3, color: '#00ffff', type: 'beam', visualIdx: 10 },
@@ -221,7 +221,7 @@ export const customSquadDesign = {
 };
 
 export const state = {
-    gameState: 'MENU', // MENU, PLAY, UPGRADE, GAMEOVER
+    gameState: 'PLAY', // Automatyczny start w trybie gry po załadowaniu strony
     wave: 1,
     enemiesToSpawn: 0,
     enemySpawnTimer: 0,

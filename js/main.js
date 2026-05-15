@@ -3,7 +3,7 @@ import { terrainPattern, bloodCanvas } from './sprites.js';
 import { Soldier, corpses } from './entities/Soldier.js';
 import { Enemy } from './entities/Enemy.js';
 import { Crate } from './entities/Crate.js';
-import { gameOver, showUpgrades, updateHUD } from './ui.js';
+import { gameOver, showUpgrades, updateHUD, startGame } from './ui.js';
 import { initInput } from './input.js';
 import './creator.js';
 
@@ -308,4 +308,6 @@ function loop(timestamp) {
     requestAnimationFrame(loop);
 }
 
+// Zgodnie z wytycznymi: gra uruchamia się natychmiastowo po załadowaniu strony
+startGame();
 requestAnimationFrame(loop);

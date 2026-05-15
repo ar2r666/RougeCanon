@@ -119,10 +119,10 @@ export function startGame() {
     Object.assign(stats, { maxSquad: 3, damage: 1, fireRate: 800, range: 180, speed: 100, bulletSpeed: 300 });
     clearBloodCanvas();
     clearCorpses();
-    state.camera.x = 1500;
-    state.camera.y = 1500;
-    state.targetPoint.x = 1500;
-    state.targetPoint.y = 1500;
+    state.camera.x = 6000;
+    state.camera.y = 6000;
+    state.targetPoint.x = 6000;
+    state.targetPoint.y = 6000;
     state.bullets = [];
     state.enemies = [];
     state.particles = [];
