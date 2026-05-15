@@ -201,6 +201,18 @@ export class Soldier {
                         state.bullets.push(new Bullet(this, this.x, this.y, bAng, false, dmg, this.weapon));
                     }
                     playSound('sfx_shoot_shotgun');
+                    
+                    // Zgodnie z instrukcją: przeładowanie strzelby (wyrzut łuski, odrzut pump) następuje od razu po strzale
+                    this.isReloadingPump = 0.35; 
+                    if (typeof bloodCtx !== 'undefined' && bloodCtx) {
+                        bloodCtx.save();
+                        bloodCtx.fillStyle = '#cc0000';
+                        bloodCtx.fillRect(this.x + (this.facingLeft ? 4 : -4), this.y + 6, 3, 2);
+                        bloodCtx.fillStyle = '#ffd700';
+                        bloodCtx.fillRect(this.x + (this.facingLeft ? 7 : -7), this.y + 6, 1, 2);
+                        bloodCtx.restore();
+                    }
+                    createParticles(this.x + (this.facingLeft ? 5 : -5), this.y, '#ffd700', 3, 25);
                 } else {
                     angle += (Math.random() - 0.5) * (this.weapon.type === 'rapid' ? 0.3 : 0.1); 
                     state.bullets.push(new Bullet(this, this.x, this.y, angle, false, dmg, this.weapon));
@@ -214,26 +226,7 @@ export class Soldier {
             }
         }
 
-        if (this.lastShot > 0) {
-            let prevShot = this.lastShot;
-            this.lastShot -= dt;
-            
-            // Odwzorowanie 2-sekundowego cyklu strzelby (1s strzał, 2s przeładowanie)
-            if (this.weapon && this.weapon.type === 'spread') {
-                if (prevShot > 1.0 && this.lastShot <= 1.0) {
-                    this.isReloadingPump = 0.35; 
-                    if (typeof bloodCtx !== 'undefined' && bloodCtx) {
-                        bloodCtx.save();
-                        bloodCtx.fillStyle = '#cc0000';
-                        bloodCtx.fillRect(this.x + (this.facingLeft ? 4 : -4), this.y + 6, 3, 2);
-                        bloodCtx.fillStyle = '#ffd700';
-                        bloodCtx.fillRect(this.x + (this.facingLeft ? 7 : -7), this.y + 6, 1, 2);
-                        bloodCtx.restore();
-                    }
-                    createParticles(this.x + (this.facingLeft ? 5 : -5), this.y, '#ffd700', 3, 25);
-                }
-            }
-        }
+        if (this.lastShot > 0) this.lastShot -= dt;
         if (this.isReloadingPump > 0) this.isReloadingPump -= dt;
         
         // Odliczanie 15-sekundowego ekwipunku ze skrzynek
@@ -601,8 +594,8 @@ export class Soldier {
             ctx.font = '7px "Press Start 2P"';
             ctx.fillText(weaponLabel, this.x, this.y - 15 - this.bobY);
             
-            // Subtelny, estetyczny pasek przeładowania strzelby widoczny w drugiej sekundzie cyklu
-            if (this.weapon.type === 'spread' && this.lastShot > 0 && this.lastShot <= 1.0) {
+            // Pasek przeładowania strzelby widoczny przez cały 2-sekundowy cykl od razu po strzale
+            if (this.weapon.type === 'spread' && this.lastShot > 0) {
                 let barW = 16;
                 let barH = 2;
                 let bx = this.x - barW / 2;
@@ -611,7 +604,8 @@ export class Soldier {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                 ctx.fillRect(bx, by, barW, barH);
                 
-                let prog = 1.0 - (this.lastShot / 1.0);
+                let fireInterval = (stats.fireRate * this.weapon.fireRateMult) / 1000; 
+                let prog = Math.max(0, Math.min(1, 1.0 - (this.lastShot / fireInterval)));
                 ctx.fillStyle = '#ffff00';
                 ctx.fillRect(bx, by, Math.floor(barW * prog), barH);
             }
