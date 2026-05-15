@@ -47,7 +47,7 @@ export function playSound(soundKey, volume = 0.25) {
         // Odtwarzanie ze zdekodowanych w pamięci RAM buforów (Brak jakichkolwiek opóźnień)
         if (audioBuffers[soundKey] === undefined) {
             audioBuffers[soundKey] = null; 
-            fetch(`Sounds/${soundKey}.mp3`) // Zgodność wielkości liter folderu Sounds z systemem plików
+            fetch(`Sounds/${encodeURIComponent(soundKey)}.mp3`) // Bezpieczne kodowanie znaków specjalnych takich jak # w nazwach plików audio
                 .then(response => response.arrayBuffer())
                 .then(arrayBuffer => ctx.decodeAudioData(arrayBuffer))
                 .then(decodedBuffer => {
