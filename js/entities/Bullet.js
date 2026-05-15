@@ -7,14 +7,15 @@ export class Bullet {
         this.shooter = shooter;
         this.x = x;
         this.y = y;
-        // Przyspieszenie pocisków wybuchowych dla potężniejszej dynamiki uderzenia
-        let speedMult = (weapon && weapon.type === 'explosive') ? 1.3 : 1.0;
+        // Szybkie kule ze strzelby (1.8x) oraz rakiety (1.3x)
+        let speedMult = (weapon && weapon.type === 'explosive') ? 1.3 : ((weapon && weapon.type === 'spread') ? 1.8 : 1.0);
         this.vx = Math.cos(angle) * stats.bulletSpeed * speedMult;
         this.vy = Math.sin(angle) * stats.bulletSpeed * speedMult;
         this.isEnemy = isEnemy;
         this.damage = damage;
         this.weapon = weapon || WEAPONS.DEFAULT;
-        this.life = (weapon && weapon.type === 'explosive') ? 1.5 : 1.0; // Zredukowany, optymalny zasięg lotu rakiety
+        this.life = (weapon && weapon.type === 'explosive') ? 1.5 : 1.0; 
+        this.hitTargets = new Set(); // Bufor celów przebitych na wylot
     }
 
     update(dt) {
@@ -45,13 +46,21 @@ export class Bullet {
             if (t.life <= 0) continue;
             if (Math.hypot(t.x - this.x, t.y - this.y) < t.radius + 2) {
                 if (this.weapon.type === 'explosive') {
-                    // Zgodnie z wytycznymi: zmniejszenie promienia wybuchu o 50% (do 60px)
                     state.explosions.push(new Explosion(this.x, this.y, 60, this.damage, this.shooter));
+                    this.life = 0; 
+                    break;
+                } else if (this.weapon.type === 'spread') {
+                    // Specjalna zdolność strzelby: kule przechodzą na wylot przez wrogów (Penetration / Piercing)
+                    if (!this.hitTargets.has(t)) {
+                        this.hitTargets.add(t);
+                        t.takeDamage(this.damage, this.shooter);
+                        createParticles(t.x, t.y, '#ffaa00', 2, 35);
+                    }
                 } else {
                     t.takeDamage(this.damage, this.shooter);
+                    this.life = 0; 
+                    break;
                 }
-                this.life = 0; // Destroy bullet
-                break;
             }
         }
     }

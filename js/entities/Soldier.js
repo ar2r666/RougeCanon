@@ -194,10 +194,10 @@ export class Soldier {
                         }
                     }
                 } else if (this.weapon.type === 'spread') {
-                    // Zgodnie z dyspozycją: skupiony wachlarz 7 śrucin o węższym kącie rażenia
-                    const spreadAngles = [-0.24, -0.16, -0.08, 0, 0.08, 0.16, 0.24];
+                    // Zgodnie z dyspozycją: ekstremalnie skupiony wachlarz 7 śrucin o zabójczym kącie rażenia
+                    const spreadAngles = [-0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15];
                     for (let angOffset of spreadAngles) {
-                        let bAng = angle + angOffset + (Math.random() - 0.5) * 0.05;
+                        let bAng = angle + angOffset + (Math.random() - 0.5) * 0.03;
                         state.bullets.push(new Bullet(this, this.x, this.y, bAng, false, dmg, this.weapon));
                     }
                     playSound('sfx_shoot_shotgun');
