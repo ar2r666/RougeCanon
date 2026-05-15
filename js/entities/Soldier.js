@@ -457,7 +457,7 @@ export class Soldier {
                     let px = Math.floor(cx / 4) * 4;
                     let py = Math.floor(cy / 4) * 4;
                     
-                    ctx.globalAlpha = p > 0.7 ? (1 - p) * 3.3 : 1.0;
+                    ctx.globalAlpha = Math.max(0, Math.min(1, p > 0.7 ? (1 - p) * 3.3 : 1.0));
                     ctx.fillRect(px - size/2, py - size/2, size, size);
                 }
                 
@@ -482,7 +482,7 @@ export class Soldier {
                     let px = Math.floor(cx / 4) * 4;
                     let py = Math.floor(cy / 4) * 4;
                     
-                    ctx.globalAlpha = p > 0.65 ? (1 - p) * 2.8 : 1.0;
+                    ctx.globalAlpha = Math.max(0, Math.min(1, p > 0.65 ? (1 - p) * 2.8 : 1.0));
                     ctx.fillRect(px - size/2, py - size/2, size, size);
                 }
                 
@@ -519,9 +519,10 @@ export class Soldier {
                     let px = Math.floor(cx / 4) * 4;
                     let py = Math.floor(cy / 4) * 4;
                     
-                    ctx.globalAlpha = phase > 0.5 ? (1 - phase) * 2.0 : 1.0;
+                    ctx.globalAlpha = Math.max(0, Math.min(1, phase > 0.5 ? (1 - phase) * 2.0 : 1.0));
                     ctx.fillRect(px - 2, py - 2, 4, 4);
                 }
+                ctx.globalAlpha = 1.0;
             } else {
                 // Ciągły, mały płomyk pilotowy ("pilot light") migoczący w spoczynku na krawędzi dyszy
                 let flicker = Math.sin(t * 3.5) * 2;
