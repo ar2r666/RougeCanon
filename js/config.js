@@ -180,7 +180,7 @@ export const WEAPONS = {
     MACHINEGUN: { name: 'Karabin Masz.', fireRateMult: 0.12, damageMult: 0.75, color: '#ffdd00', type: 'rapid', visualIdx: 3 },
     BAZOOKA: { name: 'Bazooka', fireRateMult: 3.0, damageMult: 4, color: '#ff5500', type: 'explosive', visualIdx: 5 },
     SPECIAL_PLASMA: { name: 'Plazma', fireRateMult: 0.35, damageMult: 3, color: '#00ffff', type: 'beam', visualIdx: 10 },
-    SPECIAL_FLAMETHROWER: { name: 'Miotacz Ognia', fireRateMult: 0.05, damageMult: 0.25, color: '#ff4500', type: 'flame', visualIdx: 7 }
+    SPECIAL_FLAMETHROWER: { name: 'Miotacz Ognia', fireRateMult: 0.05, damageMult: 1.5, color: '#ff4500', type: 'flame', visualIdx: 7 }
 };
 
 // --- WSPÓŁDZIELONY STAN GRY (Central State) ---

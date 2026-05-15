@@ -89,7 +89,20 @@ export class Enemy {
             if (d < minDist) { minDist = d; closest = s; }
         }
 
-        if (closest) {
+        if (this.isPanicking && this.panicTimer > 0) {
+            this.panicTimer -= dt;
+            let panicSpeed = this.speed * 2.5;
+            let moveX = Math.cos(this.panicAngle) * panicSpeed * dt;
+            this.x += moveX;
+            this.y += Math.sin(this.panicAngle) * panicSpeed * dt;
+            
+            if (Math.abs(moveX) > 0.1) {
+                this.facingLeft = moveX < 0;
+            }
+            
+            this.takeDamage(dt * 35, { weapon: { type: 'flame' } });
+            if (this.panicTimer <= 0) this.isPanicking = false;
+        } else if (closest) {
             let angle = Math.atan2(closest.y - this.y, closest.x - this.x);
             let moveX = Math.cos(angle) * this.speed * dt;
             this.x += moveX;
@@ -243,6 +256,11 @@ export class Enemy {
         createParticles(this.x, this.y, '#ff0000', 3, 60);
         if (shooter && shooter.weapon && shooter.weapon.type === 'flame') {
             this.onFireTimer = 0.5;
+            if (!this.isPanicking && Math.random() < 0.35 && shooter.x !== undefined) {
+                this.isPanicking = true;
+                this.panicAngle = Math.atan2(this.y - shooter.y, this.x - shooter.x);
+                this.panicTimer = 1.5;
+            }
         }
         if (this.hp <= 0) {
             let deathType = shooter && shooter.weapon ? shooter.weapon.type : 'normal';
