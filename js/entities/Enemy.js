@@ -91,7 +91,7 @@ export class Enemy {
 
         if (this.isPanicking && this.panicTimer > 0) {
             this.panicTimer -= dt;
-            let panicSpeed = this.speed * 2.5;
+            let panicSpeed = this.speed * 2.8;
             let moveX = Math.cos(this.panicAngle) * panicSpeed * dt;
             this.x += moveX;
             this.y += Math.sin(this.panicAngle) * panicSpeed * dt;
@@ -100,8 +100,14 @@ export class Enemy {
                 this.facingLeft = moveX < 0;
             }
             
-            this.takeDamage(dt * 35, { weapon: { type: 'flame' } });
-            if (this.panicTimer <= 0) this.isPanicking = false;
+            // W trakcie paniki utrzymujemy wroga przy 1 punkcie życia, aby zdążył widowiskowo przebiec w płomieniach!
+            if (this.hp <= 1) this.hp = 1;
+            
+            if (this.panicTimer <= 0) {
+                this.isPanicking = false;
+                this.hp = 0;
+                this.die('flame');
+            }
         } else if (closest) {
             let angle = Math.atan2(closest.y - this.y, closest.x - this.x);
             let moveX = Math.cos(angle) * this.speed * dt;
@@ -252,16 +258,24 @@ export class Enemy {
 
     takeDamage(amount, shooter) {
         if (this.hp <= 0) return;
-        this.hp -= amount;
-        createParticles(this.x, this.y, '#ff0000', 3, 60);
+        
         if (shooter && shooter.weapon && shooter.weapon.type === 'flame') {
             this.onFireTimer = 0.5;
-            if (!this.isPanicking && Math.random() < 0.35 && shooter.x !== undefined) {
+            if (!this.isPanicking && Math.random() < 0.65 && shooter.x !== undefined) {
                 this.isPanicking = true;
                 this.panicAngle = Math.atan2(this.y - shooter.y, this.x - shooter.x);
-                this.panicTimer = 1.5;
+                this.panicTimer = 1.2;
             }
         }
+        
+        if (this.isPanicking && this.panicTimer > 0) {
+            this.hp = Math.max(1, this.hp - amount);
+            return;
+        }
+        
+        this.hp -= amount;
+        createParticles(this.x, this.y, '#ff0000', 3, 60);
+        
         if (this.hp <= 0) {
             let deathType = shooter && shooter.weapon ? shooter.weapon.type : 'normal';
             this.die(deathType);
