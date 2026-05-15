@@ -286,9 +286,10 @@ export class Enemy {
                 let isElite = this.type !== 'standard';
                 let customDead = isElite ? ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyEliteDeadSkin && customSquadDesign.enemyEliteDeadSkin.complete && customSquadDesign.enemyEliteDeadSkin.width > 0) ? customSquadDesign.enemyEliteDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null)) : ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin && customSquadDesign.enemyDeadSkin.complete && customSquadDesign.enemyDeadSkin.width > 0) ? customSquadDesign.enemyDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null));
                 
-                if (customDead && customDead.height > 0) {
-                    let fh = customDead.height;
-                    bloodCtx.drawImage(customDead, 0, 0, fh, fh, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
+                if (customDead && customDead.width > 0 && customDead.height > 0) {
+                    let sW = Math.min(customDead.width, customDead.height);
+                    let sH = Math.min(customDead.height, customDead.width);
+                    bloodCtx.drawImage(customDead, 0, 0, sW, sH, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
                     bloodCtx.fillStyle = 'rgba(15, 7, 0, 0.75)';
                     bloodCtx.fillRect(-drawScale / 4, -drawScale / 4, drawScale / 2, drawScale / 2);
                 } else if (baseSprite) {
@@ -327,9 +328,10 @@ export class Enemy {
                 let isElite = this.type !== 'standard';
                 let customDead = isElite ? ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyEliteDeadSkin && customSquadDesign.enemyEliteDeadSkin.complete && customSquadDesign.enemyEliteDeadSkin.width > 0) ? customSquadDesign.enemyEliteDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null)) : ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin && customSquadDesign.enemyDeadSkin.complete && customSquadDesign.enemyDeadSkin.width > 0) ? customSquadDesign.enemyDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null));
                 
-                if (customDead && customDead.height > 0) {
-                    let fh = customDead.height;
-                    bloodCtx.drawImage(customDead, 0, 0, fh, fh, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
+                if (customDead && customDead.width > 0 && customDead.height > 0) {
+                    let sW = Math.min(customDead.width, customDead.height);
+                    let sH = Math.min(customDead.height, customDead.width);
+                    bloodCtx.drawImage(customDead, 0, 0, sW, sH, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
                 } else if (baseSprite) {
                     bloodCtx.drawImage(baseSprite, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
                 }
