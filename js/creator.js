@@ -978,6 +978,16 @@ function preloadHeroSkins() {
         updateSquadSkins();
     };
     img2.src = 'img/hero_2.png';
+    
+    const enemyImg = new Image();
+    enemyImg.onload = () => {
+        customSquadDesign.enemy.customImageSkin = enemyImg;
+        customSquadDesign.enemy.isCustomized = true;
+        if (gameState && gameState.enemies) {
+            gameState.enemies.forEach(e => e.customImageSkin = enemyImg);
+        }
+    };
+    enemyImg.src = 'img/enemy.png';
 }
 
 // Uruchomienie preloadera przy starcie modułu
