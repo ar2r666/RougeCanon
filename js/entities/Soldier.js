@@ -441,27 +441,28 @@ export class Soldier {
                     }
                 }
                 
-                // Warstwa 1: Zewnętrzna bryła (stałe alpha dla optymalnego batchingu GPU)
+                // Warstwa 1: Zewnętrzna bryła (mniejsze piksele 2x2 px dla wyśrubowanej estetyki retro)
+                let step = 2;
                 ctx.fillStyle = '#ff3300';
                 ctx.globalAlpha = 0.85;
                 for (let d = 0; d < maxDist; d += step) {
                     let p = d / maxDist;
                     let envelope = p < 0.65 ? Math.sin((p / 0.65) * Math.PI / 2) : Math.sin((1 - (p - 0.65) / 0.35) * Math.PI / 2);
-                    let size = Math.floor((4 + envelope * 20) / 4) * 4;
-                    if (size < 4) size = 4;
+                    let size = Math.floor((2 + envelope * 14) / 2) * 2;
+                    if (size < 2) size = 2;
                     
                     let w1 = Math.sin(d * 0.1 - t);
                     let w2 = Math.cos(d * 0.3 + t * 1.5) * 0.5;
                     let chaos = Math.sin(d * 1.2 + Math.floor(t * 0.8)) * 0.3;
-                    let wave = (w1 + w2 + chaos) * (p * 14);
+                    let wave = (w1 + w2 + chaos) * (p * 12);
                     
                     if (p > 0.75 && Math.sin(d * 1.0 + t * 2.7) > 0.1) continue;
                     
                     let cx = tipX + dirX * d + normX * wave;
                     let cy = tipY + dirY * d + normY * wave;
                     
-                    let px = Math.floor(cx / 4) * 4;
-                    let py = Math.floor(cy / 4) * 4;
+                    let px = Math.floor(cx / 2) * 2;
+                    let py = Math.floor(cy / 2) * 2;
                     
                     ctx.fillRect(px - size/2, py - size/2, size, size);
                 }
@@ -473,20 +474,20 @@ export class Soldier {
                 for (let d = 0; d < midDist; d += step) {
                     let p = d / midDist;
                     let envelope = p < 0.6 ? Math.sin((p / 0.6) * Math.PI / 2) : Math.sin((1 - (p - 0.6) / 0.4) * Math.PI / 2);
-                    let size = Math.floor((4 + envelope * 12) / 4) * 4;
-                    if (size < 4) size = 4;
+                    let size = Math.floor((2 + envelope * 8) / 2) * 2;
+                    if (size < 2) size = 2;
                     
                     let w1 = Math.sin(d * 0.12 - t * 1.2);
                     let w2 = Math.sin(d * 0.35 - t * 2.1) * 0.4;
-                    let wave = (w1 + w2) * (p * 9);
+                    let wave = (w1 + w2) * (p * 8);
                     
                     if (p > 0.7 && Math.cos(d * 1.3 + t * 2.0) > 0.25) continue;
                     
                     let cx = tipX + dirX * d + normX * wave;
                     let cy = tipY + dirY * d + normY * wave;
                     
-                    let px = Math.floor(cx / 4) * 4;
-                    let py = Math.floor(cy / 4) * 4;
+                    let px = Math.floor(cx / 2) * 2;
+                    let py = Math.floor(cy / 2) * 2;
                     
                     ctx.fillRect(px - size/2, py - size/2, size, size);
                 }
@@ -497,14 +498,14 @@ export class Soldier {
                 let coreDist = maxDist * 0.45;
                 for (let d = 0; d < coreDist; d += step) {
                     let p = d / coreDist;
-                    let size = 4;
+                    let size = 2;
                     let wave = Math.sin(d * 0.18 - t * 1.8) * (p * 2);
                     
                     let cx = tipX + dirX * d + normX * wave;
                     let cy = tipY + dirY * d + normY * wave;
                     
-                    let px = Math.floor(cx / 4) * 4;
-                    let py = Math.floor(cy / 4) * 4;
+                    let px = Math.floor(cx / 2) * 2;
+                    let py = Math.floor(cy / 2) * 2;
                     
                     ctx.fillRect(px - size/2, py - size/2, size, size);
                 }
@@ -522,10 +523,10 @@ export class Soldier {
                     let cx = tipX + dirX * fd + normX * wave;
                     let cy = tipY + dirY * fd + normY * wave;
                     
-                    let px = Math.floor(cx / 4) * 4;
-                    let py = Math.floor(cy / 4) * 4;
+                    let px = Math.floor(cx / 2) * 2;
+                    let py = Math.floor(cy / 2) * 2;
                     
-                    ctx.fillRect(px - 2, py - 2, 4, 4);
+                    ctx.fillRect(px - 1, py - 1, 2, 2);
                 }
                 ctx.globalAlpha = 1.0;
             } else {

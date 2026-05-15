@@ -89,7 +89,25 @@ export class Enemy {
             if (d < minDist) { minDist = d; closest = s; }
         }
 
-        if (closest) {
+        if (this.isPanicking && this.panicTimer > 0) {
+            this.panicTimer -= dt;
+            let panicSpeed = this.speed * 2.8;
+            let moveX = Math.cos(this.panicAngle) * panicSpeed * dt;
+            this.x += moveX;
+            this.y += Math.sin(this.panicAngle) * panicSpeed * dt;
+            
+            if (Math.abs(moveX) > 0.1) {
+                this.facingLeft = moveX < 0;
+            }
+            
+            if (this.hp <= 1) this.hp = 1; // Ochrona przed zgonem w trakcie widowiskowej ucieczki
+            
+            if (this.panicTimer <= 0) {
+                this.isPanicking = false;
+                this.hp = 0;
+                this.die('flame');
+            }
+        } else if (closest) {
             let angle = Math.atan2(closest.y - this.y, closest.x - this.x);
             let moveX = Math.cos(angle) * this.speed * dt;
             this.x += moveX;
@@ -250,6 +268,16 @@ export class Enemy {
         
         if (shooter && shooter.weapon && shooter.weapon.type === 'flame') {
             this.onFireTimer = 0.5;
+            if (!this.isPanicking && Math.random() < 0.65 && shooter.x !== undefined) {
+                this.isPanicking = true;
+                this.panicAngle = Math.atan2(this.y - shooter.y, this.x - shooter.x);
+                this.panicTimer = 1.2;
+            }
+        }
+        
+        if (this.isPanicking && this.panicTimer > 0) {
+            this.hp = Math.max(1, this.hp - amount);
+            return;
         }
         
         this.hp -= amount;
@@ -290,12 +318,16 @@ export class Enemy {
                     let sW = Math.min(customDead.width, customDead.height);
                     let sH = Math.min(customDead.height, customDead.width);
                     bloodCtx.drawImage(customDead, 0, 0, sW, sH, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
-                    bloodCtx.fillStyle = 'rgba(15, 7, 0, 0.75)';
-                    bloodCtx.fillRect(-drawScale / 4, -drawScale / 4, drawScale / 2, drawScale / 2);
                 } else if (baseSprite) {
                     bloodCtx.drawImage(baseSprite, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
-                    bloodCtx.fillStyle = 'rgba(15, 7, 0, 0.75)';
-                    bloodCtx.fillRect(-drawScale / 4, -drawScale / 4, drawScale / 2, drawScale / 2);
+                }
+                
+                // Zamiast wielkiego czarnego kwadratu zasłaniającego skórkę, rysujemy subtelny popiół i drobiny sadzy (2x2 px) na ciele wroga
+                bloodCtx.fillStyle = '#1a0d00';
+                for (let i = 0; i < 12; i++) {
+                    let rx = Math.floor((Math.random() - 0.5) * 16 / 2) * 2;
+                    let ry = Math.floor((Math.random() - 0.5) * 16 / 2) * 2;
+                    bloodCtx.fillRect(rx, ry, 2, 2);
                 }
                 
                 bloodCtx.fillStyle = deathType === 'beam' ? '#00ffff' : '#ff5500';
