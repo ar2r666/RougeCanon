@@ -191,7 +191,7 @@ function draw() {
             if (c.deathType === 'flame' && c.animTimer !== undefined) {
                 let maxDuration = 3.5; // Zgodnie z instrukcją: długie dopalanie przez 3.5 sekundy
                 if (c.animTimer < maxDuration) {
-                    let fade = 1.0 - (c.animTimer / maxDuration);
+                    let fade = Math.max(0, Math.min(1, 1.0 - (c.animTimer / maxDuration)));
                     ctx.globalAlpha = fade;
                     
                     for (let i = 0; i < 6; i++) {
@@ -221,7 +221,7 @@ function draw() {
     // Dynamiczne, małe dogasające płomienie na ziemi osadzone nad czarnymi plamami wypalenia
     if (state.fuelPools && state.fuelPools.length > 0) {
         state.fuelPools.forEach((f, idx) => {
-            let fade = f.life / (f.maxLife || 1.5);
+            let fade = Math.max(0, Math.min(1, f.life / (f.maxLife || 1.5)));
             ctx.globalAlpha = fade;
             
             let px = Math.floor(f.x / 2) * 2;
