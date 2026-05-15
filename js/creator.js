@@ -988,6 +988,12 @@ function preloadHeroSkins() {
         }
     };
     enemyImg.src = 'img/enemy.png';
+    
+    const enemyDeadImg = new Image();
+    enemyDeadImg.onload = () => {
+        customSquadDesign.enemyDeadSkin = enemyDeadImg;
+    };
+    enemyDeadImg.src = 'img/enemy_dead.png';
 }
 
 // Uruchomienie preloadera przy starcie modułu

@@ -312,10 +312,18 @@ export class Enemy {
                 bloodCtx.translate(this.x, this.y + 4);
                 bloodCtx.rotate((Math.random() - 0.5) * 1.2);
                 let drawScale = this.type === 'boss' ? 48 : 32;
+                let customDead = (typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin) ? customSquadDesign.enemyDeadSkin : this.customImageSkin;
                 
-                if (baseSprite) {
+                if (customDead) {
+                    let fh = customDead.height;
+                    bloodCtx.drawImage(customDead, 0, 0, fh, fh, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
+                    bloodCtx.save();
+                    bloodCtx.globalCompositeOperation = 'source-atop';
+                    bloodCtx.fillStyle = 'rgba(15, 7, 0, 0.85)';
+                    bloodCtx.fillRect(-drawScale / 2, -drawScale / 2, drawScale, drawScale);
+                    bloodCtx.restore();
+                } else if (baseSprite) {
                     bloodCtx.drawImage(baseSprite, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
-                    // Optymalizacja: błyskawiczne nałożenie zwęglenia w trybie source-atop zamiast kosztownego przełączania potoku ctx.filter
                     bloodCtx.save();
                     bloodCtx.globalCompositeOperation = 'source-atop';
                     bloodCtx.fillStyle = 'rgba(15, 7, 0, 0.85)';
@@ -350,7 +358,12 @@ export class Enemy {
                 bloodCtx.translate(this.x, this.y + 4);
                 bloodCtx.rotate((Math.random() - 0.5) * 1.2);
                 let drawScale = this.type === 'boss' ? 48 : 32;
-                if (baseSprite) {
+                let customDead = (typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin) ? customSquadDesign.enemyDeadSkin : this.customImageSkin;
+                
+                if (customDead) {
+                    let fh = customDead.height;
+                    bloodCtx.drawImage(customDead, 0, 0, fh, fh, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
+                } else if (baseSprite) {
                     bloodCtx.drawImage(baseSprite, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
                 }
 
