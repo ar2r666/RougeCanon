@@ -49,14 +49,13 @@ export class Enemy {
         this.accessoryIdx = 0;
         this.customImageSkin = null;
 
-        // Wzorzec niestandardowy wroga z panelu Creator posiada bezwzględny priorytet
         if (customSquadDesign && customSquadDesign.enemy && customSquadDesign.enemy.isCustomized) {
             this.helmetIdx = customSquadDesign.enemy.helmetIdx;
             this.faceIdx = customSquadDesign.enemy.faceIdx;
             this.uniformIdx = customSquadDesign.enemy.uniformIdx;
             this.weaponIdx = customSquadDesign.enemy.weaponIdx;
             this.accessoryIdx = customSquadDesign.enemy.accessoryIdx;
-            this.customImageSkin = customSquadDesign.enemy.customImageSkin;
+            this.customImageSkin = this.type === 'standard' ? customSquadDesign.enemy.customImageSkin : ((customSquadDesign.enemyEliteSkin && customSquadDesign.enemyEliteSkin.complete && customSquadDesign.enemyEliteSkin.width > 0) ? customSquadDesign.enemyEliteSkin : customSquadDesign.enemy.customImageSkin);
         }
 
         // Zindywidualizowane parametry marszu
@@ -283,12 +282,12 @@ export class Enemy {
                 bloodCtx.translate(this.x, this.y + 4);
                 bloodCtx.rotate((Math.random() - 0.5) * 1.2);
                 let drawScale = this.type === 'boss' ? 48 : 32;
-                let customDead = (typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin && customSquadDesign.enemyDeadSkin.complete && customSquadDesign.enemyDeadSkin.width > 0) ? customSquadDesign.enemyDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null);
+                let isElite = this.type !== 'standard';
+                let customDead = isElite ? ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyEliteDeadSkin && customSquadDesign.enemyEliteDeadSkin.complete && customSquadDesign.enemyEliteDeadSkin.width > 0) ? customSquadDesign.enemyEliteDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null)) : ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin && customSquadDesign.enemyDeadSkin.complete && customSquadDesign.enemyDeadSkin.width > 0) ? customSquadDesign.enemyDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null));
                 
                 if (customDead && customDead.height > 0) {
                     let fh = customDead.height;
                     bloodCtx.drawImage(customDead, 0, 0, fh, fh, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
-                    // Optymalizacja: rysowanie półprzezroczystego zwęglenia w natywnym trybie source-over bez jakichkolwiek zmian globalCompositeOperation
                     bloodCtx.fillStyle = 'rgba(15, 7, 0, 0.75)';
                     bloodCtx.fillRect(-drawScale / 4, -drawScale / 4, drawScale / 2, drawScale / 2);
                 } else if (baseSprite) {
@@ -324,7 +323,8 @@ export class Enemy {
                 bloodCtx.translate(this.x, this.y + 4);
                 bloodCtx.rotate((Math.random() - 0.5) * 1.2);
                 let drawScale = this.type === 'boss' ? 48 : 32;
-                let customDead = (typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin && customSquadDesign.enemyDeadSkin.complete && customSquadDesign.enemyDeadSkin.width > 0) ? customSquadDesign.enemyDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null);
+                let isElite = this.type !== 'standard';
+                let customDead = isElite ? ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyEliteDeadSkin && customSquadDesign.enemyEliteDeadSkin.complete && customSquadDesign.enemyEliteDeadSkin.width > 0) ? customSquadDesign.enemyEliteDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null)) : ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin && customSquadDesign.enemyDeadSkin.complete && customSquadDesign.enemyDeadSkin.width > 0) ? customSquadDesign.enemyDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null));
                 
                 if (customDead && customDead.height > 0) {
                     let fh = customDead.height;

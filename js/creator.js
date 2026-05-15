@@ -984,7 +984,9 @@ function preloadHeroSkins() {
         customSquadDesign.enemy.customImageSkin = enemyImg;
         customSquadDesign.enemy.isCustomized = true;
         if (gameState && gameState.enemies) {
-            gameState.enemies.forEach(e => e.customImageSkin = enemyImg);
+            gameState.enemies.forEach(e => {
+                if (e.type === 'standard') e.customImageSkin = enemyImg;
+            });
         }
     };
     enemyImg.src = 'img/enemy.png';
@@ -994,6 +996,23 @@ function preloadHeroSkins() {
         customSquadDesign.enemyDeadSkin = enemyDeadImg;
     };
     enemyDeadImg.src = 'img/enemy_dead.png';
+    
+    const enemy2Img = new Image();
+    enemy2Img.onload = () => {
+        customSquadDesign.enemyEliteSkin = enemy2Img;
+        if (gameState && gameState.enemies) {
+            gameState.enemies.forEach(e => {
+                if (e.type !== 'standard') e.customImageSkin = enemy2Img;
+            });
+        }
+    };
+    enemy2Img.src = 'img/enemy2.png';
+    
+    const enemy2DeadImg = new Image();
+    enemy2DeadImg.onload = () => {
+        customSquadDesign.enemyEliteDeadSkin = enemy2DeadImg;
+    };
+    enemy2DeadImg.src = 'img/enemy2_dead.png';
 }
 
 // Uruchomienie preloadera przy starcie modułu
