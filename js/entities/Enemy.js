@@ -77,6 +77,7 @@ export class Enemy {
     }
 
     update(dt) {
+        if (this.hp <= 0) return; // Gwarancja przerwania aktualizacji martwych jednostek
         let oldX = this.x;
         let oldY = this.y;
 
@@ -349,6 +350,6 @@ export class Enemy {
         if (corpses.length > 150) corpses.shift();
 
         state.enemiesAlive--;
-        updateHUD();
+        // Eliminacja synchronicznego wymuszania przebudowy DOM (layout thrashing) w pętli kolizji
     }
 }

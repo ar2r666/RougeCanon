@@ -89,6 +89,7 @@ export class Soldier {
     }
 
     update(dt) {
+        if (this.hp <= 0) return;
         let oldX = this.x;
         let oldY = this.y;
 
