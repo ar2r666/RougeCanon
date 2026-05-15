@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cannon Rogues</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+    
+    <!-- Touch capture layer to prevent UI selection issues -->
+    <div id="joystickZone"></div>
+    <!-- Shadery ekranowe -->
+    <div id="fxLayer"></div>
+    <div id="scanlines"></div>
+
+    <!-- Panel Administratora (Drawer) -->
+    <button id="adminToggleBtn" onclick="toggleAdminPanel()">ADMIN</button>
+    <div id="adminPanel">
+        <div class="admin-header">DEBUG PANEL</div>
+        <button class="admin-btn" style="border-color: #8bde38; color: #8bde38; font-weight: bold;" onclick="showCreatorScreen()">KREATOR POSTACI</button>
+        <button class="admin-btn pause-btn" onclick="togglePause()">PAUZA / WZNIÓW</button>
+        <button class="admin-btn" onclick="adminSpawnRecruit()">+1 REKRUT</button>
+        <button class="admin-btn" onclick="adminSpawnDog()">+1 PIES</button>
+        <button class="admin-btn" onclick="adminSpawnCrate('PLASMA')">+1 SKRZYNKA (PLAZMA)</button>
+        <button class="admin-btn" onclick="adminSpawnCrate('FLAME')">+1 SKRZYNKA (OGIEŃ)</button>
+        <button class="admin-btn" onclick="adminGiveWeapon('SHOTGUN')">BROŃ: STRZELBA</button>
+        <button class="admin-btn" onclick="adminGiveWeapon('MACHINEGUN')">BROŃ: KARABIN MASZ.</button>
+        <button class="admin-btn" onclick="adminGiveWeapon('BAZOOKA')">BROŃ: BAZOOKA</button>
+        <button class="admin-btn" onclick="adminApplyUpgrade('damage')">+1 OBRAŻENIA</button>
+        <button class="admin-btn" onclick="adminApplyUpgrade('speed')">+20% PRĘDKOŚCI</button>
+        <button class="admin-btn" onclick="adminApplyUpgrade('heal')">LECZ SKŁAD</button>
+    </div>
+
+    <div id="uiLayer">
+        <div>
+            <div class="hud-text" id="waveDisplay">FALA 1</div>
+            <div class="hud-text" id="enemiesDisplay">WROGOWIE: 0</div>
+        </div>
+        <div>
+            <div class="hud-text" id="squadDisplay">SKŁAD: 3</div>
+        </div>
+    </div>
+
+    <div id="screens">
+        <!-- Main Menu -->
+        <div id="mainMenu">
+            <h1>CANNON<br>ROGUES</h1>
+            <button class="btn" onclick="startGame()">ROZPOCZNIJ MISJĘ</button>
+            <p style="color: #aaa; font-size: 10px; text-align: center; margin-top: 20px; line-height: 1.5;">
+                DOTKNIJ I PRZECIĄGNIJ ZNACZNIK<br><br>SKŁAD AUTOMATYCZNIE STRZELA
+            </p>
+        </div>
+
+        <!-- Upgrade Screen -->
+        <div id="upgradeScreen" class="hidden">
+            <h1 id="upgradeTitle" style="font-size: 20px; margin-bottom: 20px;">FALA POKONANA</h1>
+            <p id="upgradeSubtitle" style="color: white; font-size: 10px; margin-bottom: 30px;">WYBIERZ WSPARCIE</p>
+            <div id="upgradeOptions" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                <!-- Generated dynamically -->
+            </div>
+        </div>
+
+        <!-- Game Over -->
+        <div id="gameOverScreen" class="hidden">
+            <h1 style="color: #ff0000; text-shadow: 3px 3px 0 #8b0000;">POLEGŁ W AKCJI</h1>
+            <p id="survivalStats" style="color: white; font-size: 12px; margin-bottom: 30px; text-align: center; line-height: 1.5;"></p>
+            <button class="btn" onclick="resetGame()">SPRÓBUJ PONOWNIE</button>
+        </div>
+
+        <!-- Kreator Postaci Screen -->
+        <div id="creatorScreen" class="hidden" style="width: 100%; height: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #111810; pointer-events: auto;">
+            <div style="display: flex; width: 100%; max-width: 900px; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1 style="margin: 0; font-size: 18px; color: #8bde38;">KREATOR POSTACI</h1>
+                <button class="btn-action secondary" style="width: auto; padding: 10px 15px; margin: 0;" onclick="hideCreatorScreen()">ZAMKNIJ [X]</button>
+            </div>
+
+            <!-- Pasek wyboru postaci do edycji -->
+            <div style="width: 100%; max-width: 900px; background: #1a2617; padding: 15px; border: 2px solid #3c5e37; margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <span style="font-size: 10px; color: #8bde38;">EDYTUJESZ:</span>
+                <select id="creator-character-select" style="flex: 1; min-width: 200px; background: #111810; color: #fff; border: 1px solid #55a828; padding: 10px; font-family: 'Press Start 2P', monospace; font-size: 10px;" onchange="creatorSelectCharacter(this.value)">
+                    <option value="hero">Główny Bohater (Skład gracza)</option>
+                    <option value="enemy">Wróg (Przeciwnicy na mapie)</option>
+                    <option value="weapon">Broń (Wygląd uzbrojenia)</option>
+                    <option value="crate">Skrzynka (Zaopatrzenie na mapie)</option>
+                </select>
+                <button class="btn-action success" style="width: auto; padding: 12px 20px; margin: 0;" onclick="creatorApplyToSquad()">ZASTOSUJ W GRZE</button>
+            </div>
+
+            <div class="creator-layout">
+                <!-- Lewy Panel: Podgląd -->
+                <div class="preview-section">
+                    <div class="canvas-container">
+                        <canvas id="creator-previewCanvas" width="256" height="256"></canvas>
+                        <div class="creator-scanlines"></div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-action secondary" onclick="creatorRandomize()">LOSUJ</button>
+                        <button class="btn-action" onclick="creatorExportImage()">ZAPISZ PNG</button>
+                    </div>
+                    <div style="display: flex; width: 100%; gap: 10px; margin-top: 10px;">
+                        <label class="btn-action success" style="flex: 1; text-align: center; cursor: pointer; padding: 10px 2px; font-size: 9px; margin: 0;">
+                            + WCZYTAJ (PNG)
+                            <input type="file" id="creator-upload-skin" accept="image/png" style="display: none;" onchange="creatorUploadSkin(this)">
+                        </label>
+                        <button class="btn-action success" style="flex: 1; padding: 10px 2px; font-size: 9px; margin: 0;" onclick="creatorExportAnimationPng()">EKSPORT 4 KLATKI</button>
+                    </div>
+                </div>
+
+                <!-- Prawy Panel: Opcje i Edytor -->
+                <div class="controls-section">
+                    <div class="creator-tabs">
+                        <button class="creator-tab-btn active" onclick="creatorSwitchTab('templates')">SZABLONY</button>
+                        <button class="creator-tab-btn" onclick="creatorSwitchTab('editor')">RYSOWANIE</button>
+                        <button class="creator-tab-btn" onclick="creatorSwitchTab('animation')">ANIMACJA</button>
+                    </div>
+
+                    <!-- Zakładka 1: Szablony -->
+                    <div id="creator-tab-templates" class="creator-tab-content active">
+                        <div id="creator-panels"></div>
+                    </div>
+
+                    <!-- Wspólny obszar edytora (współdzielony przez RYSOWANIE i ANIMACJĘ) -->
+                    <div id="creator-shared-editor" class="creator-tab-content">
+                        <div class="editor-container">
+                            <div class="editor-toolbar">
+                                <select id="creator-editor-target" style="flex: 2; background: #111810; color: #8bde38; border: 2px solid #55a828; padding: 10px; font-family: 'Press Start 2P', monospace; font-size: 10px;" onchange="creatorOnTargetChange(this.value)">
+                                    <option value="helmet">Warstwa: KASK / HEŁM</option>
+                                    <option value="face">Warstwa: TWARZ / GŁOWA</option>
+                                    <option value="uniform">Warstwa: MUNDUR / KORPUS</option>
+                                    <option value="weapon">Warstwa: BROŃ</option>
+                                    <option value="accessory">Warstwa: DODATEK</option>
+                                </select>
+                                <button class="btn-action secondary" style="margin:0; flex: 1;" onclick="creatorUndo()">COFNIJ</button>
+                            </div>
+                            
+                            <!-- Blok informacyjny dla trybu Rysowania -->
+                            <div id="creator-mode-drawing-info" style="font-size: 9px; color: #a0a8ab; margin-top: 5px; text-align: center;">Rysujesz bazową teksturę (Klatka 1: STÓJ)</div>
+
+                            <!-- Panel osi czasu dla trybu Animacji -->
+                            <div id="creator-mode-animation-controls" style="display: none; width: 100%; background: #111810; border: 2px solid #2b6611; padding: 10px; flex-direction: column; gap: 8px; margin-top: 5px;">
+                                <div style="font-size: 9px; color: #8bde38; text-align: center;">Oś Czasu - Edytujesz Klatkę:</div>
+                                <div style="display: flex; gap: 5px; width: 100%;">
+                                    <button id="creator-frame-btn-0" class="btn-action success" style="padding: 10px 2px; font-size: 9px; margin:0;" onclick="creatorSetEditFrame(0)">1:STÓJ</button>
+                                    <button id="creator-frame-btn-1" class="btn-action secondary" style="padding: 10px 2px; font-size: 9px; margin:0;" onclick="creatorSetEditFrame(1)">2:KROK P</button>
+                                    <button id="creator-frame-btn-2" class="btn-action secondary" style="padding: 10px 2px; font-size: 9px; margin:0;" onclick="creatorSetEditFrame(2)">3:PRZEJ</button>
+                                    <button id="creator-frame-btn-3" class="btn-action secondary" style="padding: 10px 2px; font-size: 9px; margin:0;" onclick="creatorSetEditFrame(3)">4:KROK L</button>
+                                </div>
+                                <button class="btn-action secondary" style="width: 100%; padding: 8px; font-size: 9px; margin:0;" onclick="creatorCopyFrameToAll()">SKOPIUJ KONTURY DO WSZYSTKICH KLATEK</button>
+                                
+                                <div style="display: flex; width: 100%; gap: 5px; justify-content: center; align-items: center; background: #0b120a; border: 1px solid #1f4210; padding: 5px; margin-top: 5px;">
+                                    <span style="font-size: 8px; color: #a0a8ab;">PRZESUŃ:</span>
+                                    <button class="btn-action secondary" style="padding: 6px; font-size: 9px; margin:0; flex:1;" onclick="creatorShiftLayer('up')">↑ GÓRA</button>
+                                    <button class="btn-action secondary" style="padding: 6px; font-size: 9px; margin:0; flex:1;" onclick="creatorShiftLayer('down')">↓ DÓŁ</button>
+                                    <button class="btn-action secondary" style="padding: 6px; font-size: 9px; margin:0; flex:1;" onclick="creatorShiftLayer('left')">← LEWO</button>
+                                    <button class="btn-action secondary" style="padding: 6px; font-size: 9px; margin:0; flex:1;" onclick="creatorShiftLayer('right')">→ PRAWO</button>
+                                </div>
+
+                                <button class="btn-action success" style="width: 100%; padding: 10px; font-size: 9px; margin-top: 5px;" onclick="creatorAcceptComponentAnim()">ZAAKCEPTUJ RUCH ELEMENTU</button>
+                            </div>
+
+                            <div style="font-size: 10px; color: #8bde38; margin-top: 5px; margin-bottom: 5px;">PALETA KOLORÓW</div>
+                            <div id="creator-palette"></div>
+                            
+                            <div style="font-size: 10px; color: #8bde38; margin-top: 10px; margin-bottom: 5px;">TWOJE PŁÓTNO (16x16)</div>
+                            <div id="creator-pixel-grid"></div>
+
+                            <div style="display: flex; width: 100%; gap: 5px; margin-top: 10px;">
+                                <button class="btn-action success" style="flex: 2; padding: 10px 5px; font-size: 9px; margin: 0;" onclick="creatorSaveCustomElement()">ZAPISZ WZORZEC</button>
+                                <button class="btn-action secondary" style="flex: 1; padding: 10px 5px; font-size: 9px; margin: 0;" onclick="creatorClearLayer()">WYCZYŚĆ</button>
+                            </div>
+                            
+                            <!-- Zwieńczenie operacji dla trybu Animacji -->
+                            <div id="creator-mode-animation-footer" style="display: none; width: 100%; gap: 10px; margin-top: 15px; border-top: 1px solid #2b6611; padding-top: 15px;">
+                                <button class="btn-action success" style="flex: 1; padding: 12px; font-size: 9px; margin: 0;" onclick="creatorApplyToSquad()">ZASTOSUJ W GRZE</button>
+                                <button class="btn-action success" style="flex: 1; padding: 12px; font-size: 9px; margin: 0;" onclick="creatorExportAnimationPng()">EKSPORT 4 KLATKI</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wejście do aplikacji modułowej -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
