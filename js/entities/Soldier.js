@@ -194,10 +194,10 @@ export class Soldier {
                         }
                     }
                 } else if (this.weapon.type === 'spread') {
-                    // Zgodnie z dyspozycją: potężny wachlarz 7 śrucin tworzący ścianę ognia
-                    const spreadAngles = [-0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45];
+                    // Zgodnie z dyspozycją: skupiony wachlarz 7 śrucin o węższym kącie rażenia
+                    const spreadAngles = [-0.24, -0.16, -0.08, 0, 0.08, 0.16, 0.24];
                     for (let angOffset of spreadAngles) {
-                        let bAng = angle + angOffset + (Math.random() - 0.5) * 0.08;
+                        let bAng = angle + angOffset + (Math.random() - 0.5) * 0.05;
                         state.bullets.push(new Bullet(this, this.x, this.y, bAng, false, dmg, this.weapon));
                     }
                     playSound('sfx_shoot_shotgun');
@@ -593,12 +593,6 @@ export class Soldier {
             weaponLabel += ` (${Math.ceil(this.specialWeaponTimer)}s)`;
         }
         
-        if (this.isReloadingPump > 0) {
-            ctx.fillStyle = '#ffff00';
-            ctx.font = '7px "Press Start 2P"';
-            ctx.fillText('PRZEŁAD.', this.x, this.y - 32 - this.bobY);
-        }
-        
         if (weaponLabel) {
             ctx.fillStyle = 'white';
             ctx.font = '9px "Press Start 2P"';
@@ -606,6 +600,21 @@ export class Soldier {
             ctx.fillStyle = this.weapon.color;
             ctx.font = '7px "Press Start 2P"';
             ctx.fillText(weaponLabel, this.x, this.y - 15 - this.bobY);
+            
+            // Subtelny, estetyczny pasek przeładowania strzelby widoczny w drugiej sekundzie cyklu
+            if (this.weapon.type === 'spread' && this.lastShot > 0 && this.lastShot <= 1.0) {
+                let barW = 16;
+                let barH = 2;
+                let bx = this.x - barW / 2;
+                let by = this.y - 8 - this.bobY;
+                
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(bx, by, barW, barH);
+                
+                let prog = 1.0 - (this.lastShot / 1.0);
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(bx, by, Math.floor(barW * prog), barH);
+            }
         } else {
             ctx.fillStyle = 'white';
             ctx.font = '9px "Press Start 2P"';
