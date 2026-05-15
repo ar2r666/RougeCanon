@@ -170,14 +170,19 @@ export function adminSpawnDog() {
 }
 
 export function adminGiveWeapon(weaponKey) {
-    if (state.squad.length === 0) return;
+    if (!state.squad || state.squad.length === 0) return;
     let targetWeapon = WEAPONS[weaponKey] || WEAPONS.DEFAULT;
-    state.squad.forEach(soldier => {
-        soldier.weapon = targetWeapon;
-        soldier.specialWeaponTimer = 0; 
-        soldier.storedWeapon = null; 
-        soldier.updateSprites();
-    });
+    
+    // Zgodnie z wytycznymi: przydzielamy broń pojedynczo za każdym kliknięciem kolejnemu żołnierzowi
+    let targetSoldier = state.squad.find(s => s.weapon !== targetWeapon);
+    if (!targetSoldier) targetSoldier = state.squad[0];
+    
+    if (targetSoldier) {
+        targetSoldier.weapon = targetWeapon;
+        targetSoldier.specialWeaponTimer = 0; 
+        targetSoldier.storedWeapon = null; 
+        targetSoldier.updateSprites();
+    }
 }
 
 export function adminApplyUpgrade(statKey) {
