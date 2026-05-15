@@ -422,7 +422,7 @@ export class Soldier {
             
             if (isFlameAnimationEnabled && this.flameStreamDist > 15) {
                 let maxDist = this.flameStreamDist;
-                let step = 4; // Precyzyjny krok 4px budujący zwartą wiązkę w skali retro pixel art
+                let step = 2; // Precyzyjny krok 2px budujący zwartą wiązkę w skali retro 2x2 pixel art
                 
                 // Tworzenie małych dogasających płomieni na ziemi, które zostawiają po sobie trwałe, czarne plamy wypalenia
                 if (typeof bloodCtx !== 'undefined' && bloodCtx && Math.random() < 0.12) {
@@ -442,7 +442,6 @@ export class Soldier {
                 }
                 
                 // Warstwa 1: Zewnętrzna bryła (mniejsze piksele 2x2 px dla wyśrubowanej estetyki retro)
-                let step = 2;
                 ctx.fillStyle = '#ff3300';
                 ctx.globalAlpha = 0.85;
                 for (let d = 0; d < maxDist; d += step) {
