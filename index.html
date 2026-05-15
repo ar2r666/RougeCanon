@@ -5,6 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cannon Rogues</title>
     <link rel="stylesheet" href="css/style.css">
+    <script>
+        window.addEventListener('error', function(e) {
+            const hud = document.getElementById('errorConsoleHUD');
+            const log = document.getElementById('errorLogContent');
+            if (hud && log) {
+                hud.style.display = 'block';
+                const msg = e.message || e.error || "Syntax / Script Error";
+                const file = e.filename || "index";
+                const line = e.lineno || 0;
+                log.innerHTML += `<div style="color:#ffcc00; border-bottom:1px dashed #ffaa00; padding:5px 0;"><strong>${msg}</strong> (${file}:${line})</div>`;
+            }
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+            const hud = document.getElementById('errorConsoleHUD');
+            const log = document.getElementById('errorLogContent');
+            if (hud && log) {
+                hud.style.display = 'block';
+                log.innerHTML += `<div style="color:#ffcc00; border-bottom:1px dashed #ffaa00; padding:5px 0;"><strong>PROMISE ERROR:</strong> ${e.reason || e}</div>`;
+            }
+        });
+    </script>
 </head>
 <body>
 
