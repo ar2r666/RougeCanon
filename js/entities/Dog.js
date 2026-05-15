@@ -51,6 +51,7 @@ export class Dog {
         }
 
         if (this.lastBite > 0) this.lastBite -= dt;
+        if (this.barkCooldown > 0) this.barkCooldown -= dt;
 
         // --- WZAJEMNE ODPYCHANIE PSÓW (Flocking Separation) ---
         // Zapobiega niepotrzebnemu grupowaniu się w kłębek
@@ -106,8 +107,12 @@ export class Dog {
             if (bestEnemy) {
                 this.targetEnemy = bestEnemy;
                 this.dogState = 'ATTACK';
-                if (Math.random() < 0.5) playSound('sfx_dog_bark#1', 0.5);
-                else playSound('sfx_dog_bark#2', 0.5);
+                this.barkCooldown = this.barkCooldown || 0;
+                if (this.barkCooldown <= 0) {
+                    this.barkCooldown = 2.5 + Math.random() * 1.5; // 2.5..4 sekundy przerwy przed kolejnym szczeknięciem
+                    let variant = Math.floor(Math.random() * 3) + 1;
+                    playSound(`sfx_dog_bark#${variant}`, 0.12); // Dyskretne szczekanie cichsze od strzału podstawowego
+                }
             }
 
         } else if (this.dogState === 'ATTACK') {
@@ -122,10 +127,9 @@ export class Dog {
 
                 let distToEnemy = Math.hypot(this.targetEnemy.x - this.x, this.targetEnemy.y - this.y);
                 if (distToEnemy < 14 && this.lastBite <= 0) {
-                    // Zgodnie z wytycznymi: odgłos ataku oraz subtelny efekt krwi przy ugryzieniu
-                    playSound('sfx_dog_attack', 0.6);
+                    // Zgodnie z dyspozycją: cichy atak bez osobnego dźwięku, zachowując krwisty efekt ugryzienia
                     this.targetEnemy.takeDamage(2, { kills: 0 }); 
-                    createParticles(this.targetEnemy.x, this.targetEnemy.y, '#ff0000', 8, 50); // Krwisty efekt ugryzienia
+                    createParticles(this.targetEnemy.x, this.targetEnemy.y, '#ff0000', 8, 50); 
                     createParticles(this.targetEnemy.x, this.targetEnemy.y, '#8b0000', 6, 30); 
                     this.lastBite = 0.4; // Cooldown
 
