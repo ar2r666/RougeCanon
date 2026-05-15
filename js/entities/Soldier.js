@@ -214,7 +214,27 @@ export class Soldier {
             }
         }
 
-        if (this.lastShot > 0) this.lastShot -= dt;
+        if (this.lastShot > 0) {
+            let prevShot = this.lastShot;
+            this.lastShot -= dt;
+            
+            // Odwzorowanie 2-sekundowego cyklu strzelby (1s strzał, 2s przeładowanie)
+            if (this.weapon && this.weapon.type === 'spread') {
+                if (prevShot > 1.0 && this.lastShot <= 1.0) {
+                    this.isReloadingPump = 0.35; 
+                    if (typeof bloodCtx !== 'undefined' && bloodCtx) {
+                        bloodCtx.save();
+                        bloodCtx.fillStyle = '#cc0000';
+                        bloodCtx.fillRect(this.x + (this.facingLeft ? 4 : -4), this.y + 6, 3, 2);
+                        bloodCtx.fillStyle = '#ffd700';
+                        bloodCtx.fillRect(this.x + (this.facingLeft ? 7 : -7), this.y + 6, 1, 2);
+                        bloodCtx.restore();
+                    }
+                    createParticles(this.x + (this.facingLeft ? 5 : -5), this.y, '#ffd700', 3, 25);
+                }
+            }
+        }
+        if (this.isReloadingPump > 0) this.isReloadingPump -= dt;
         
         // Odliczanie 15-sekundowego ekwipunku ze skrzynek
         if (this.specialWeaponTimer > 0) {
@@ -318,6 +338,12 @@ export class Soldier {
                 recoilX = -Math.cos(aimAngle) * intensity;
                 recoilY = -Math.sin(aimAngle) * intensity;
             }
+        }
+        if (this.isReloadingPump > 0 && closestForAim) {
+            let pumpIntensity = Math.sin((this.isReloadingPump / 0.35) * Math.PI) * 3;
+            let aimAngle = Math.atan2(closestForAim.y - this.y, closestForAim.x - this.x);
+            recoilX += Math.cos(aimAngle) * pumpIntensity;
+            recoilY += Math.sin(aimAngle) * pumpIntensity;
         }
 
         // 1. Rysowanie ciała (z bufora czystego ciała bez wpieczonego karabinu)
@@ -567,12 +593,22 @@ export class Soldier {
             weaponLabel += ` (${Math.ceil(this.specialWeaponTimer)}s)`;
         }
         
+        if (this.isReloadingPump > 0) {
+            ctx.fillStyle = '#ffff00';
+            ctx.font = '7px "Press Start 2P"';
+            ctx.fillText('PRZEŁAD.', this.x, this.y - 32 - this.bobY);
+        }
+        
         if (weaponLabel) {
+            ctx.fillStyle = 'white';
+            ctx.font = '9px "Press Start 2P"';
             ctx.fillText(this.name, this.x, this.y - 25 - this.bobY);
             ctx.fillStyle = this.weapon.color;
             ctx.font = '7px "Press Start 2P"';
             ctx.fillText(weaponLabel, this.x, this.y - 15 - this.bobY);
         } else {
+            ctx.fillStyle = 'white';
+            ctx.font = '9px "Press Start 2P"';
             ctx.fillText(this.name, this.x, this.y - 18 - this.bobY);
         }
     }
