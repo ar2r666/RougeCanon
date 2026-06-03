@@ -213,210 +213,34 @@ h1 {
     font-weight: bold;
 }
 
-/* --- STYLE KREATORA POSTACI --- */
-.creator-layout {
-    display: flex;
-    flex-direction: row;
-    gap: 40px;
-    width: 100%;
-    max-width: 900px;
-    background: #1a2617;
-    padding: 20px;
-    border: 4px solid #3c5e37;
-    box-shadow: 10px 10px 0px #0a0f09;
-}
 
-@media (max-width: 768px) {
-    .creator-layout {
-        flex-direction: column;
-    }
-}
 
-.preview-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.canvas-container {
-    position: relative;
-    width: 256px;
-    height: 256px;
-    border: 4px solid #55a828;
-    background-color: #000;
-    box-shadow: inset 0 0 20px #000;
-}
-
-.canvas-container canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    image-rendering: pixelated;
-}
-
-.creator-scanlines {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none;
-    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
-    background-size: 100% 4px;
-    z-index: 10;
-}
-
-.action-buttons {
-    display: flex;
-    width: 100%;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.btn-action {
-    flex: 1;
-    background: #55a828;
-    border: 3px solid #8bde38;
-    color: #000;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
-    padding: 15px 5px;
-    cursor: pointer;
-    transition: transform 0.1s, background 0.2s;
-    text-transform: uppercase;
-}
-
-.btn-action:active { transform: scale(0.95); }
-.btn-action.secondary { background: #363b3d; border-color: #a0a8ab; color: #fff; }
-.btn-action.success { background: #8bde38; border-color: #fff; }
-
-.controls-section {
-    flex: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.creator-tabs {
-    display: flex;
-    gap: 10px;
-    width: 100%;
-}
-
-.creator-tab-btn {
-    flex: 1;
-    background: #111810;
+/* Sloty Doktryn Taktycznych (HUD) */
+.doctrine-slot {
+    background: rgba(22, 34, 20, 0.85);
     border: 2px solid #2b6611;
-    color: #a0a8ab;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 12px;
-    padding: 15px;
-    cursor: pointer;
-}
-
-.creator-tab-btn.active {
-    background: #2b6611;
-    color: #fff;
-    border-color: #8bde38;
-}
-
-.creator-tab-content { display: none; flex-direction: column; gap: 20px; }
-.creator-tab-content.active { display: flex; }
-
-.category-box {
-    background: #111810;
-    border: 2px solid #2b6611;
-    padding: 15px;
-}
-
-.cat-title {
-    font-size: 10px;
     color: #8bde38;
-    margin-bottom: 10px;
+    font-size: 9px;
+    padding: 8px 14px;
+    font-family: 'Press Start 2P', monospace;
+    text-shadow: 1px 1px 0 #000;
+    box-shadow: 4px 4px 0 #050804;
+    transition: 0.2s;
     display: flex;
     justify-content: space-between;
-}
-
-.cat-title .val { color: #fff; }
-
-.creator-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
-}
-
-.btn-grid {
-    background: #2a3d27;
-    border: 2px solid #3c5e37;
-    color: #a0a8ab;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
-    padding: 10px 0;
-    cursor: pointer;
-    transition: 0.1s;
-}
-
-.btn-grid:hover { background: #3c5e37; color: #fff; }
-.btn-grid.active { background: #8bde38; color: #000; border-color: #fff; }
-
-.editor-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     gap: 15px;
-    background: #111810;
-    border: 2px solid #2b6611;
-    padding: 15px;
-    width: 100%;
+    width: 240px;
 }
 
-.editor-toolbar {
-    display: flex;
-    width: 100%;
-    gap: 10px;
+.doctrine-slot.ready {
+    border-color: #ffff00;
+    color: #ffff00;
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.4), 4px 4px 0 #050804;
+    animation: pulse-ready 1.5s infinite alternate;
 }
 
-#creator-palette {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 5px;
-    width: 100%;
-}
-
-.swatch {
-    aspect-ratio: 1;
-    cursor: pointer;
-    border: 2px solid #111810;
-    box-shadow: 0 0 0 1px #3c5e37;
-    transition: transform 0.1s;
-}
-
-.swatch.active {
-    border-color: #fff;
-    transform: scale(1.1);
-    z-index: 2;
-}
-
-.swatch-eraser {
-    background: repeating-conic-gradient(#808080 0% 25%, #fff 0% 50%) 50% / 10px 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: red;
-    font-weight: bold;
-}
-
-#creator-pixel-grid {
-    display: grid;
-    grid-template-columns: repeat(16, 1fr);
-    width: 256px;
-    height: 256px;
-    background: #666666; /* szare tło */
-    border: 2px solid #3c5e37;
-    touch-action: none;
-}
-
-.pixel-cell {
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    cursor: crosshair;
+@keyframes pulse-ready {
+    0% { border-color: #a8a800; }
+    100% { border-color: #ffff00; }
 }
 

@@ -2,10 +2,10 @@ import { stats, state, customSquadDesign } from '../config.js';
 import { getSoldierSprites, getSoldierBodySprites, getWeaponSprite, bloodCtx } from '../sprites.js';
 import { createParticles } from './Particle.js';
 import { corpses } from './Soldier.js';
-import { updateHUD } from '../ui.js';
+import { updateHUD, chargeDoctrines } from '../ui.js';
 
 export class Enemy {
-    constructor(x, y) {
+    constructor(x, y, forcedType = null) {
         this.x = x;
         this.y = y;
         this.radius = 8;
@@ -14,10 +14,10 @@ export class Enemy {
         
         // Przypisanie zaawansowanych wariantów wrogów na podstawie fali i losowości
         let rand = Math.random();
-        if (state.wave > 5 && rand < 0.1) {
+        if (forcedType === 'boss' || (state.wave > 5 && rand < 0.1)) {
             this.type = 'boss';
-            this.hp = 25 + state.wave * 5;
-            this.speed = 45;
+            this.hp = forcedType === 'boss' ? (40 + state.wave * 10) : (25 + state.wave * 5);
+            this.speed = 50;
             this.radius = 12;
             this.helmetIdx = 13; // Pancerz Głowy Bossa
             this.faceIdx = 12;   // Twarz Elitarnego Cyborga
@@ -81,10 +81,16 @@ export class Enemy {
         let oldX = this.x;
         let oldY = this.y;
 
-        // Podążanie za najbliższym członkiem oddziału gracza
+        // Podążanie za najbliższym członkiem oddziału lub aktywnym wabikiem (Decoy)
         let closest = null;
         let minDist = Infinity;
-        for (let s of state.squad) {
+        
+        let potentialTargets = [...state.squad];
+        if (state.decoys && state.decoys.length > 0) {
+            potentialTargets = [...state.squad, ...state.decoys.filter(d => !d.isDestroyed)];
+        }
+        
+        for (let s of potentialTargets) {
             let d = Math.hypot(s.x - this.x, s.y - this.y);
             if (d < minDist) { minDist = d; closest = s; }
         }
@@ -301,6 +307,7 @@ export class Enemy {
             let deathType = shooter && shooter.weapon ? shooter.weapon.type : 'normal';
             this.die(deathType);
             if (shooter && shooter.kills !== undefined) shooter.kills++;
+            chargeDoctrines(); // Ładowanie Doktryn Taktycznych w locie
         }
     }
 
@@ -394,7 +401,7 @@ export class Enemy {
             bloodCtx.restore();
         }
 
-        corpses.push({ x: this.x, y: this.y, isScorched: isScorched, deathType: deathType, smokeTimer: isScorched ? 3.0 : 0, animTimer: 0 });
+        corpses.push({ x: this.x, y: this.y, isScorched: isScorched, deathType: deathType, smokeTimer: isScorched ? 3.0 : 0, animTimer: 0, seed: Math.random() * 1000 });
         if (corpses.length > 150) corpses.shift();
 
         state.enemiesAlive--;

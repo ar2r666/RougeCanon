@@ -4,6 +4,8 @@ import { createParticles } from './Particle.js';
 import { Bullet } from './Bullet.js';
 import { PlasmaBeam } from './PlasmaBeam.js';
 import { playSound } from '../sfx.js';
+import { Explosion } from './Explosion.js';
+import { Crate } from './Crate.js';
 
 const gunFireImg = new Image();
 gunFireImg.src = 'img/gun_fire.png';
@@ -48,6 +50,7 @@ export class Soldier {
         this.personalSwagger = Math.random() * Math.PI * 2;
         this.swaggerSpeed = 1.5 + Math.random() * 1.5;
         this.facingLeft = false;
+        this.aimAngle = this.facingLeft ? Math.PI : 0;
         
         this.accessoryIdx = 0;
         this.customImageSkin = null;
@@ -58,24 +61,87 @@ export class Soldier {
         this.storedWeapon = null;
         this.specialWeaponTimer = 0;
         
-        let targetCfg = customSquadDesign.hero;
-        if (targetCfg && targetCfg.isCustomized) {
-            this.helmetIdx = targetCfg.helmetIdx;
-            this.faceIdx = targetCfg.faceIdx;
-            this.uniformIdx = targetCfg.uniformIdx;
-            this.weaponIdx = targetCfg.weaponIdx;
-            this.accessoryIdx = targetCfg.accessoryIdx;
-            
-            let activeSkins = customSquadDesign.heroSkins ? customSquadDesign.heroSkins.filter(Boolean) : [];
-            if (activeSkins.length > 0) {
-                this.customImageSkin = activeSkins[state.squad.length % activeSkins.length];
+        let squadIndex = state.squad ? state.squad.length : 0;
+        let activeClasses = state.squad ? state.squad.map(s => s.soldierClass).filter(Boolean) : [];
+        
+        // Jeśli brak Dowódcy (np. na starcie), pierwszy zyskuje tę klasę
+        if (squadIndex === 0 && !activeClasses.includes('COMMANDER')) {
+            // DOWÓDCA (Squad Commander) - podlega modyfikacjom z kreatora ADMIN
+            this.soldierClass = 'COMMANDER';
+            let targetCfg = customSquadDesign.hero;
+            if (targetCfg && targetCfg.isCustomized) {
+                this.helmetIdx = targetCfg.helmetIdx;
+                this.faceIdx = targetCfg.faceIdx;
+                this.uniformIdx = targetCfg.uniformIdx;
+                this.weaponIdx = targetCfg.weaponIdx;
+                this.accessoryIdx = targetCfg.accessoryIdx;
+                
+                if (this.weaponIdx === 0) this.weapon = WEAPONS.DEFAULT; // M16 (Burst)
+                else if (this.weaponIdx === 1) this.weapon = WEAPONS.SHOTGUN; // Strzelba
+                else if (this.weaponIdx === 2) this.weapon = WEAPONS.RIFLE_GARAND; // M1 Garand (Semi-Auto)
+                else if (this.weaponIdx === 3) this.weapon = WEAPONS.HEAVY_SAW; // M249 SAW (Karabin Maszynowy)
+                else if (this.weaponIdx === 4) this.weapon = WEAPONS.RIFLE_SMG; // PM Uzi / Pistolet (Rapid)
+                else this.weapon = WEAPONS.DEFAULT;
+                
+                let activeSkins = customSquadDesign.heroSkins ? customSquadDesign.heroSkins.filter(Boolean) : [];
+                if (activeSkins.length > 0) {
+                    this.customImageSkin = activeSkins[0];
+                } else {
+                    this.customImageSkin = targetCfg.customImageSkin;
+                }
             } else {
-                this.customImageSkin = targetCfg.customImageSkin;
+                this.helmetIdx = 0;
+                this.faceIdx = 6; // Weteran (Broda)
+                this.uniformIdx = 0; // Zielony Kamuflaż
+                this.weapon = WEAPONS.DEFAULT;
             }
         } else {
-            this.helmetIdx = 0;
-            this.faceIdx = 10;
-            this.uniformIdx = 11;
+            // Wybór pierwszej brakującej klasy ze zbalansowanej wirtualnej talii (RNG draft protection)
+            let chosenClass = 'MEDIC';
+            if (!activeClasses.includes('MEDIC')) {
+                chosenClass = 'MEDIC';
+            } else if (!activeClasses.includes('ENGINEER')) {
+                chosenClass = 'ENGINEER';
+            } else if (!activeClasses.includes('SNIPER')) {
+                chosenClass = 'SNIPER';
+            } else if (!activeClasses.includes('HEAVY_GUNNER')) {
+                chosenClass = 'HEAVY_GUNNER';
+            } else {
+                // W razie posiadania już wszystkich, następny staje się kolejnym Heavy Gunnerem
+                chosenClass = 'HEAVY_GUNNER';
+            }
+            
+            this.soldierClass = chosenClass;
+            
+            if (chosenClass === 'MEDIC') {
+                // MEDYK (Medic) - PM Uzi, Czapka, Mundur Medyka, Plecak Radio
+                this.helmetIdx = 4;
+                this.faceIdx = 0;
+                this.uniformIdx = 4;
+                this.accessoryIdx = 5;
+                this.weapon = WEAPONS.RIFLE_SMG;
+            } else if (chosenClass === 'ENGINEER') {
+                // INŻYNIER (Engineer) - Strzelba, Hełm ONZ, Stalowy Pancerz, Tarcza
+                this.helmetIdx = 2;
+                this.faceIdx = 8;
+                this.uniformIdx = 6;
+                this.accessoryIdx = 6;
+                this.weapon = WEAPONS.SHOTGUN;
+            } else if (chosenClass === 'SNIPER') {
+                // SNAJPER (Sniper) - M1 Garand, Bandana, Czerń
+                this.helmetIdx = 3;
+                this.faceIdx = 4;
+                this.uniformIdx = 3;
+                this.accessoryIdx = 0;
+                this.weapon = WEAPONS.RIFLE_GARAND;
+            } else if (chosenClass === 'HEAVY_GUNNER') {
+                // HEAVY GUNNER (Ciężki Strzelec) - M249 SAW, Irokez, Pustynna, Pas z amunicją
+                this.helmetIdx = 7;
+                this.faceIdx = 8;
+                this.uniformIdx = 1;
+                this.accessoryIdx = 9;
+                this.weapon = WEAPONS.HEAVY_SAW;
+            }
         }
         
         this.updateSprites();
@@ -131,6 +197,16 @@ export class Soldier {
         }
         this.x += forceX * dt;
         this.y += forceY * dt;
+        
+        // Aplikacja knockbacku fizycznego na sojusznika (wyhamowanie w dżungli)
+        this.kbX = this.kbX || 0;
+        this.kbY = this.kbY || 0;
+        if (Math.abs(this.kbX) > 1 || Math.abs(this.kbY) > 1) {
+            this.x += this.kbX * dt;
+            this.y += this.kbY * dt;
+            this.kbX *= Math.pow(0.02, dt);
+            this.kbY *= Math.pow(0.02, dt);
+        }
 
         // Ograniczenie wyjścia poza pole strzału
         let centerRef = state.squad[0] || { x: state.camera.x, y: state.camera.y };
@@ -144,82 +220,164 @@ export class Soldier {
             this.y = centerRef.y + Math.sin(clampAngle) * maxAllowedDist;
         }
 
-        // Automatyczny ogień do wrogów oraz nienaruszonych skrzynek
-        let possibleTargets = [...state.enemies, ...(state.crates ? state.crates.filter(c => !c.isDestroyed) : [])];
-        if (this.lastShot <= 0 && possibleTargets.length > 0) {
-            let closest = null;
-            let minDist = this.weapon.type === 'beam' ? stats.range * 1.5 : (this.weapon.type === 'explosive' ? stats.range * 1.3 : stats.range);
-            for (let e of possibleTargets) {
-                let d = Math.hypot(e.x - this.x, e.y - this.y);
-                if (d < minDist) { minDist = d; closest = e; }
-            }
+        // Automatyczny ogień do wrogów, skrzynek, klatek z jeńcami oraz ufortyfikowanych magazynów wroga
+        let possibleTargets = [
+            ...state.enemies,
+            ...(state.crates ? state.crates.filter(c => !c.isDestroyed) : []),
+            ...(state.prisonerCages ? state.prisonerCages.filter(c => !c.isDestroyed) : []),
+            ...(state.enemyDepots ? state.enemyDepots.filter(d => !d.isDestroyed) : [])
+        ];
+        let closest = null;
+        let minDist = this.weapon.type === 'beam' ? stats.range * 1.5 : (this.weapon.type === 'explosive' ? stats.range * 1.3 : stats.range);
+        for (let e of possibleTargets) {
+            let d = Math.hypot(e.x - this.x, e.y - this.y);
+            if (d < minDist) { minDist = d; closest = e; }
+        }
 
-            if (closest) {
-                let angle = Math.atan2(closest.y - this.y, closest.x - this.x);
-                let fireRate = (stats.fireRate * this.weapon.fireRateMult) / 1000;
-                let dmg = stats.damage * this.weapon.damageMult;
+        // Płynny obrót w stronę celu
+        if (closest) {
+            let targetAngle = Math.atan2(closest.y - this.y, closest.x - this.x);
+            let diff = targetAngle - this.aimAngle;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            
+            let rotSpeed = this.weapon.type === 'flame' ? 8.5 : 32.0;
+            this.aimAngle += diff * rotSpeed * dt;
+            
+            while (this.aimAngle < -Math.PI) this.aimAngle += Math.PI * 2;
+            while (this.aimAngle > Math.PI) this.aimAngle -= Math.PI * 2;
+        } else {
+            // Płynny powrót do kierunku marszu, jeśli brak celu
+            let targetAngle = this.facingLeft ? Math.PI : 0;
+            let diff = targetAngle - this.aimAngle;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            this.aimAngle += diff * 5.0 * dt;
+        }
+
+        if (this.lastShot <= 0 && closest) {
+            let targetAngle = Math.atan2(closest.y - this.y, closest.x - this.x);
+            let aimDiff = targetAngle - this.aimAngle;
+            while (aimDiff < -Math.PI) aimDiff += Math.PI * 2;
+            while (aimDiff > Math.PI) aimDiff -= Math.PI * 2;
+            
+            // Poczekaj z pociągnięciem za spust, aż lufa zostanie wycelowana w stronę wroga (~14 stopni)
+            if (Math.abs(aimDiff) > 0.25) {
+                return;
+            }
+            
+            let angle = this.aimAngle;
+            let fireRate = (stats.fireRate * this.weapon.fireRateMult) / 1000;
+            if (state.passiveAmmoBeltActive) {
+                fireRate *= 0.8; // +25% reload speed (skrócenie o 20% interwału)
+            }
+            let dmg = stats.damage * this.weapon.damageMult;
+            
+            if (this.weapon.type === 'beam') {
+                let dirX = Math.cos(angle);
+                let dirY = Math.sin(angle);
+                let normX = -Math.sin(angle);
+                let normY = Math.cos(angle);
+                let shoulderY = this.y - this.bobY + ((this.animFrame === 1 || this.animFrame === 3) ? 3 : 2);
+                let startBeamX = this.x + dirX * 16 + normX * 3;
+                let startBeamY = shoulderY + dirY * 16 + normY * 3;
+                state.bullets.push(new PlasmaBeam(startBeamX, startBeamY, closest, dmg, this));
+            } else if (this.weapon.type === 'flame') {
+                playSound('sfx_shoot_fire', 0.28); // Podbicie głośności Miotacza Ognia
                 
-                if (this.weapon.type === 'beam') {
-                    let dirX = Math.cos(angle);
-                    let dirY = Math.sin(angle);
-                    let normX = -Math.sin(angle);
-                    let normY = Math.cos(angle);
-                    let shoulderY = this.y - this.bobY + ((this.animFrame === 1 || this.animFrame === 3) ? 3 : 2);
-                    let startBeamX = this.x + dirX * 16 + normX * 3;
-                    let startBeamY = shoulderY + dirY * 16 + normY * 3;
-                    state.bullets.push(new PlasmaBeam(startBeamX, startBeamY, closest, dmg, this));
-                } else if (this.weapon.type === 'flame') {
-                    playSound('sfx_shoot_fire', 0.28); // Podbicie głośności Miotacza Ognia
-                    
-                    // Stożkowe rażenie wrogów
-                    let flameRange = stats.range * 0.9;
-                    for (let e of state.enemies) {
-                        if (e.hp > 0) {
-                            let ed = Math.hypot(e.x - this.x, e.y - this.y);
-                            if (ed < flameRange) {
-                                let eAng = Math.atan2(e.y - this.y, e.x - this.x);
-                                let diff = Math.abs(eAng - angle);
-                                if (diff > Math.PI) diff = Math.PI * 2 - diff;
-                                if (diff < 0.45) {
-                                    e.takeDamage(dmg, this);
-                                    if (Math.random() < 0.25) {
-                                        createParticles(e.x, e.y, '#ff5500', 1, 15);
-                                    }
+                // Stożkowe rażenie wrogów, skrzynek, klatek i bunkrów w zasięgu lufy
+                let flameRange = stats.range * 0.9;
+                for (let e of possibleTargets) {
+                    if (e.hp > 0) {
+                        let ed = Math.hypot(e.x - this.x, e.y - this.y);
+                        if (ed < flameRange) {
+                            let eAng = Math.atan2(e.y - this.y, e.x - this.x);
+                            let diff = Math.abs(eAng - angle);
+                            if (diff > Math.PI) diff = Math.PI * 2 - diff;
+                            if (diff < 0.45) {
+                                e.takeDamage(dmg, this);
+                                if (Math.random() < 0.25) {
+                                    createParticles(e.x, e.y, '#ff5500', 1, 15);
                                 }
                             }
                         }
                     }
-                } else if (this.weapon.type === 'spread') {
-                    // Zgodnie z dyspozycją: ekstremalnie skupiony wachlarz 7 śrucin o zabójczym kącie rażenia
-                    const spreadAngles = [-0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15];
-                    for (let angOffset of spreadAngles) {
-                        let bAng = angle + angOffset + (Math.random() - 0.5) * 0.03;
-                        state.bullets.push(new Bullet(this, this.x, this.y, bAng, false, dmg, this.weapon));
-                    }
-                    playSound('sfx_shoot_shotgun');
-                    
-                    // Zgodnie z instrukcją: przeładowanie strzelby (wyrzut łuski, odrzut pump) następuje od razu po strzale
-                    this.isReloadingPump = 0.35; 
-                    if (typeof bloodCtx !== 'undefined' && bloodCtx) {
-                        bloodCtx.save();
-                        bloodCtx.fillStyle = '#cc0000';
-                        bloodCtx.fillRect(this.x + (this.facingLeft ? 4 : -4), this.y + 6, 3, 2);
-                        bloodCtx.fillStyle = '#ffd700';
-                        bloodCtx.fillRect(this.x + (this.facingLeft ? 7 : -7), this.y + 6, 1, 2);
-                        bloodCtx.restore();
-                    }
-                    createParticles(this.x + (this.facingLeft ? 5 : -5), this.y, '#ffd700', 3, 25);
-                } else {
-                    angle += (Math.random() - 0.5) * (this.weapon.type === 'rapid' ? 0.3 : 0.1); 
-                    state.bullets.push(new Bullet(this, this.x, this.y, angle, false, dmg, this.weapon));
-                    let vol = this.weapon.type === 'rapid' ? 0.15 : (this.weapon.type === 'explosive' ? 0.3 : 0.08);
-                    playSound(this.weapon.type === 'rapid' ? 'sfx_shoot_machinegun' : (this.weapon.type === 'explosive' ? 'sfx_shoot_bazooka' : 'sfx_shoot_default'), vol);
                 }
+            } else if (this.weapon.type === 'spread') {
+                // Zgodnie z dyspozycją: ekstremalnie skupiony wachlarz 7 śrucin o zabójczym kącie rażenia
+                const spreadAngles = [-0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15];
+                for (let angOffset of spreadAngles) {
+                    let bAng = angle + angOffset + (Math.random() - 0.5) * 0.03;
+                    state.bullets.push(new Bullet(this, this.x, this.y, bAng, false, dmg, this.weapon));
+                }
+                playSound('sfx_shoot_shotgun', 0.06);
                 
-                this.lastShot = fireRate;
-                if (this.weapon.type !== 'beam' && this.weapon.type !== 'flame') {
-                    createParticles(this.x + Math.cos(angle)*10, this.y + Math.sin(angle)*10, this.weapon.color, 1, 30);
+                // Zgodnie z instrukcją: przeładowanie strzelby (wyrzut łuski, odrzut pump) następuje od razu po strzale
+                this.isReloadingPump = 0.35; 
+                if (typeof bloodCtx !== 'undefined' && bloodCtx) {
+                    bloodCtx.save();
+                    bloodCtx.fillStyle = '#cc0000';
+                    bloodCtx.fillRect(this.x + (this.facingLeft ? 4 : -4), this.y + 6, 3, 2);
+                    bloodCtx.fillStyle = '#ffd700';
+                    bloodCtx.fillRect(this.x + (this.facingLeft ? 7 : -7), this.y + 6, 1, 2);
+                    bloodCtx.restore();
                 }
+                createParticles(this.x + (this.facingLeft ? 5 : -5), this.y, '#ffd700', 3, 25);
+            } else if (this.weapon.type === 'semi') {
+                // Półautomatyczny M1 Garand (Wolny, celny, potężny odrzut i particle łuski)
+                state.bullets.push(new Bullet(this, this.x, this.y, angle, false, dmg, this.weapon));
+                playSound('sfx_shoot_default', 0.4);
+                createParticles(this.x + Math.cos(angle)*12, this.y + Math.sin(angle)*12, '#ffff00', 2, 40);
+                
+                // Wyrzut łuski Garanda
+                if (typeof bloodCtx !== 'undefined' && bloodCtx) {
+                    bloodCtx.save();
+                    bloodCtx.fillStyle = '#ffd700';
+                    bloodCtx.fillRect(Math.floor((this.x + (this.facingLeft ? 6 : -6)) / 2) * 2, Math.floor((this.y + 6) / 2) * 2, 1, 2);
+                    bloodCtx.restore();
+                }
+            } else if (this.weapon.type === 'burst') {
+                // Karabin M16 strzelający seriami po 3 pociski w odstępach
+                let burstCount = 0;
+                let fireBurst = () => {
+                    if (burstCount < 3 && state.squad.includes(this) && this.hp > 0) {
+                        // Pobieramy aktualny kąt celowania, aby seria M16 płynnie podążała za obrotem lufy
+                        let currentAngle = this.aimAngle;
+                        let spreadAng = currentAngle + (Math.random() - 0.5) * 0.04;
+                        state.bullets.push(new Bullet(this, this.x, this.y, spreadAng, false, dmg * 0.8, this.weapon));
+                        playSound('sfx_shoot_m16', 0.22); // Dźwięk dedykowany M16
+                        createParticles(this.x + Math.cos(spreadAng)*10, this.y + Math.sin(spreadAng)*10, '#ffff00', 1, 25);
+                        burstCount++;
+                        setTimeout(fireBurst, 55); // Odstęp 55ms między strzałami w serii
+                    }
+                };
+                fireBurst();
+            } else if (this.weapon.type === 'rapid') {
+                // PM Uzi (Pistolet) lub M249 SAW
+                let spreadAng = angle + (Math.random() - 0.5) * 0.3;
+                state.bullets.push(new Bullet(this, this.x, this.y, spreadAng, false, dmg, this.weapon));
+                if (this.weapon === WEAPONS.RIFLE_SMG) {
+                    // PM Uzi (Pistolet) strzela szybką serią z lżejszym, bardziej dopasowanym dźwiękiem pistoletu
+                    playSound('sfx_shoot_default', 0.18);
+                } else {
+                    // M249 SAW strzela z ciężkim odgłosem karabinu maszynowego
+                    playSound('sfx_shoot_machinegun', 0.2);
+                }
+            } else if (this.weapon.type === 'fullauto') {
+                // FN FAL w pełni automatyczny z odczuwalnym rozrzutem kątowym (spread)
+                let spreadAng = angle + (Math.random() - 0.5) * 0.12;
+                state.bullets.push(new Bullet(this, this.x, this.y, spreadAng, false, dmg, this.weapon));
+                playSound('sfx_shoot_machinegun', 0.2);
+            } else {
+                angle += (Math.random() - 0.5) * 0.1; 
+                state.bullets.push(new Bullet(this, this.x, this.y, angle, false, dmg, this.weapon));
+                let vol = this.weapon.type === 'explosive' ? 0.3 : 0.08;
+                playSound(this.weapon.type === 'explosive' ? 'sfx_shoot_bazooka' : 'sfx_shoot_default', vol);
+            }
+            
+            this.lastShot = fireRate;
+            if (this.weapon.type !== 'beam' && this.weapon.type !== 'flame') {
+                createParticles(this.x + Math.cos(angle)*10, this.y + Math.sin(angle)*10, this.weapon.color, 1, 30);
             }
         }
 
@@ -312,38 +470,21 @@ export class Soldier {
         
         let recoilX = 0;
         let recoilY = 0;
-        let isEffectivelyFacingLeft = this.facingLeft;
-        let closestForAim = null;
-        let minDistAim = Infinity;
-        
-        let possibleAimTargets = [...state.enemies, ...(state.crates ? state.crates.filter(c => !c.isDestroyed) : [])];
-        for (let t of possibleAimTargets) {
-            if (t.hp > 0) {
-                let d = Math.hypot(t.x - this.x, t.y - this.y);
-                if (d < minDistAim) { minDistAim = d; closestForAim = t; }
-            }
-        }
-        
-        let maxAimDist = this.weapon && this.weapon.type === 'explosive' ? stats.range * 1.3 : stats.range * 1.5;
-        if (closestForAim && minDistAim < maxAimDist) {
-            isEffectivelyFacingLeft = closestForAim.x < this.x;
-        }
+        let isEffectivelyFacingLeft = Math.abs(this.aimAngle) > Math.PI / 2;
         
         if (this.lastShot > 0 && this.weapon) {
             let fireRate = (stats.fireRate * this.weapon.fireRateMult) / 1000;
             let timeSinceShot = fireRate - this.lastShot;
-            if (closestForAim && timeSinceShot < 0.08) {
+            if (timeSinceShot < 0.08) {
                 let intensity = 1.2 * (1 - timeSinceShot / 0.08);
-                let aimAngle = Math.atan2(closestForAim.y - this.y, closestForAim.x - this.x);
-                recoilX = -Math.cos(aimAngle) * intensity;
-                recoilY = -Math.sin(aimAngle) * intensity;
+                recoilX = -Math.cos(this.aimAngle) * intensity;
+                recoilY = -Math.sin(this.aimAngle) * intensity;
             }
         }
-        if (this.isReloadingPump > 0 && closestForAim) {
+        if (this.isReloadingPump > 0) {
             let pumpIntensity = Math.sin((this.isReloadingPump / 0.35) * Math.PI) * 3;
-            let aimAngle = Math.atan2(closestForAim.y - this.y, closestForAim.x - this.x);
-            recoilX += Math.cos(aimAngle) * pumpIntensity;
-            recoilY += Math.sin(aimAngle) * pumpIntensity;
+            recoilX += Math.cos(this.aimAngle) * pumpIntensity;
+            recoilY += Math.sin(this.aimAngle) * pumpIntensity;
         }
 
         // 1. Rysowanie ciała (z bufora czystego ciała bez wpieczonego karabinu)
@@ -378,10 +519,7 @@ export class Soldier {
             let shoulderY = this.y - this.bobY + ((this.animFrame === 1 || this.animFrame === 3) ? 3 : 2) + recoilY;
             ctx.translate(this.x + recoilX, shoulderY);
             
-            let rotAngle = isEffectivelyFacingLeft ? Math.PI : 0;
-            if (closestForAim) {
-                rotAngle = Math.atan2(closestForAim.y - shoulderY, closestForAim.x - (this.x + recoilX));
-            }
+            let rotAngle = this.aimAngle;
             
             ctx.rotate(rotAngle);
             if (Math.abs(rotAngle) > Math.PI / 2) {
@@ -400,10 +538,7 @@ export class Soldier {
             let shoulderY = this.y - this.bobY + ((this.animFrame === 1 || this.animFrame === 3) ? 3 : 2) + recoilY;
             ctx.translate(this.x + recoilX, shoulderY);
             
-            let rotAngle = isEffectivelyFacingLeft ? Math.PI : 0;
-            if (closestForAim) {
-                rotAngle = Math.atan2(closestForAim.y - shoulderY, closestForAim.x - (this.x + recoilX));
-            }
+            let rotAngle = this.aimAngle;
             
             ctx.rotate(rotAngle);
             if (Math.abs(rotAngle) > Math.PI / 2) {
@@ -429,8 +564,19 @@ export class Soldier {
                     let dropX = Math.floor((this.x + recoilX + Math.cos(worldAngle) * dropD + (Math.random() - 0.5) * 24) / 2) * 2;
                     let dropY = Math.floor((shoulderY + Math.sin(worldAngle) * dropD + (Math.random() - 0.5) * 24) / 2) * 2;
                     
-                    bloodCtx.fillStyle = '#0d0600';
-                    bloodCtx.fillRect(dropX - 2, dropY - 2, 4, 4);
+                    bloodCtx.save();
+                    bloodCtx.fillStyle = 'rgba(25, 15, 8, 0.7)';
+                    bloodCtx.fillRect(dropX - 1, dropY - 1, 2, 2);
+                    
+                    let fuelColors = ['rgba(45, 25, 10, 0.5)', 'rgba(80, 50, 15, 0.4)', 'rgba(15, 10, 5, 0.6)'];
+                    for (let j = 0; j < 4; j++) {
+                        let sx = dropX + Math.floor((Math.random() - 0.5) * 6);
+                        let sy = dropY + Math.floor((Math.random() - 0.5) * 6);
+                        bloodCtx.fillStyle = fuelColors[Math.floor(Math.random() * fuelColors.length)];
+                        bloodCtx.fillRect(sx, sy, 1, 1);
+                    }
+                    bloodCtx.restore();
+                    
                     if (!state.fuelPools) state.fuelPools = [];
                     if (state.fuelPools.length < 60) {
                         state.fuelPools.push({ x: dropX, y: dropY, life: 1.5, maxLife: 1.5 });
@@ -528,80 +674,73 @@ export class Soldier {
             let fireRate = (stats.fireRate * this.weapon.fireRateMult) / 1000;
             let timeSinceShot = fireRate - this.lastShot;
             if (timeSinceShot < 0.1) {
-                let closest = null;
-                let minDist = Infinity;
-                for (let t of state.enemies) {
-                    if (t.hp > 0) {
-                        let d = Math.hypot(t.x - this.x, t.y - this.y);
-                        if (d < minDist) { minDist = d; closest = t; }
-                    }
-                }
-                if (closest) {
-                    let aimAngle = Math.atan2(closest.y - this.y, closest.x - this.x);
-                    let isFacingLeft = closest.x < this.x;
-                    
-                    let tipX = this.x + (isFacingLeft ? -10 : 10) + recoilX;
-                    let tipY = this.y - this.bobY + 3 + recoilY;
-                    
-                    ctx.save();
-                    ctx.translate(tipX, tipY);
-                    ctx.rotate(aimAngle);
-                    
-                    let fh = gunFireImg.height;
-                    let totalFrames = Math.max(1, Math.round(gunFireImg.width / fh));
-                    if (totalFrames < 2) totalFrames = 6;
-                    
-                    let fw = Math.floor(gunFireImg.width / totalFrames);
-                    let fIdx = Math.floor((timeSinceShot / 0.1) * totalFrames) % totalFrames;
-                    
-                    let drawH = 20;
-                    let drawW = fw * (drawH / fh);
-                    
-                    ctx.imageSmoothingEnabled = false;
-                    ctx.drawImage(gunFireImg, fIdx * fw, 0, fw, fh, 0, -drawH / 2, drawW, drawH);
-                    ctx.restore();
-                }
+                let isFacingLeft = Math.abs(this.aimAngle) > Math.PI / 2;
+                
+                let tipX = this.x + (isFacingLeft ? -10 : 10) + recoilX;
+                let tipY = this.y - this.bobY + 3 + recoilY;
+                
+                ctx.save();
+                ctx.translate(tipX, tipY);
+                ctx.rotate(this.aimAngle);
+                
+                let fh = gunFireImg.height;
+                let totalFrames = Math.max(1, Math.round(gunFireImg.width / fh));
+                if (totalFrames < 2) totalFrames = 6;
+                
+                let fw = Math.floor(gunFireImg.width / totalFrames);
+                let fIdx = Math.floor((timeSinceShot / 0.1) * totalFrames) % totalFrames;
+                
+                let drawH = 20;
+                let drawW = fw * (drawH / fh);
+                
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(gunFireImg, fIdx * fw, 0, fw, fh, 0, -drawH / 2, drawW, drawH);
+                ctx.restore();
             }
         }
 
-        // Etykieta nazwy i uzbrojenia
+        // Etykieta nazwy
         ctx.fillStyle = 'white';
         ctx.font = '9px "Press Start 2P"'; 
         ctx.textAlign = 'center';
+        ctx.fillText(this.name, this.x, this.y - 24 - this.bobY);
         
-        let weaponLabel = this.weapon.name !== 'Karabin' ? `[${this.weapon.name}]` : '';
-        if (this.specialWeaponTimer > 0) {
-            weaponLabel += ` (${Math.ceil(this.specialWeaponTimer)}s)`;
+        // Renderowanie 3-segmentowego paska HP (matryca 2x2 piksele) bezpośrednio pod imieniem
+        let blockW = 4;
+        let blockH = 2;
+        let gap = 2;
+        let startX = this.x - (blockW * 3 + gap * 2) / 2;
+        let hpY = this.y - 19 - this.bobY;
+        
+        for (let i = 0; i < 3; i++) {
+            ctx.fillStyle = (i < this.hp) ? '#39ff14' : '#ff0000'; // Neonowy zielony / czerwony
+            ctx.fillRect(Math.floor(startX + i * (blockW + gap)), Math.floor(hpY), blockW, blockH);
         }
         
-        if (weaponLabel) {
-            ctx.fillStyle = 'white';
-            ctx.font = '9px "Press Start 2P"';
-            ctx.fillText(this.name, this.x, this.y - 25 - this.bobY);
-            ctx.fillStyle = this.weapon.color;
-            ctx.font = '7px "Press Start 2P"';
-            ctx.fillText(weaponLabel, this.x, this.y - 15 - this.bobY);
+        // Pasek przeładowania strzelby widoczny przez cały cykl od razu po strzale
+        if (this.weapon.type === 'spread' && this.lastShot > 0) {
+            let barW = 16;
+            let barH = 2;
+            let bx = this.x - barW / 2;
+            let by = this.y - 8 - this.bobY;
             
-            // Pasek przeładowania strzelby widoczny przez cały 2-sekundowy cykl od razu po strzale
-            if (this.weapon.type === 'spread' && this.lastShot > 0) {
-                let barW = 16;
-                let barH = 2;
-                let bx = this.x - barW / 2;
-                let by = this.y - 8 - this.bobY;
-                
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.fillRect(bx, by, barW, barH);
-                
-                let fireInterval = (stats.fireRate * this.weapon.fireRateMult) / 1000; 
-                let prog = Math.max(0, Math.min(1, 1.0 - (this.lastShot / fireInterval)));
-                ctx.fillStyle = '#ffff00';
-                ctx.fillRect(bx, by, Math.floor(barW * prog), barH);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(bx, by, barW, barH);
+            
+            let fireInterval = (stats.fireRate * this.weapon.fireRateMult) / 1000; 
+            if (state.passiveAmmoBeltActive) {
+                fireInterval *= 0.8;
             }
-        } else {
-            ctx.fillStyle = 'white';
-            ctx.font = '9px "Press Start 2P"';
-            ctx.fillText(this.name, this.x, this.y - 18 - this.bobY);
+            let prog = Math.max(0, Math.min(1, 1.0 - (this.lastShot / fireInterval)));
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(bx, by, Math.floor(barW * prog), barH);
         }
+    }
+
+    applyKnockback(kx, ky) {
+        if (state.passiveShrapnelArmorActive) return; // 100% odporności na knockback z pasywu Szrapnelowe Pancerze!
+        this.kbX = (this.kbX || 0) + kx;
+        this.kbY = (this.kbY || 0) + ky;
     }
 
     takeDamage(amount) {
@@ -647,7 +786,18 @@ export class Soldier {
             bloodCtx.restore();
         }
 
-        corpses.push({ x: this.x, y: this.y });
+        corpses.push({ x: this.x, y: this.y, seed: Math.random() * 1000 });
         if (corpses.length > 150) corpses.shift();
+        
+        // Pasyw Martyrdom (Eksplozywny Odwet): Wybuch + 50% szansy na zrzut Skrzynki Zaopatrzenia
+        if (state.passiveMartyrdomActive) {
+            state.explosions.push(new Explosion(this.x, this.y, 100, 250, this)); // Wybuch 250 DMG
+            
+            if (Math.random() < 0.5) {
+                if (!state.crates) state.crates = [];
+                state.crates.push(new Crate(this.x, this.y));
+                console.warn("Martyrdom zrzucił Skrzynkę Zaopatrzenia w miejscu zgonu!");
+            }
+        }
     }
 }

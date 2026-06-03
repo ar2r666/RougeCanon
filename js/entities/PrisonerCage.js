@@ -81,7 +81,7 @@ export class PrisonerCage {
         const rx = 18;
         const ry = 9;
         const cx = this.x;
-        const cy = this.y + 22;
+        const cy = this.y + 33;
         for (let dy = -ry; dy <= ry; dy += 2) {
             let maxDx = rx * Math.sqrt(Math.max(0, 1 - (dy * dy) / (ry * ry)));
             let maxDxP = Math.floor(maxDx / 2) * 2;

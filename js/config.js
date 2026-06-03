@@ -177,17 +177,21 @@ export const CATEGORY_NAMES = {
 export const NAMES = ['Jools', 'Jops', 'Stoo', 'RJ', 'Ubik', 'CJ', 'Biker', 'Phil', 'Matt', 'Rich', 'Mike', 'Rob'];
 
 export const WEAPONS = {
-    DEFAULT: { name: 'Karabin', fireRateMult: 1, damageMult: 1, color: '#ffff00', type: 'normal', visualIdx: 0 },
+    DEFAULT: { name: 'Karabin M16', fireRateMult: 1.0, damageMult: 1.0, color: '#ffff00', type: 'burst', visualIdx: 0 }, // Domyślny karabin (seria Burst M16)
+    RIFLE_GARAND: { name: 'M1 Garand', fireRateMult: 1.8, damageMult: 2.5, color: '#ffea00', type: 'semi', visualIdx: 2 }, // Karabin wyborowy (wolny, potężny)
+    RIFLE_FAL: { name: 'FN FAL', fireRateMult: 0.32, damageMult: 0.85, color: '#ffd700', type: 'fullauto', visualIdx: 0 }, // Karabin bojowy (automatyczny, rozrzut)
+    RIFLE_SMG: { name: 'PM Uzi', fireRateMult: 0.25, damageMult: 0.6, color: '#ffeedd', type: 'rapid', visualIdx: 4 }, // SMG Medyka polowego
+    HEAVY_SAW: { name: 'M249 SAW', fireRateMult: 0.12, damageMult: 0.85, color: '#ffdd00', type: 'rapid', visualIdx: 3 }, // Ciężka broń Heavy Gunnera
     SHOTGUN: { name: 'Strzelba', fireRateMult: 1.5, damageMult: 2.0, color: '#ffaa00', type: 'spread', visualIdx: 1 }, // Błyskawiczne przeładowanie (1.2s przy bazowym 800ms)
-    MACHINEGUN: { name: 'Karabin Masz.', fireRateMult: 0.12, damageMult: 0.75, color: '#ffdd00', type: 'rapid', visualIdx: 3 },
     BAZOOKA: { name: 'Bazooka', fireRateMult: 3.0, damageMult: 4, color: '#ff5500', type: 'explosive', visualIdx: 5 },
     SPECIAL_PLASMA: { name: 'Plazma', fireRateMult: 0.35, damageMult: 3, color: '#00ffff', type: 'beam', visualIdx: 10 },
-    SPECIAL_FLAMETHROWER: { name: 'Miotacz Ognia', fireRateMult: 0.05, damageMult: 1.5, color: '#ff4500', type: 'flame', visualIdx: 7 }
+    SPECIAL_FLAMETHROWER: { name: 'Miotacz Ognia', fireRateMult: 0.05, damageMult: 1.5, color: '#ff4500', type: 'flame', visualIdx: 7 },
+    SPECIAL_AIRSTRIKE: { name: 'Nalot (Spacja)', fireRateMult: 1, damageMult: 1, color: '#ff3300', type: 'airstrike', visualIdx: 13 }
 };
 
 // --- WSPÓŁDZIELONY STAN GRY (Central State) ---
 export const stats = {
-    maxSquad: 3,
+    maxSquad: 4,
     damage: 1,
     fireRate: 800, // ms between shots
     range: 200,
@@ -199,11 +203,12 @@ export const customSquadDesign = {
     hero: {
         name: 'Główny Bohater',
         helmetIdx: 0,
-        faceIdx: 10,
-        uniformIdx: 11,
+        faceIdx: 1,        // head_2
+        uniformIdx: 3,      // uniform_4
+        weaponIdx: 2,      // weapon_3
         accessoryIdx: 0,
         customImageSkin: null,
-        isCustomized: false
+        isCustomized: true
     },
     enemy: {
         name: 'Wróg',
@@ -236,6 +241,20 @@ export const state = {
     explosions: [],
     crates: [],
     crateSpawnTimer: 15,
+    prisonerCages: [], // Klatki z jeńcami do ocalenia (fale 3, 6, 9...)
+    enemyDepots: [], // Magazyny wroga do szturmu przy pełnym składzie
+    pendingLevelUp: false, // Czy oczekuje wybór awansu żołnierza
+    tacticalDoctrines: [], // Ekwipunek Doktryn Taktycznych (zbierane przez gracza)
+    decoys: [], // Aktywne wabiki (Decoys) na polu walki
     companions: [], // Towarzysze wybiegający poza okrąg (np. Psy)
+    airstrikeTimer: 0,
+    airstrikeBombTimer: 0,
+    airstrikeBombs: [],
+    
+    // Flagi aktywnych globalnych pasywów drużyny
+    passiveShrapnelArmorActive: false, // Szrapnelowe pancerze (brak knockbacku, -100% AoE dmg)
+    passiveAmmoBeltActive: false,      // Pas z Amunicją (+25% reload speed)
+    passiveMartyrdomActive: false,     // Martyrdom (wybuch + 50% skrzynka)
+    
     isPaused: false // Flaga wstrzymania aktualizacji logiki (aktywna pauza)
 };

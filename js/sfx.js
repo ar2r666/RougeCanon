@@ -83,7 +83,7 @@ export function playSound(soundKey, volume = 0.25) {
     // Natychmiastowy Fallback do tradycyjnego API, jeśli Web Audio buforuje w tle
     try {
         if (soundCache[soundKey] === undefined) {
-            const audio = new Audio(`sounds/${soundKey}.mp3`);
+            const audio = new Audio(`Sounds/${soundKey}.mp3`);
             audio.onerror = () => { soundCache[soundKey] = null; };
             soundCache[soundKey] = audio;
         }

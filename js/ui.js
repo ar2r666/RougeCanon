@@ -1,6 +1,9 @@
-import { state, stats, WEAPONS } from './config.js';
+import { state, stats, WEAPONS, customSquadDesign } from './config.js';
 import { Soldier, clearCorpses } from './entities/Soldier.js';
 import { Dog } from './entities/Dog.js';
+import { PrisonerCage } from './entities/PrisonerCage.js';
+import { EnemyDepot } from './entities/EnemyDepot.js';
+import { Enemy } from './entities/Enemy.js';
 import { clearBloodCanvas } from './sprites.js';
 
 export function spawnSquad() {
@@ -17,11 +20,50 @@ export function startWave() {
     state.gameState = 'PLAY';
     document.getElementById('screens').classList.add('hidden');
     document.getElementById('upgradeScreen').classList.add('hidden');
+    
+    // Generowanie klatki z jeńcem co 3 poziomy przy niepełnym składzie (< 4 żołnierzy)
+    state.prisonerCages = [];
+    state.enemyDepots = [];
+    if (state.wave % 3 === 0) {
+        let leader = state.squad[0] || { x: state.camera.x, y: state.camera.y };
+        let spawnAng = Math.random() * Math.PI * 2;
+        
+        if (state.squad.length < 4) {
+            let spawnDist = 350 + Math.random() * 100; // 350-450 px od Dowódcy
+            let cx = leader.x + Math.cos(spawnAng) * spawnDist;
+            let cy = leader.y + Math.sin(spawnAng) * spawnDist;
+            cx = Math.max(400, Math.min(11600, cx));
+            cy = Math.max(400, Math.min(11600, cy));
+            
+            state.prisonerCages.push(new PrisonerCage(cx, cy));
+        } else {
+            // EVENT Szturmu na Magazyn (Squad Size = 4) - Spawnowanie magazynu wroga i bossa
+            let spawnDist = 400 + Math.random() * 100; // Dalej dla misji taktycznej
+            let cx = leader.x + Math.cos(spawnAng) * spawnDist;
+            let cy = leader.y + Math.sin(spawnAng) * spawnDist;
+            cx = Math.max(500, Math.min(11500, cx));
+            cy = Math.max(500, Math.min(11500, cy));
+            
+            // Spawnowanie Magazynu i pilnującego go gigantycznego Bossa
+            state.enemyDepots.push(new EnemyDepot(cx, cy));
+            
+            // Zrzucenie Boss-Mutanta tuż obok Magazynu (zwiększamy HP wroga-bossa)
+            let boss = new Enemy(cx + 20, cy + 20, 'boss');
+            state.enemies.push(boss);
+            state.enemiesAlive++; // Dodanie do puli celów fali
+            
+            // Powiadomienie radiowe
+            console.warn("Szturm na Magazyn Wroga! Zniszcz ufortyfikowany betonowy bunkier i pokonaj Bossa!");
+        }
+    }
+    
     updateHUD();
 }
 
 const UPGRADES = [
-    { name: "Nowy Rekrut", desc: "+1 Członek Składu", apply: () => { stats.maxSquad++; state.squad.push(new Soldier(state.camera.x, state.camera.y)); } },
+    { name: "Pas z Amunicją", desc: "+25% szybszego przeładowania całego składu", apply: () => { state.passiveAmmoBeltActive = true; } },
+    { name: "Eksplozywny Odwet", desc: "Granat po zgonie weterana + 50% szans na skrzynię", apply: () => { state.passiveMartyrdomActive = true; } },
+    { name: "Szrapnelowe Pancerze", desc: "Redukcja 100% AoE z kamikadze i brak odrzutu", apply: () => { state.passiveShrapnelArmorActive = true; } },
     { name: "Pies Bojowy", desc: "Atakuje cele poza okręgiem", apply: () => { state.companions.push(new Dog(state.camera.x, state.camera.y)); } },
     { name: "Ciężka Amunicja", desc: "+1 Obrażenia", apply: () => stats.damage++ },
     { name: "Adrenalina", desc: "+20% Prędkości", apply: () => stats.speed *= 1.2 },
@@ -38,14 +80,41 @@ export function showUpgrades() {
     let optionsDiv = document.getElementById('upgradeOptions');
     optionsDiv.innerHTML = '';
     
-    // Co 3 fale oferujemy specjalną broń
+    // Awans poziomu (Level Up) po szturmie na Magazyn
+    if (state.pendingLevelUp && state.squad.length > 0) {
+        document.getElementById('upgradeTitle').innerText = "ZGLISZCZA MAGAZYNU";
+        document.getElementById('upgradeSubtitle').innerText = "WYBIERZ SPECJALISTĘ DO AWANSU";
+        
+        state.squad.forEach(soldier => {
+            let btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerHTML = `AWANSUJ: ${soldier.name} [${soldier.soldierClass || 'REKRUT'}]<div class="upgrade-desc">+1 Max HP, +20% Szybkostrzelności, Awans na Oficera!</div>`;
+            btn.onclick = () => {
+                soldier.maxHp = (soldier.maxHp || 3) + 1;
+                soldier.hp = soldier.maxHp; // Pełne leczenie przy awansie
+                soldier.baseDamage = (soldier.baseDamage || 1) + 1;
+                
+                // Wizualny awans na Oficera (Czapka oficerska = index 5)
+                soldier.helmetIdx = 5;
+                soldier.updateSprites();
+                
+                state.pendingLevelUp = false;
+                state.wave++;
+                startWave();
+            };
+            optionsDiv.appendChild(btn);
+        });
+        return;
+    }
+    
+    // Co 3 fale oferujemy specjalną broń (zrzut)
     if (state.wave % 3 === 0 && state.squad.length > 0) {
         document.getElementById('upgradeTitle').innerText = "ZRZUT ZAOPATRZENIA";
         document.getElementById('upgradeSubtitle').innerText = "PRZYDZIEL NOWĄ BROŃ";
         
         // Wybierz do 3 losowych żyjących żołnierzy
         let randomSoldiers = [...state.squad].sort(() => 0.5 - Math.random()).slice(0, 3);
-        let availableWeapons = [WEAPONS.SHOTGUN, WEAPONS.MACHINEGUN, WEAPONS.BAZOOKA];
+        let availableWeapons = [WEAPONS.SHOTGUN, WEAPONS.HEAVY_SAW, WEAPONS.BAZOOKA];
         
         randomSoldiers.forEach(soldier => {
             let randomWeapon = availableWeapons[Math.floor(Math.random() * availableWeapons.length)];
@@ -112,11 +181,47 @@ export function updateHUD() {
         squadEl.innerText = `SKŁAD: ${state.squad.length}`;
         lastDisplayedSquad = state.squad.length;
     }
+    
+    // Dynamiczna aktualizacja slotów Doktryn Taktycznych w HUD
+    let doctrinesEl = document.getElementById('doctrinesDisplay');
+    if (doctrinesEl) {
+        doctrinesEl.innerHTML = '';
+        if (state.tacticalDoctrines && state.tacticalDoctrines.length > 0) {
+            state.tacticalDoctrines.forEach((doc, idx) => {
+                let div = document.createElement('div');
+                let isReady = doc.charge >= 100;
+                div.className = `doctrine-slot${isReady ? ' ready' : ''}`;
+                
+                let chargeText = isReady ? 'GOTOWA' : `${Math.floor(doc.charge)}%`;
+                div.innerHTML = `<span>[${idx + 1}] ${doc.name.toUpperCase()}</span> <span>${chargeText}</span>`;
+                doctrinesEl.appendChild(div);
+            });
+        } else {
+            let div = document.createElement('div');
+            div.className = 'doctrine-slot';
+            div.innerHTML = '<span>BRAK DOKTRYN</span>';
+            doctrinesEl.appendChild(div);
+        }
+    }
+}
+
+export function chargeDoctrines() {
+    if (!state.tacticalDoctrines || state.tacticalDoctrines.length === 0) return;
+    
+    // +2.5% ładunku za każdego zabitego wroga
+    let gain = 2.5;
+    state.tacticalDoctrines.forEach(doc => {
+        if (doc.charge < 100) {
+            doc.charge = Math.min(100, doc.charge + gain);
+        }
+    });
+    
+    updateHUD();
 }
 
 export function startGame() {
     state.wave = 1;
-    Object.assign(stats, { maxSquad: 3, damage: 1, fireRate: 800, range: 180, speed: 100, bulletSpeed: 300 });
+    Object.assign(stats, { maxSquad: 1, damage: 1, fireRate: 800, range: 180, speed: 100, bulletSpeed: 300 });
     clearBloodCanvas();
     clearCorpses();
     state.camera.x = 6000;
@@ -128,6 +233,25 @@ export function startGame() {
     state.particles = [];
     state.explosions = [];
     state.companions = [];
+    state.airstrikeTimer = 0;
+    state.airstrikeBombTimer = 0;
+    state.airstrikeBombs = [];
+    state.prisonerCages = [];
+    state.enemyDepots = [];
+    state.decoys = [];
+    state.pendingLevelUp = false;
+    
+    // Reset flag pasywów drużyny na start misji
+    state.passiveShrapnelArmorActive = false;
+    state.passiveAmmoBeltActive = false;
+    state.passiveMartyrdomActive = false;
+    
+    // Domyślne Doktryny Taktyczne na start misji do testowania pod klawiszami [1] i [2]
+    state.tacticalDoctrines = [
+        { name: 'Nalot Dywanowy', type: 'airstrike', charge: 35 }, // Start z lekkim ładunkiem
+        { name: 'Wabik Decoy', type: 'decoy', charge: 60 }
+    ];
+    
     spawnSquad();
     startWave();
 }
@@ -193,6 +317,38 @@ export function adminApplyUpgrade(statKey) {
     }
 }
 
+export function adminGiveAirstrike() {
+    if (!state.squad || state.squad.length === 0) return;
+    let targetSoldier = state.squad.find(s => !s.hasAirstrike);
+    if (!targetSoldier) targetSoldier = state.squad[0];
+    if (targetSoldier) {
+        targetSoldier.hasAirstrike = true;
+        targetSoldier.accessoryIdx = 5; // Radio plecak
+        targetSoldier.updateSprites();
+    }
+}
+
+export function adminUploadSkin(inputEl) {
+    const file = inputEl.files[0];
+    if (!file) return;
+    
+    const img = new Image();
+    img.onload = () => {
+        // Nadpisanie skórki u wszystkich żyjących weteranów
+        state.squad.forEach(soldier => {
+            soldier.customImageSkin = img;
+        });
+        // Zapis w customSquadDesign, by nowo ratowani weterani też dziedziczyli skórkę!
+        if (!customSquadDesign.hero) customSquadDesign.hero = {};
+        customSquadDesign.hero.customImageSkin = img;
+        customSquadDesign.hero.isCustomized = true;
+        
+        console.warn("Pomyślnie wczytano Twoją własną, retro skórkę PNG z PixelArt creatora!");
+        if (inputEl) inputEl.value = '';
+    };
+    img.src = URL.createObjectURL(file);
+}
+
 // Rejestracja w obiekcie window
 window.toggleAdminPanel = toggleAdminPanel;
 window.togglePause = togglePause;
@@ -200,3 +356,6 @@ window.adminSpawnRecruit = adminSpawnRecruit;
 window.adminSpawnDog = adminSpawnDog;
 window.adminGiveWeapon = adminGiveWeapon;
 window.adminApplyUpgrade = adminApplyUpgrade;
+window.adminGiveAirstrike = adminGiveAirstrike;
+window.adminUploadSkin = adminUploadSkin;
+window.chargeDoctrines = chargeDoctrines;

@@ -7,19 +7,45 @@ Plik zawiera szczegółową specyfikację funkcjonalną, opisy mechanik i interf
 - **Klimat**: Retro pixel-art, widok z góry (top-down), dżungla, odniesienia do klasycznych gier na Amigę.
 - **Platforma docelowa**: Przeglądarka internetowa (Desktop / Mobile) z natywną obsługą dotyku i gestów.
 
+## Żelazne Zasady Estetyki i Architektury Wizualnej (Pillars of Visual System)
+Aby zachować bezwzględną spójność i najwyższą jakość wizualną gry, każdy element graficzny, proceduralny oraz silnikowy musi dożywotnio przestrzegać trzech fundamentalnych reguł:
+
+1. **Rygorystyczna Matryca Pikselowa (Siatka 2x2 px)**:
+   - Każdy zasób w grze (sprite'y postaci 32x32 px, kafelki podłoża, napisy UI, klastry dymu, ognia oraz cząsteczki) musi być renderowany ze ścisłą rozdzielczością wirtualną **2x2 piksele ekranowe** (gdzie 1 piksel gry = dokładnie kwadrat 2x2 na ekranie, `step = 2`).
+   - Kategorycznie zabrania się stosowania niespójnych rozdzielczości, mieszania gęstości tekseli oraz używania wielkich, surowych bloków (np. 4x4 czy 8x8 px) niszczących harmonię pixel artu.
+
+2. **Perspektywa Izometryczna 3/4 (3/4 Elevation Angle)**:
+   - Gra wykorzystuje rzut z lotu ptaka z kątem uniesienia (3/4 elevation). Wszelkie pionowe struktury (postacie, drzewa, skrzynki oraz w szczególności **kolumny wybuchów i dymu**) muszą wypiętrzać się wzdłuż osi Z świata (w górę ekranu wzdłuż ujemnej osi Y).
+   - Obiekty płaskie i ślady na podłożu (kratery po bombach, plamy krwi, cienie) muszą być spłaszczone izometrycznie na osi Y o współczynnik `~0.55` do `0.6`, tworząc naturalne elipsy wpisane w grunt. Zabrania się generowania płaskich okręgów 360 stopni w płaszczyźnie ekranu.
+
+3. **Absolutna Płynność 60 FPS i Ciągła Dynamika**:
+   - Wszystkie obliczenia fizyczne, ruchy obłoków, rozszerzanie kraterów, odrzut odłamków i zmiany przezroczystości muszą zachodzić w sposób ciągły w każdej klatce renderowania (`dt` w 60 FPS). Przejścia stanów i gradacja barw (Color Grading ze stygnięcia) muszą być idealnie płynne.
+   - Wyklucza się stosowanie skokowych, kanciastych przeskoków klatkowych (stop-motion), z wyjątkiem dedykowanych, wyizolowanych wariantów demonstracyjnych.
+
 ## Mechaniki Gry
 1. **Sterowanie Składem (Flocking)**:
    - Gracz kontroluje nie jedną postać, lecz cały oddział (skład) żołnierzy.
    - Poruszanie odbywa się za pomocą wskazywania celu (mysz / dotyk na strefie joysticka).
    - Żołnierze podążają do celu w formacji wykorzystującej algorytmy miękkiego odpychania (flocking), aby nie wchodzić na siebie.
-2. **Walka (Auto-Fire)**:
+2. **Walka (Auto-Fire & Zbrojownia Karabinów)**:
    - Skład automatycznie wykrywa najbliższych wrogów w zasięgu i prowadzi ogień.
-   - Zaimplementowane różne typy uzbrojenia:
-     - **Karabin** (Standard)
+   - **Zbrojownia Karabinów Podstawowych (Weapons Arsenal)**: Gracz może wyposażyć swoich żołnierzy przed misją (lub w locie przy rekrutacji) w jeden z trzech unikalnych karabinów:
+     - **Karabin M16 (Szturmowy)**: Strzela precyzyjnymi seriami po 3 pociski (Burst Fire, interwał 55ms, lekki rozrzut).
+     - **M1 Garand (Wyborowy)**: Wolny, półautomatyczny ogień (Semi-Auto) o ogromnej sile rażenia pojedynczego pocisku, wysokim zasięgu i zrzucie fizycznej łuski na ziemię.
+     - **FN FAL (Bojowy)**: W pełni automatyczny (Full-Auto) karabin siejący zniszczenie z odczuwalnym rozrzutem kątowym, doskonały na krótki dystans.
+   - Zaimplementowane ciężkie uzbrojenie (ze skrzynek / zrzutów):
      - **Strzelba** (Rozrzut, wyższa szybkostrzelność, mniejsze obrażenia)
      - **Minigun** (Bardzo szybki ogień ciągły)
      - **Bazooka** (Pociski wybuchowe o spowolnionym locie, obrażenia obszarowe)
-3. **Jednostki Towarzyszące (Companions - Pies Bojowy)**:
+
+## 3. Nowy System Progresji (Tryb Lone Survivor i Eventy Co 3 Poziomy)
+Gra wdraża dynamiczną, modularną pętlę rekrutacji polowej, która wyklucza nudne menu ulepszeń na rzecz starć na mapie:
+- **Start z jednym żołnierzem (Lone Survivor)**: Gracz zaczyna z jednym strzelcem, a kolejnych towarzyszy ratuje w ferworze walki.
+- **Misje Ratunkowe (Poziom < 4)**: Co 3 fale na mapie generuje się klatka więzienna. Jej rozbicie pod ostrzałem rekrutuje losową klasę (*Medyk, Inżynier, Snajper, Heavy Gunner*). Aby zapobiec losowości, wdrożono *kontrolowany draft bez powtórzeń* (pierwsze 4 ocalenia dają dokładnie po jednym przedstawicielu każdej klasy).
+- **Atak na Magazyn i Level Up (Poziom = 4)**: Po osiągnięciu pełnego składu (squad cap = 4), co kolejne 3 poziomy oddział szturmuje Magazyn wroga z walką z bossem. Wygrana nagradza gracza punktem **LEVEL UP** dla wybranego weterana, odblokowując legendarne cechy z jego drzewka rozwoju (np. Defibrylacja u Medyka, Podwójne Wieżyczki CKM u Inżyniera, 40% szans na krytyk u Snajpera).
+- **Koło Ratunkowe (Comeback Mechanic)**: Jeśli w trakcie walki w Magazynie zginie nam weteran, po wygranej możemy uwolnić z klatki słabszego *Rezerwistę* o 1. poziomie, co zabezpiecza skład przed zniszczeniem fali.
+
+## 4. Jednostki Towarzyszące (Companions - Pies Bojowy)
    - Gracz może odblokować wsparcie w postaci Psa Bojowego.
    - Pies porusza się swobodnie, wybiegając poza okrąg ochronny oddziału w celu eliminacji pojedynczych wrogów w walce wręcz (gryzienie), po czym posłusznie wraca do właścicieli.
    - Zostawia miniaturowe odciski łap po przejściu przez poległe ciała.
