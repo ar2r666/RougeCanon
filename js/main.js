@@ -1,11 +1,15 @@
 import { state, stats, WEAPONS } from './config.js';
-import { terrainPattern, bloodCanvas } from './sprites.js';
+import { terrainPattern, bloodCanvas, discoverCustomAssets } from './sprites.js';
 import { Soldier, corpses } from './entities/Soldier.js';
 import { Enemy } from './entities/Enemy.js';
 import { Crate } from './entities/Crate.js';
-import { gameOver, showUpgrades, updateHUD, startGame } from './ui.js';
+import { PrisonerCage } from './entities/PrisonerCage.js';
+import { EnemyDepot } from './entities/EnemyDepot.js';
+import { Decoy } from './entities/Decoy.js';
+import { Explosion } from './entities/Explosion.js';
+import { AirstrikeBomb } from './entities/AirstrikeBomb.js';
+import { gameOver, showUpgrades, updateHUD, startGame } from './ui.js?v=1.0.5';
 import { initInput } from './input.js';
-import './creator.js';
 
 const afterBurningImg = new Image();
 afterBurningImg.src = 'img/after_burning.png';
@@ -38,6 +42,7 @@ window.adminSpawnCrate = (type) => {
     let cr = new Crate(leader.x + Math.cos(ang)*dist, leader.y + Math.sin(ang)*dist);
     if (type === 'PLASMA') cr.droppedWeapon = WEAPONS.SPECIAL_PLASMA;
     if (type === 'FLAME') cr.droppedWeapon = WEAPONS.SPECIAL_FLAMETHROWER;
+    if (type === 'AIRSTRIKE') cr.droppedWeapon = WEAPONS.SPECIAL_AIRSTRIKE;
     
     // Zgodnie z wytycznymi: broń leży bezpośrednio na ziemi bez fizycznej skrzynki
     cr.isDestroyed = true;
@@ -64,6 +69,41 @@ function update(dt) {
     } else {
         gameOver();
         return;
+    }
+
+    if (state.airstrikeTimer > 0) {
+        state.airstrikeTimer -= dt;
+        state.airstrikeBombTimer = (state.airstrikeBombTimer || 0) - dt;
+        if (state.airstrikeBombTimer <= 0) {
+            state.airstrikeBombTimer = 0.12 + Math.random() * 0.06;
+            let bx, by;
+            let valid = false;
+            let visibleEnemies = state.enemies.filter(e => e.hp > 0 && Math.hypot(e.x - state.camera.x, e.y - state.camera.y) < window.innerWidth * 0.6);
+            
+            for (let attempt = 0; attempt < 10; attempt++) {
+                if (visibleEnemies.length > 0 && Math.random() < 0.75) {
+                    let targetEnemy = visibleEnemies[Math.floor(Math.random() * visibleEnemies.length)];
+                    bx = targetEnemy.x + (Math.random() - 0.5) * 60;
+                    by = targetEnemy.y + (Math.random() - 0.5) * 60;
+                } else {
+                    bx = state.camera.x + (Math.random() - 0.5) * (window.innerWidth * 0.85);
+                    by = state.camera.y + (Math.random() - 0.5) * (window.innerHeight * 0.85);
+                }
+                
+                let tooClose = false;
+                if (state.airstrikeBombs && state.airstrikeBombs.some(b => Math.hypot(b.x - bx, b.y - by) < 100)) tooClose = true;
+                if (state.explosions && state.explosions.some(ex => ex.isAirstrike && Math.hypot(ex.x - bx, ex.y - by) < 100)) tooClose = true;
+                
+                if (!tooClose) {
+                    valid = true;
+                    break;
+                }
+            }
+            if (valid) {
+                if (!state.airstrikeBombs) state.airstrikeBombs = [];
+                state.airstrikeBombs.push(new AirstrikeBomb(bx, by));
+            }
+        }
     }
 
     // Spawn Enemies outside camera view
@@ -104,24 +144,41 @@ function update(dt) {
     }
 
     // Update Entities
-    state.squad.forEach(s => s.update(dt));
-    state.companions.forEach(c => c.update(dt));
-    state.enemies.forEach(e => e.update(dt));
-    state.bullets.forEach(b => b.update(dt));
-    state.particles.forEach(p => p.update(dt));
-    state.explosions.forEach(ex => ex.update(dt));
-    if (state.crates) state.crates.forEach(cr => cr.update(dt));
+    for (let i = 0; i < state.squad.length; i++) state.squad[i].update(dt);
+    for (let i = 0; i < state.companions.length; i++) state.companions[i].update(dt);
+    for (let i = 0; i < state.enemies.length; i++) state.enemies[i].update(dt);
+    for (let i = 0; i < state.bullets.length; i++) state.bullets[i].update(dt);
+    for (let i = 0; i < state.particles.length; i++) state.particles[i].update(dt);
+    for (let i = 0; i < state.explosions.length; i++) state.explosions[i].update(dt);
+    if (state.crates) {
+        for (let i = 0; i < state.crates.length; i++) state.crates[i].update(dt);
+    }
+    if (state.prisonerCages) {
+        for (let i = 0; i < state.prisonerCages.length; i++) state.prisonerCages[i].update(dt);
+    }
+    if (state.enemyDepots) {
+        for (let i = 0; i < state.enemyDepots.length; i++) state.enemyDepots[i].update(dt);
+    }
+    if (state.decoys) {
+        for (let i = 0; i < state.decoys.length; i++) state.decoys[i].update(dt);
+    }
+    if (state.airstrikeBombs) {
+        for (let i = 0; i < state.airstrikeBombs.length; i++) state.airstrikeBombs[i].update(dt);
+    }
     
     if (typeof corpses !== 'undefined' && corpses) {
-        corpses.forEach(c => {
+        for (let i = 0; i < corpses.length; i++) {
+            let c = corpses[i];
             if (c.deathType === 'flame') {
                 c.animTimer = (c.animTimer || 0) + dt;
             }
-        });
+        }
     }
     
     if (state.fuelPools) {
-        state.fuelPools.forEach(f => f.life -= dt);
+        for (let i = 0; i < state.fuelPools.length; i++) {
+            state.fuelPools[i].life -= dt;
+        }
         state.fuelPools = state.fuelPools.filter(f => f.life > 0);
     }
 
@@ -133,6 +190,10 @@ function update(dt) {
     state.particles = state.particles.filter(p => p.life > 0);
     state.explosions = state.explosions.filter(ex => ex.life > 0);
     if (state.crates) state.crates = state.crates.filter(cr => cr.life > 0);
+    if (state.prisonerCages) state.prisonerCages = state.prisonerCages.filter(pc => !pc.isDestroyed || pc.life > 0);
+    if (state.enemyDepots) state.enemyDepots = state.enemyDepots.filter(ed => !ed.isDestroyed || ed.life > 0);
+    if (state.decoys) state.decoys = state.decoys.filter(dec => !dec.isDestroyed || dec.life > 0);
+    if (state.airstrikeBombs) state.airstrikeBombs = state.airstrikeBombs.filter(b => !b.isDead);
 
     if (state.enemies.length !== startEnemies || state.squad.length === 0) {
         updateHUD();
@@ -186,12 +247,24 @@ function draw() {
     }
 
     // Draw Entities (sort by Y for basic depth)
-    let renderables = [...state.squad, ...state.companions, ...state.enemies, ...(state.crates || [])].sort((a, b) => a.y - b.y);
+    let renderables = [...state.squad, ...state.companions, ...state.enemies, ...(state.crates || []), ...(state.prisonerCages || []), ...(state.enemyDepots || []), ...(state.decoys || []), ...(state.airstrikeBombs || [])];
     
-    state.explosions.forEach(ex => ex.draw(ctx));
-    state.particles.forEach(p => p.draw(ctx));
-    state.bullets.forEach(b => b.draw(ctx));
-    renderables.forEach(r => r.draw(ctx));
+    // Frustum culling: filter to only render visible entities
+    let visibleRenderables = [];
+    const halfW = window.innerWidth / 2 + 64;
+    const halfH = window.innerHeight / 2 + 64;
+    for (let i = 0; i < renderables.length; i++) {
+        let r = renderables[i];
+        if (Math.abs(r.x - state.camera.x) < halfW && Math.abs(r.y - state.camera.y) < halfH) {
+            visibleRenderables.push(r);
+        }
+    }
+    visibleRenderables.sort((a, b) => a.y - b.y);
+    
+    for (let i = 0; i < state.explosions.length; i++) state.explosions[i].draw(ctx);
+    for (let i = 0; i < state.particles.length; i++) state.particles[i].draw(ctx);
+    for (let i = 0; i < state.bullets.length; i++) state.bullets[i].draw(ctx);
+    for (let i = 0; i < visibleRenderables.length; i++) visibleRenderables[i].draw(ctx);
     
     // Dopalanie się zwłok oraz rozlanego paliwa w surowej, precyzyjnej estetyce retro 2x2 pixel art
     ctx.save();
@@ -199,40 +272,57 @@ function draw() {
     let t = Date.now() / 40;
     
     if (typeof corpses !== 'undefined' && corpses) {
-        corpses.forEach(c => {
+        const corpseCullW = window.innerWidth / 2 + 50;
+        const corpseCullH = window.innerHeight / 2 + 50;
+        for (let idx = 0; idx < corpses.length; idx++) {
+            let c = corpses[idx];
             if (c.deathType === 'flame' && c.animTimer !== undefined) {
                 let maxDuration = 3.5; // Zgodnie z instrukcją: długie dopalanie przez 3.5 sekundy
                 if (c.animTimer < maxDuration) {
+                    // Frustum culling for burning corpses
+                    if (Math.abs(c.x - state.camera.x) > corpseCullW || Math.abs(c.y - state.camera.y) > corpseCullH) {
+                        continue;
+                    }
                     let fade = Math.max(0, Math.min(1, 1.0 - (c.animTimer / maxDuration)));
                     ctx.globalAlpha = fade;
                     
-                    for (let i = 0; i < 8; i++) {
-                        let fx = c.x - 10 + (i * 3);
-                        let wave = Math.abs(Math.sin(t + (i * 1.3))) * (12 * fade);
-                        let fy = c.y + 4 - wave;
+                    let seed = c.seed || 0;
+                    for (let i = 0; i < 10; i++) {
+                        let s1 = Math.sin(seed + i * 2.3);
+                        let s2 = Math.cos(seed * 1.7 + i * 3.1);
+                        let fx = c.x + Math.floor(s1 * 12);
+                        let baseWave = Math.abs(Math.sin(t * (0.8 + Math.abs(s2) * 0.4) + seed + i * 1.7));
+                        let wave = baseWave * (14 * fade) + Math.floor(s2 * 3);
+                        let fy = c.y + 6 + Math.floor(s2 * 4) - wave;
                         
                         let px = Math.floor(fx / 2) * 2;
                         let py = Math.floor(fy / 2) * 2;
                         
                         ctx.fillStyle = '#ff3300';
                         ctx.fillRect(px, py, 2, 2);
-                        if (wave > 2) {
+                        if (wave > 3) {
                             ctx.fillStyle = '#ff8800';
                             ctx.fillRect(px, py + 2, 2, 2);
                         }
-                        if (i % 2 === 0 && wave > 5) {
+                        if (i % 2 === 0 && wave > 6) {
                             ctx.fillStyle = '#ffffff';
                             ctx.fillRect(px, py + 4, 2, 2);
                         }
                     }
                 }
             }
-        });
+        }
     }
     
     // Dynamiczne, małe dogasające płomienie na ziemi osadzone nad czarnymi plamami wypalenia
     if (state.fuelPools && state.fuelPools.length > 0) {
-        state.fuelPools.forEach((f, idx) => {
+        const fuelCullW = window.innerWidth / 2 + 20;
+        const fuelCullH = window.innerHeight / 2 + 20;
+        for (let idx = 0; idx < state.fuelPools.length; idx++) {
+            let f = state.fuelPools[idx];
+            if (Math.abs(f.x - state.camera.x) > fuelCullW || Math.abs(f.y - state.camera.y) > fuelCullH) {
+                continue;
+            }
             let fade = Math.max(0, Math.min(1, f.life / (f.maxLife || 1.5)));
             ctx.globalAlpha = fade;
             
@@ -244,13 +334,13 @@ function draw() {
             if (height < 2) height = 2;
             
             ctx.fillStyle = '#ff3300';
-            ctx.fillRect(px - 2, py - height, 4, height + 2);
+            ctx.fillRect(px - 1, py - height, 2, height + 1);
             
             if (fade > 0.25) {
                 ctx.fillStyle = '#ffcc00';
-                ctx.fillRect(px - 1, py - height + 1, 2, height - 1);
+                ctx.fillRect(px, py - height + 1, 1, height - 1);
             }
-        });
+        }
     }
     ctx.restore();
 
@@ -264,6 +354,95 @@ function draw() {
     }
 
     ctx.restore();
+
+    // Uratowanie Jeńca: off-screen wskaźnik kierunkowy i odległość (HUD)
+    if (state.gameState === 'PLAY' && state.prisonerCages && state.prisonerCages.length > 0) {
+        let cage = state.prisonerCages.find(c => !c.isDestroyed);
+        if (cage) {
+            let screenX = window.innerWidth / 2 - state.camera.x + cage.x;
+            let screenY = window.innerHeight / 2 - state.camera.y + cage.y;
+            
+            // Rysujemy strzałkę tylko jeśli klatka jest poza granicami widocznego ekranu z marginesem 40px
+            if (screenX < 40 || screenX > window.innerWidth - 40 || screenY < 40 || screenY > window.innerHeight - 40) {
+                let ang = Math.atan2(cage.y - state.camera.y, cage.x - state.camera.x);
+                let halfW = window.innerWidth / 2 - 40;
+                let halfH = window.innerHeight / 2 - 40;
+                let ax = window.innerWidth / 2 + Math.cos(ang) * halfW;
+                let ay = window.innerHeight / 2 + Math.sin(ang) * halfH;
+                
+                let distMeters = Math.floor(Math.hypot(cage.x - state.camera.x, cage.y - state.camera.y) / 10);
+                
+                ctx.save();
+                ctx.fillStyle = '#39ff14'; // Neonowa zieleń
+                ctx.strokeStyle = '#39ff14';
+                ctx.lineWidth = 2;
+                
+                // Rysowanie strzałki kierunkowej pointing to the cage
+                ctx.translate(ax, ay);
+                ctx.rotate(ang);
+                ctx.beginPath();
+                ctx.moveTo(10, 0);
+                ctx.lineTo(-6, -5);
+                ctx.lineTo(-6, 5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+                
+                // Rysowanie tekstu odległości (z przesunięciem w pionie, by nie nakładał się na strzałkę)
+                ctx.save();
+                ctx.fillStyle = '#39ff14';
+                ctx.font = '8px "Press Start 2P"';
+                ctx.textAlign = 'center';
+                ctx.shadowBlur = 4;
+                ctx.shadowColor = '#39ff14';
+                ctx.fillText(`RATUNEK: ${distMeters}m`, ax, ay - 12);
+                ctx.restore();
+            }
+        }
+    }
+
+    // Szturm na Magazyn: off-screen wskaźnik kierunkowy (kolor czerwony ostrzegawczy)
+    if (state.gameState === 'PLAY' && state.enemyDepots && state.enemyDepots.length > 0) {
+        let depot = state.enemyDepots.find(d => !d.isDestroyed);
+        if (depot) {
+            let screenX = window.innerWidth / 2 - state.camera.x + depot.x;
+            let screenY = window.innerHeight / 2 - state.camera.y + depot.y;
+            
+            if (screenX < 40 || screenX > window.innerWidth - 40 || screenY < 40 || screenY > window.innerHeight - 40) {
+                let ang = Math.atan2(depot.y - state.camera.y, depot.x - state.camera.x);
+                let halfW = window.innerWidth / 2 - 40;
+                let halfH = window.innerHeight / 2 - 40;
+                let ax = window.innerWidth / 2 + Math.cos(ang) * halfW;
+                let ay = window.innerHeight / 2 + Math.sin(ang) * halfH;
+                
+                let distMeters = Math.floor(Math.hypot(depot.x - state.camera.x, depot.y - state.camera.y) / 10);
+                
+                ctx.save();
+                ctx.fillStyle = '#ff3300'; // Neonowa czerwień
+                ctx.strokeStyle = '#ff3300';
+                ctx.lineWidth = 2;
+                
+                ctx.translate(ax, ay);
+                ctx.rotate(ang);
+                ctx.beginPath();
+                ctx.moveTo(10, 0);
+                ctx.lineTo(-6, -5);
+                ctx.lineTo(-6, 5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+                
+                ctx.save();
+                ctx.fillStyle = '#ff3300';
+                ctx.font = '8px "Press Start 2P"';
+                ctx.textAlign = 'center';
+                ctx.shadowBlur = 4;
+                ctx.shadowColor = '#ff3300';
+                ctx.fillText(`CEL: ${distMeters}m`, ax, ay - 12);
+                ctx.restore();
+            }
+        }
+    }
 }
 
 // --- GŁÓWNA PĘTLA (Loop) ---
@@ -281,7 +460,8 @@ function loop(timestamp) {
 }
 
 // Zgodnie z wytycznymi: gra uruchamia się natychmiastowo, ale dopiero po pełnym załadowaniu struktury DOM
-function initApp() {
+async function initApp() {
+    await discoverCustomAssets();
     if (typeof resize === 'function') resize();
     startGame();
     requestAnimationFrame(loop);

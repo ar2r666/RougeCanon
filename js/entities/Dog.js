@@ -89,11 +89,19 @@ export class Dog {
             // Wyszukiwanie wroga - inteligentne dobieranie unikalnych, wolnych celów w promieniu 350 pikseli
             let bestEnemy = null;
             let minDist = 350;
-            for (let e of state.enemies) {
+            for (let i = 0; i < state.enemies.length; i++) {
+                let e = state.enemies[i];
                 if (e.hp > 0) {
                     let dFromSquad = Math.hypot(e.x - cx, e.y - cy);
                     // Sprawdź, czy inny pies już go nie zaatakował
-                    let targetedByOther = state.companions.some(c => c !== this && c.targetEnemy === e);
+                    let targetedByOther = false;
+                    for (let j = 0; j < state.companions.length; j++) {
+                        let c = state.companions[j];
+                        if (c !== this && c.targetEnemy === e) {
+                            targetedByOther = true;
+                            break;
+                        }
+                    }
                     // Jeśli cel jest już zajęty, dodaj mu sztuczną karę do dystansu, żeby pies priorytetyzował inne cele
                     let effectiveDist = dFromSquad + (targetedByOther ? 250 : 0);
 
@@ -199,6 +207,13 @@ export class Dog {
     }
 
     draw(ctx) {
+        // Frustum culling for dogs
+        const halfW = window.innerWidth / 2 + 30;
+        const halfH = window.innerHeight / 2 + 30;
+        if (Math.abs(this.x - state.camera.x) > halfW || Math.abs(this.y - state.camera.y) > halfH) {
+            return;
+        }
+
         // Dyskretny, pixel-artowy cień pod łapami
         ctx.save();
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';

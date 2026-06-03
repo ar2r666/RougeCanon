@@ -40,38 +40,92 @@ export class Bullet {
         }
 
         // Collision
-        let targets = this.isEnemy ? state.squad : [...state.enemies, ...(state.crates || [])];
-        for (let i = targets.length - 1; i >= 0; i--) {
-            let t = targets[i];
-            if (t.life <= 0) continue;
-            if (Math.hypot(t.x - this.x, t.y - this.y) < t.radius + 2) {
-                if (this.weapon.type === 'explosive') {
-                    state.explosions.push(new Explosion(this.x, this.y, 60, this.damage, this.shooter));
-                    this.life = 0; 
-                    break;
-                } else if (this.weapon.type === 'spread') {
-                    // Specjalna zdolność strzelby: kule przechodzą na wylot przez wrogów (Penetration / Piercing)
-                    if (!this.hitTargets.has(t)) {
-                        this.hitTargets.add(t);
-                        t.takeDamage(this.damage, this.shooter);
-                        createParticles(t.x, t.y, '#ffaa00', 2, 35);
-                        
-                        // Zgodnie z wytycznymi: zbalansowany, realistyczny odrzut dla strzelby
-                        if (t.hp > 0 && typeof t.applyKnockback === 'function') {
-                            let bAng = Math.atan2(this.vy, this.vx);
-                            t.applyKnockback(Math.cos(bAng) * 120, Math.sin(bAng) * 120);
-                        }
+        if (this.isEnemy) {
+            for (let i = state.squad.length - 1; i >= 0; i--) {
+                let t = state.squad[i];
+                if (t.hp <= 0) continue;
+                if (Math.hypot(t.x - this.x, t.y - this.y) < t.radius + 2) {
+                    this.handleCollision(t);
+                    if (this.life <= 0) return;
+                }
+            }
+        } else {
+            // Check enemies
+            for (let i = state.enemies.length - 1; i >= 0; i--) {
+                let t = state.enemies[i];
+                if (t.hp <= 0) continue;
+                if (Math.hypot(t.x - this.x, t.y - this.y) < t.radius + 2) {
+                    this.handleCollision(t);
+                    if (this.life <= 0) return;
+                }
+            }
+            // Check crates
+            if (state.crates) {
+                for (let i = state.crates.length - 1; i >= 0; i--) {
+                    let t = state.crates[i];
+                    if (t.life <= 0 || t.isDestroyed) continue;
+                    if (Math.hypot(t.x - this.x, t.y - this.y) < t.radius + 2) {
+                        this.handleCollision(t);
+                        if (this.life <= 0) return;
                     }
-                } else {
-                    t.takeDamage(this.damage, this.shooter);
-                    this.life = 0; 
-                    break;
+                }
+            }
+            // Check prisonerCages
+            if (state.prisonerCages) {
+                for (let i = state.prisonerCages.length - 1; i >= 0; i--) {
+                    let t = state.prisonerCages[i];
+                    if (t.life <= 0 || t.isDestroyed) continue;
+                    if (Math.hypot(t.x - this.x, t.y - this.y) < t.radius + 2) {
+                        this.handleCollision(t);
+                        if (this.life <= 0) return;
+                    }
+                }
+            }
+            // Check enemyDepots
+            if (state.enemyDepots) {
+                for (let i = state.enemyDepots.length - 1; i >= 0; i--) {
+                    let t = state.enemyDepots[i];
+                    if (t.life <= 0 || t.isDestroyed) continue;
+                    if (Math.hypot(t.x - this.x, t.y - this.y) < t.radius + 2) {
+                        this.handleCollision(t);
+                        if (this.life <= 0) return;
+                    }
                 }
             }
         }
     }
 
+    handleCollision(t) {
+        if (this.weapon.type === 'explosive') {
+            state.explosions.push(new Explosion(this.x, this.y, 60, this.damage, this.shooter));
+            this.life = 0; 
+        } else if (this.weapon.type === 'spread') {
+            // Specjalna zdolność strzelby: kule przechodzą na wylot przez wrogów (Penetration / Piercing)
+            if (!this.hitTargets.has(t)) {
+                this.hitTargets.add(t);
+                t.takeDamage(this.damage, this.shooter);
+                createParticles(t.x, t.y, '#ffaa00', 2, 35);
+                
+                // Zgodnie z wytycznymi: zbalansowany, realistyczny odrzut dla strzelby
+                if (t.hp > 0 && typeof t.applyKnockback === 'function') {
+                    let bAng = Math.atan2(this.vy, this.vx);
+                    t.applyKnockback(Math.cos(bAng) * 120, Math.sin(bAng) * 120);
+                }
+            }
+        } else {
+            t.takeDamage(this.damage, this.shooter);
+            this.life = 0; 
+        }
+    }
+
     draw(ctx) {
+        // Frustum culling: check if bullet is visible
+        const halfW = window.innerWidth / 2 + 20;
+        const halfH = window.innerHeight / 2 + 20;
+        if (Math.abs(this.x - state.camera.x) > halfW || Math.abs(this.y - state.camera.y) > halfH) {
+            return;
+        }
+
         ctx.save();
         if (this.weapon.type === 'explosive') {
             let angle = Math.atan2(this.vy, this.vx);

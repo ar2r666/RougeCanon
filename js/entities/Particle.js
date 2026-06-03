@@ -19,6 +19,13 @@ export class Particle {
     }
 
     draw(ctx) {
+        // Frustum culling for particles
+        const halfW = window.innerWidth / 2 + 10;
+        const halfH = window.innerHeight / 2 + 10;
+        if (Math.abs(this.x - state.camera.x) > halfW || Math.abs(this.y - state.camera.y) > halfH) {
+            return;
+        }
+
         ctx.fillStyle = this.color;
         ctx.globalAlpha = Math.max(0, this.life);
         ctx.fillRect(this.x, this.y, 3, 3);
@@ -27,6 +34,10 @@ export class Particle {
 }
 
 export function createParticles(x, y, color, count, speed) {
+    if (state.particles.length > 400) {
+        count = Math.floor(count * 0.25);
+        if (count === 0 && Math.random() < 0.3) count = 1;
+    }
     for (let i = 0; i < count; i++) {
         state.particles.push(new Particle(x, y, color, speed));
     }
