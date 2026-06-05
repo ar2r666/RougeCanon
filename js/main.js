@@ -11,6 +11,7 @@ import { AirstrikeBomb } from './entities/AirstrikeBomb.js';
 import { createParticles } from './entities/Particle.js';
 import { gameOver, showUpgrades, updateHUD, startGame } from './ui.js?v=1.0.5';
 import { initInput } from './input.js';
+import { preloadSounds } from './sfx.js';
 
 const afterBurningImg = new Image();
 afterBurningImg.src = 'img/after_burning.png';
@@ -606,6 +607,7 @@ function loop(timestamp) {
 async function initApp() {
     await discoverCustomAssets();
     if (typeof resize === 'function') resize();
+    preloadSounds(); // Asynchroniczne załadowanie wszystkich plików audio na starcie
     startGame();
     requestAnimationFrame(loop);
 }

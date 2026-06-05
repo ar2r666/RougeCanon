@@ -75,9 +75,11 @@ export function playSound(soundKey, volume = 0.25) {
                 source.connect(gainNode);
                 gainNode.connect(ctx.destination);
                 source.start(0); // Wyzwolenie z zerowym opóźnieniem!
-                return;
             } catch (e) {}
         }
+        // ZAWSZE wracamy stąd, jeśli Web Audio API jest obsługiwane. Zapobiega to kosztownemu 
+        // i zacinającemu fallbackowi HTML5 Audio na urządzeniach mobilnych podczas strzelania.
+        return; 
     }
     
     // Natychmiastowy Fallback do tradycyjnego API, jeśli Web Audio buforuje w tle
@@ -103,4 +105,39 @@ export function playSound(soundKey, volume = 0.25) {
 export function toggleMute() {
     isMuted = !isMuted;
     return isMuted;
+}
+
+export function preloadSounds() {
+    const soundsToPreload = [
+        'sfx_shoot_default',
+        'sfx_shoot_m16',
+        'sfx_shoot_machinegun',
+        'sfx_shoot_sniper',
+        'sfx_shoot_shotgun',
+        'sfx_shoot_bazooka',
+        'sfx_shoot_turet',
+        'sfx_shoot_head',
+        'sfx_click',
+        'sfx_hit',
+        'sfx_crate_destroy',
+        'sfx_explosion_default'
+    ];
+    
+    // Uruchamiamy ładowanie po krótkiej chwili, aby nie blokować początkowego renderowania strony
+    setTimeout(() => {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        soundsToPreload.forEach(soundKey => {
+            if (audioBuffers[soundKey] === undefined) {
+                audioBuffers[soundKey] = null;
+                fetch(`Sounds/${encodeURIComponent(soundKey)}.mp3`)
+                    .then(response => response.arrayBuffer())
+                    .then(arrayBuffer => ctx.decodeAudioData(arrayBuffer))
+                    .then(decodedBuffer => {
+                        audioBuffers[soundKey] = decodedBuffer;
+                    })
+                    .catch(() => {});
+            }
+        });
+    }, 800);
 }
