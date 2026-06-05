@@ -160,7 +160,7 @@ export function getSoldierSprites(helmetIdx, faceIdx, uniformIdx, weaponIdx, acc
         if (acc && acc.isBack) drawLayer(acc.art);
         
         const uLayers = [UNIFORMS_1, UNIFORMS_2, UNIFORMS_3, UNIFORMS_4];
-        if (customUniformImages[uniformIdx] && customUniformImages[uniformIdx].complete) {
+        if (customUniformImages[uniformIdx] && customUniformImages[uniformIdx].complete && customUniformImages[uniformIdx].naturalWidth > 0) {
             let img = customUniformImages[uniformIdx];
             let fw = (img.width > 256) ? 256 : img.width;
             let sx = (img.width > 256) ? (frame * 256) : 0;
@@ -169,7 +169,7 @@ export function getSoldierSprites(helmetIdx, faceIdx, uniformIdx, weaponIdx, acc
             drawLayer(uLayers[frame][uniformIdx]);
         }
         
-        if (customHeadImages[faceIdx] && customHeadImages[faceIdx].complete) {
+        if (customHeadImages[faceIdx] && customHeadImages[faceIdx].complete && customHeadImages[faceIdx].naturalWidth > 0) {
             let img = customHeadImages[faceIdx];
             let fw = (img.width > 256) ? 256 : img.width;
             let sx = (img.width > 256) ? (frame * 256) : 0;
@@ -178,7 +178,7 @@ export function getSoldierSprites(helmetIdx, faceIdx, uniformIdx, weaponIdx, acc
             drawLayer(FACES[faceIdx]);
         }
         
-        if (customHelmetImages[helmetIdx] && customHelmetImages[helmetIdx].complete) {
+        if (customHelmetImages[helmetIdx] && customHelmetImages[helmetIdx].complete && customHelmetImages[helmetIdx].naturalWidth > 0) {
             let img = customHelmetImages[helmetIdx];
             let fw = (img.width > 256) ? 256 : img.width;
             let sx = (img.width > 256) ? (frame * 256) : 0;
@@ -192,7 +192,7 @@ export function getSoldierSprites(helmetIdx, faceIdx, uniformIdx, weaponIdx, acc
         if (frame === 1 || frame === 3) {
             cx.translate(0, scale); // obniżenie broni o 1 piksel
         }
-        if (customWeaponImages[weaponIdx] && customWeaponImages[weaponIdx].complete) {
+        if (customWeaponImages[weaponIdx] && customWeaponImages[weaponIdx].complete && customWeaponImages[weaponIdx].naturalWidth > 0) {
             let img = customWeaponImages[weaponIdx];
             let fw = (img.width > 256) ? 256 : img.width;
             let sx = (img.width > 256) ? (frame * 256) : 0;
@@ -249,7 +249,7 @@ export function getSoldierBodySprites(helmetIdx, faceIdx, uniformIdx, accessoryI
         if (acc && acc.isBack) drawLayer(acc.art);
         
         const uLayers = [UNIFORMS_1, UNIFORMS_2, UNIFORMS_3, UNIFORMS_4];
-        if (customUniformImages[uniformIdx] && customUniformImages[uniformIdx].complete) {
+        if (customUniformImages[uniformIdx] && customUniformImages[uniformIdx].complete && customUniformImages[uniformIdx].naturalWidth > 0) {
             let img = customUniformImages[uniformIdx];
             let fw = (img.width > 256) ? 256 : img.width;
             let sx = (img.width > 256) ? (frame * 256) : 0;
@@ -258,7 +258,7 @@ export function getSoldierBodySprites(helmetIdx, faceIdx, uniformIdx, accessoryI
             drawLayer(uLayers[frame][uniformIdx]);
         }
         
-        if (customHeadImages[faceIdx] && customHeadImages[faceIdx].complete) {
+        if (customHeadImages[faceIdx] && customHeadImages[faceIdx].complete && customHeadImages[faceIdx].naturalWidth > 0) {
             let img = customHeadImages[faceIdx];
             let fw = (img.width > 256) ? 256 : img.width;
             let sx = (img.width > 256) ? (frame * 256) : 0;
@@ -267,7 +267,7 @@ export function getSoldierBodySprites(helmetIdx, faceIdx, uniformIdx, accessoryI
             drawLayer(FACES[faceIdx]);
         }
         
-        if (customHelmetImages[helmetIdx] && customHelmetImages[helmetIdx].complete) {
+        if (customHelmetImages[helmetIdx] && customHelmetImages[helmetIdx].complete && customHelmetImages[helmetIdx].naturalWidth > 0) {
             let img = customHelmetImages[helmetIdx];
             let fw = (img.width > 256) ? 256 : img.width;
             let sx = (img.width > 256) ? (frame * 256) : 0;
@@ -291,7 +291,7 @@ export function getWeaponSprite(weaponIdx) {
     c.width = 32; c.height = 32;
     const cx = c.getContext('2d');
     
-    if (customWeaponImages[weaponIdx] && customWeaponImages[weaponIdx].complete) {
+    if (customWeaponImages[weaponIdx] && customWeaponImages[weaponIdx].complete && customWeaponImages[weaponIdx].naturalWidth > 0) {
         let img = customWeaponImages[weaponIdx];
         let fw = (img.width > 256) ? 256 : img.width;
         cx.drawImage(img, 0, 0, fw, img.height, 0, 0, 32, 32);

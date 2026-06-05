@@ -65,7 +65,7 @@ export const UNIFORMS_1 = [
     make16(["      DGD       ", "    HGGGDGG     ", "    GGDHGGG     ", "      GGDGG     ", "      GD DG     ", "      B   B     ", "     BB   BB    "], 8), // 0: Kamuflaż
     make16(["      yYy       ", "    LYYyYYL     ", "    YyYYyYY     ", "      YyLYY     ", "      Yy yY     ", "      M   M     ", "     MM   MM    "], 8), // 1: Pustynia
     make16(["      gWg       ", "    WggWgWW     ", "    WWgCCgW     ", "      WggWW     ", "      Wg gW     ", "      g   g     ", "     gg   gg    "], 8), // 2: Śnieg
-    make16(["      NBN       ", "    CBNNNCB     ", "    BNNNNNB     ", "      NBNBN     ", "      NB BN     ", "      N   N     ", "     NN   NN    "], 8), // 3: Black Ops
+    make16(["      NBN       ", "    CBNNNCB     ", "    BNNNNNB     ", "      NBNBN     ", "      NB BN     ", "      N   N     ", "     MM   MM    "], 8), // 3: Black Ops
     make16(["      gWg       ", "    WgWRWgW     ", "    WWRRRWW     ", "      WgRWg     ", "      Wg gW     ", "      B   B     ", "     BB   BB    "], 8), // 4: Medyk
     make16(["      BWB       ", "    BBWRWBB     ", "    BNBWRBN     ", "      BNBNB     ", "      NB BN     ", "      B   B     ", "     BB   BB    "], 8), // 5: Garnitur
     make16(["      CgC       ", "    WgCgCgW     ", "    WgCcCgW     ", "      CgCgC     ", "      gC Cg     ", "      g   g     ", "     gg   gg    "], 8), // 6: Pancerz
@@ -83,7 +83,7 @@ export const UNIFORMS_2 = [
     make16(["      DGD       ", "    HGGGDGG     ", "    GGDHGGG     ", "      GGDGG     ", "       GDG      ", "       B B      ", "      BB BB     "], 8),
     make16(["      yYy       ", "    LYYyYYL     ", "    YyYYyYY     ", "      YyLYY     ", "       YyY      ", "       M M      ", "      MM MM     "], 8),
     make16(["      gWg       ", "    WggWgWW     ", "    WWgCCgW     ", "      WggWW     ", "       WgW      ", "       g g      ", "      gg gg     "], 8),
-    make16(["      NBN       ", "    CBNNNCB     ", "    BNNNNNB     ", "      NBNBN     ", "       NBN      ", "       N N      ", "      NN NN     "], 8),
+    make16(["      NBN       ", "    CBNNNCB     ", "    BNNNNNB     ", "      NBNBN     ", "       NBN      ", "       N N      ", "      MM MM     "], 8),
     make16(["      gWg       ", "    WgWRWgW     ", "    WWRRRWW     ", "      WgRWg     ", "       WgW      ", "       B B      ", "      BB BB     "], 8),
     make16(["      BWB       ", "    BBWRWBB     ", "    BNBWRBN     ", "      BNBNB     ", "       NBN      ", "       B B      ", "      BB BB     "], 8),
     make16(["      CgC       ", "    WgCgCgW     ", "    WgCcCgW     ", "      CgCgC     ", "       gCg      ", "       g g      ", "      gg gg     "], 8),
@@ -99,17 +99,28 @@ export const UNIFORMS_2 = [
 
 export const UNIFORMS_3 = UNIFORMS_1.map(u => {
     let res = [...u];
-    // Zmodyfikuj wiersze nóg (wiersz 13 i 14 na siatce 16x16) dla kroku lewą nogą
-    res[13] = "      B         ";
-    res[14] = "     BBB   B    ";
+    // Zmodyfikuj wiersze nóg (wiersz 13 i 14 na siatce 16x16) dla kroku lewą nogą,
+    // zachowując oryginalne kolory nogawek i butów z u[13] i u[14]
+    let cLeftPants = u[13][6] || 'B';
+    let cRightPants = u[13][10] || 'B';
+    let cLeftBoot = u[14][5] || 'B';
+    let cRightBoot = u[14][9] || 'B';
+
+    res[13] = `      ${cLeftPants}         `;
+    res[14] = `     ${cLeftBoot}${cLeftBoot}${cLeftBoot}   ${cRightBoot}    `;
     return res;
 });
 
 export const UNIFORMS_4 = UNIFORMS_1.map(u => {
     let res = [...u];
-    // Zmodyfikuj wiersze nóg dla kroku prawą nogą
-    res[13] = "          B     ";
-    res[14] = "       B  BBB   ";
+    // Zmodyfikuj wiersze nóg dla kroku prawą nogą, zachowując kolory
+    let cLeftPants = u[13][6] || 'B';
+    let cRightPants = u[13][10] || 'B';
+    let cLeftBoot = u[14][5] || 'B';
+    let cRightBoot = u[14][9] || 'B';
+
+    res[13] = `          ${cRightPants}     `;
+    res[14] = `       ${cLeftBoot}  ${cRightBoot}${cRightBoot}${cRightBoot}   `;
     return res;
 });
 
@@ -126,7 +137,19 @@ export const WEAPON_LAYERS = [
     make16(["          MMMMM ", "          h  MMR"], 10), // 9: Przepychacz do rur
     make16(["       P        ", "  BBBBccccPPPPPf", "    c h   h     "], 9), // 10: Miotacz Plazmy
     make16(["        GG      ", "  BBBBBBGGGGGGf ", "      h GGh     "], 9),  // 11: Ciężkie Działo Obcych
-    make16(["                "], 10) // 12: Bez Broni (pusta warstwa)
+    make16(["                "], 10), // 12: Bez Broni (pusta warstwa)
+    make16([
+        "  B             ",
+        "  B             ",
+        "  B             ",
+        "  B             ",
+        "                ",
+        "  ggg           ",
+        " gggg           ",
+        " gYgg           ",
+        " gggg           ",
+        "  gg            "
+    ], 2) // 13: Radio (Plecak) jako przedmiot do podniesienia
 ];
 
 export const ACCESSORIES = [
@@ -135,7 +158,18 @@ export const ACCESSORIES = [
     { isBack: true,  art: make16(["  ggg           ", " ggCgg          ", " ggCgg          ", "  O O           "], 7) }, 
     { isBack: true,  art: make16(["   RRR          ", "  RRRRR         ", "  RRRRR         ", "  RRRRR         ", "   RRR          "], 8) }, 
     { isBack: false, art: make16(["            C f "], 6) }, 
-    { isBack: true,  art: make16(["  B             ", "  B             ", "  B             ", "  g             "], 2) }, 
+    { isBack: true,  art: make16([
+        "  B             ",
+        "  B             ",
+        "  B             ",
+        "  B             ",
+        "                ",
+        "  ggg           ",
+        " gggg           ",
+        " gYgg           ",
+        " gggg           ",
+        "  gg            "
+    ], 2) }, // index 5: Radio (Plecak)
     { isBack: false, art: make16(["         B      ", "        BBB     ", "        BBB     ", "         B      "], 8) }, 
     { isBack: false, art: make16(["   RR           ", "   RYR          ", "   rR           "], 4) }, 
     { isBack: false, art: make16(["      YYYY      ", "     Y    Y     "], 0) }, 
@@ -178,11 +212,12 @@ export const NAMES = ['Jools', 'Jops', 'Stoo', 'RJ', 'Ubik', 'CJ', 'Biker', 'Phi
 
 export const WEAPONS = {
     DEFAULT: { name: 'Karabin M16', fireRateMult: 1.0, damageMult: 1.0, color: '#ffff00', type: 'burst', visualIdx: 0 }, // Domyślny karabin (seria Burst M16)
+    M16: { name: 'Karabin M16', fireRateMult: 1.0, damageMult: 1.0, color: '#ffff00', type: 'burst', visualIdx: 0 },
     RIFLE_GARAND: { name: 'M1 Garand', fireRateMult: 1.8, damageMult: 2.5, color: '#ffea00', type: 'semi', visualIdx: 2 }, // Karabin wyborowy (wolny, potężny)
     RIFLE_FAL: { name: 'FN FAL', fireRateMult: 0.32, damageMult: 0.85, color: '#ffd700', type: 'fullauto', visualIdx: 0 }, // Karabin bojowy (automatyczny, rozrzut)
     RIFLE_SMG: { name: 'PM Uzi', fireRateMult: 0.25, damageMult: 0.6, color: '#ffeedd', type: 'rapid', visualIdx: 4 }, // SMG Medyka polowego
     HEAVY_SAW: { name: 'M249 SAW', fireRateMult: 0.12, damageMult: 0.85, color: '#ffdd00', type: 'rapid', visualIdx: 3 }, // Ciężka broń Heavy Gunnera
-    SHOTGUN: { name: 'Strzelba', fireRateMult: 1.5, damageMult: 2.0, color: '#ffaa00', type: 'spread', visualIdx: 1 }, // Błyskawiczne przeładowanie (1.2s przy bazowym 800ms)
+    SHOTGUN: { name: 'Strzelba', fireRateMult: 2.6, damageMult: 2.0, color: '#ffaa00', type: 'spread', visualIdx: 1 }, // Wydłużone przeładowanie (2.08s przy bazowym 800ms)
     BAZOOKA: { name: 'Bazooka', fireRateMult: 3.0, damageMult: 4, color: '#ff5500', type: 'explosive', visualIdx: 5 },
     SPECIAL_PLASMA: { name: 'Plazma', fireRateMult: 0.35, damageMult: 3, color: '#00ffff', type: 'beam', visualIdx: 10 },
     SPECIAL_FLAMETHROWER: { name: 'Miotacz Ognia', fireRateMult: 0.05, damageMult: 1.5, color: '#ff4500', type: 'flame', visualIdx: 7 },
@@ -205,7 +240,7 @@ export const customSquadDesign = {
         helmetIdx: 0,
         faceIdx: 1,        // head_2
         uniformIdx: 3,      // uniform_4
-        weaponIdx: 2,      // weapon_3
+        weaponIdx: 0,      // M16 (weapon_1)
         accessoryIdx: 0,
         customImageSkin: null,
         isCustomized: true
@@ -234,10 +269,12 @@ export const state = {
     camera: { x: 6000, y: 6000 },
     targetPoint: { x: 6000, y: 6000 },
     isPointerDown: false,
+    viewport: { width: 1920, height: 1080, halfW: 960, halfH: 540 },
     squad: [],
     enemies: [],
     bullets: [],
     particles: [],
+    dyingBodies: [], // Tymczasowe ciała wrogów z fizyką przed wypaleniem w tło
     explosions: [],
     crates: [],
     crateSpawnTimer: 15,
@@ -246,6 +283,7 @@ export const state = {
     pendingLevelUp: false, // Czy oczekuje wybór awansu żołnierza
     tacticalDoctrines: [], // Ekwipunek Doktryn Taktycznych (zbierane przez gracza)
     decoys: [], // Aktywne wabiki (Decoys) na polu walki
+    medkits: [], // Aktywne apteczki (Medyk) na polu walki
     companions: [], // Towarzysze wybiegający poza okrąg (np. Psy)
     airstrikeTimer: 0,
     airstrikeBombTimer: 0,

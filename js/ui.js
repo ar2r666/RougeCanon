@@ -5,6 +5,7 @@ import { PrisonerCage } from './entities/PrisonerCage.js';
 import { EnemyDepot } from './entities/EnemyDepot.js';
 import { Enemy } from './entities/Enemy.js';
 import { clearBloodCanvas } from './sprites.js';
+import { playSound } from './sfx.js';
 
 export function spawnSquad() {
     state.squad = [];
@@ -109,6 +110,7 @@ export function showUpgrades() {
                 soldier.maxHp = (soldier.maxHp || 3) + 1;
                 soldier.hp = soldier.maxHp; // Pełne leczenie przy awansie
                 soldier.baseDamage = (soldier.baseDamage || 1) + 1;
+                soldier.isPromoted = true; // Odblokowanie unikalnej legendarnej cechy!
                 
                 // Wizualny awans na Oficera (Czapka oficerska = index 5)
                 soldier.helmetIdx = 5;
@@ -249,6 +251,7 @@ export function startGame() {
     state.particles = [];
     state.explosions = [];
     state.companions = [];
+    state.medkits = [];
     state.airstrikeTimer = 0;
     state.airstrikeBombTimer = 0;
     state.airstrikeBombs = [];
@@ -365,6 +368,19 @@ export function adminUploadSkin(inputEl) {
     img.src = URL.createObjectURL(file);
 }
 
+export function adminPromoteSquad() {
+    if (!state.squad || state.squad.length === 0) return;
+    state.squad.forEach(s => {
+        s.isPromoted = true;
+        s.helmetIdx = 5; // Czapka oficerska
+        s.maxHp = (s.maxHp || 3) + 1;
+        s.hp = s.maxHp;
+        s.baseDamage = (s.baseDamage || 1) + 1;
+        s.updateSprites();
+    });
+    playSound('sfx_click', 0.6);
+}
+
 // Rejestracja w obiekcie window
 window.toggleAdminPanel = toggleAdminPanel;
 window.togglePause = togglePause;
@@ -374,4 +390,5 @@ window.adminGiveWeapon = adminGiveWeapon;
 window.adminApplyUpgrade = adminApplyUpgrade;
 window.adminGiveAirstrike = adminGiveAirstrike;
 window.adminUploadSkin = adminUploadSkin;
+window.adminPromoteSquad = adminPromoteSquad;
 window.chargeDoctrines = chargeDoctrines;

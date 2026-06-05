@@ -63,7 +63,7 @@ export class Decoy {
             
             // 2. Rysowanie munduru (uniform_5 lub domyślny podarty zielony mundur)
             let drawnUniform = false;
-            if (customUniformImages[4] && customUniformImages[4].complete) {
+            if (customUniformImages[4] && customUniformImages[4].complete && customUniformImages[4].naturalWidth > 0) {
                 // Rysujemy stojący mundur 5 z PNG z przesunięciem do środka
                 ctx.drawImage(customUniformImages[4], 0, 0, 256, customUniformImages[4].height, -16, -16, 32, 32);
                 drawnUniform = true;
@@ -94,7 +94,7 @@ export class Decoy {
             ctx.rotate(0.15);      // Lekkie stylowe przekrzywienie kapelusza
             
             let drawnHat = false;
-            if (customHelmetImages[9] && customHelmetImages[9].complete) {
+            if (customHelmetImages[9] && customHelmetImages[9].complete && customHelmetImages[9].naturalWidth > 0) {
                 ctx.drawImage(customHelmetImages[9], 0, 0, 256, customHelmetImages[9].height, -16, -5, 32, 32);
                 drawnHat = true;
             }

@@ -6,6 +6,8 @@ import { PlasmaBeam } from './PlasmaBeam.js';
 import { playSound } from '../sfx.js';
 import { Explosion } from './Explosion.js';
 import { Crate } from './Crate.js';
+import { Medkit } from './Medkit.js';
+import { Turret } from './Turret.js';
 
 const gunFireImg = new Image();
 gunFireImg.src = 'img/gun_fire.png';
@@ -60,6 +62,7 @@ export class Soldier {
         this.weapon = WEAPONS.DEFAULT;
         this.storedWeapon = null;
         this.specialWeaponTimer = 0;
+        this.isPromoted = false;
         
         let squadIndex = state.squad ? state.squad.length : 0;
         let activeClasses = state.squad ? state.squad.map(s => s.soldierClass).filter(Boolean) : [];
@@ -156,6 +159,45 @@ export class Soldier {
 
     update(dt) {
         if (this.hp <= 0) return;
+
+        // --- CECHA MEDYKA (Zrzut apteczki co 20 sekund) ---
+        if (this.soldierClass === 'MEDIC') {
+            if (this.medkitTimer === undefined) this.medkitTimer = 20.0;
+            this.medkitTimer -= dt;
+            if (this.medkitTimer <= 0) {
+                this.medkitTimer = 20.0;
+                if (state.medkits) {
+                    let throwAng = Math.random() * Math.PI * 2;
+                    let throwDist = 18 + Math.random() * 8;
+                    let dropX = this.x + Math.cos(throwAng) * throwDist;
+                    let dropY = this.y + Math.sin(throwAng) * throwDist;
+                    
+                    state.medkits.push(new Medkit(dropX, dropY));
+                    playSound('sfx_click', 0.4); 
+                    createParticles(dropX, dropY, '#39ff14', 8, 20);
+                }
+            }
+        }
+
+        // --- CECHA INŻYNIERA (Rozstawianie wieżyczki przyciągającej wrogów) ---
+        if (this.soldierClass === 'ENGINEER') {
+            if (!this.activeTurret || this.activeTurret.isDestroyed) {
+                if (this.turretDeployCooldown === undefined) this.turretDeployCooldown = 0;
+                if (this.turretDeployCooldown > 0) {
+                    this.turretDeployCooldown -= dt;
+                } else {
+                    this.turretDeployCooldown = 5.0; // 5s cooldown po zniszczeniu przed kolejnym rozstawieniem
+                    let turret = new Turret(this.x, this.y + 12, this);
+                    this.activeTurret = turret;
+                    if (state.decoys) {
+                        state.decoys.push(turret);
+                        playSound('sfx_crate_destroy', 0.45);
+                        createParticles(this.x, this.y + 12, '#00ffff', 15, 30);
+                    }
+                }
+            }
+        }
+
         let oldX = this.x;
         let oldY = this.y;
 
@@ -228,7 +270,8 @@ export class Soldier {
             ...(state.enemyDepots ? state.enemyDepots.filter(d => !d.isDestroyed) : [])
         ];
         let closest = null;
-        let minDist = this.weapon.type === 'beam' ? stats.range * 1.5 : (this.weapon.type === 'explosive' ? stats.range * 1.3 : stats.range);
+        let baseRange = this.soldierClass === 'SNIPER' ? stats.range * 2.2 : stats.range;
+        let minDist = this.weapon.type === 'beam' ? baseRange * 1.5 : (this.weapon.type === 'explosive' ? baseRange * 1.3 : baseRange);
         for (let e of possibleTargets) {
             let d = Math.hypot(e.x - this.x, e.y - this.y);
             if (d < minDist) { minDist = d; closest = e; }
@@ -310,7 +353,7 @@ export class Soldier {
                     let bAng = angle + angOffset + (Math.random() - 0.5) * 0.03;
                     state.bullets.push(new Bullet(this, this.x, this.y, bAng, false, dmg, this.weapon));
                 }
-                playSound('sfx_shoot_shotgun', 0.06);
+                playSound('sfx_shoot_shotgun', 0.035);
                 
                 // Zgodnie z instrukcją: przeładowanie strzelby (wyrzut łuski, odrzut pump) następuje od razu po strzale
                 this.isReloadingPump = 0.35; 
@@ -325,9 +368,28 @@ export class Soldier {
                 createParticles(this.x + (this.facingLeft ? 5 : -5), this.y, '#ffd700', 3, 25);
             } else if (this.weapon.type === 'semi') {
                 // Półautomatyczny M1 Garand (Wolny, celny, potężny odrzut i particle łuski)
-                state.bullets.push(new Bullet(this, this.x, this.y, angle, false, dmg, this.weapon));
-                playSound('sfx_shoot_default', 0.4);
-                createParticles(this.x + Math.cos(angle)*12, this.y + Math.sin(angle)*12, '#ffff00', 2, 40);
+                let finalDmg = dmg;
+                let isCrit = false;
+                if (this.soldierClass === 'SNIPER' && Math.random() < 0.40) {
+                    finalDmg = dmg * 3;
+                    isCrit = true;
+                }
+                
+                let bullet = new Bullet(this, this.x, this.y, angle, false, finalDmg, this.weapon);
+                if (isCrit) {
+                    bullet.isCrit = true;
+                }
+                
+                if (this.soldierClass === 'SNIPER') {
+                    playSound('sfx_shoot_sniper', 0.18); // Jeszcze bardziej ściszona snajperka (0.18)
+                } else {
+                    playSound('sfx_shoot_default', 0.4);
+                }
+                
+                state.bullets.push(bullet);
+                
+                let sparkColor = isCrit ? '#d03be3' : '#ffff00';
+                createParticles(this.x + Math.cos(angle)*12, this.y + Math.sin(angle)*12, sparkColor, isCrit ? 6 : 2, 40);
                 
                 // Wyrzut łuski Garanda
                 if (typeof bloodCtx !== 'undefined' && bloodCtx) {

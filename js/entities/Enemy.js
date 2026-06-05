@@ -95,6 +95,9 @@ export class Enemy {
         
         for (let s of potentialTargets) {
             let d = Math.hypot(s.x - this.x, s.y - this.y);
+            if (s.isTurret) {
+                d *= 0.5; // przyciąga wrogów mocniej (podwójny zasięg agresji)
+            }
             if (d < minDist) { minDist = d; closest = s; }
         }
 
@@ -305,7 +308,7 @@ export class Enemy {
         this.kbY = (this.kbY || 0) + vy;
     }
 
-    takeDamage(amount, shooter) {
+    takeDamage(amount, shooter, isHeadshot = false) {
         if (this.hp <= 0) return;
         
         if (shooter && shooter.weapon && shooter.weapon.type === 'flame') {
@@ -324,9 +327,49 @@ export class Enemy {
         
         this.hp -= amount;
         createParticles(this.x, this.y, '#ff0000', 3, 60);
+
+        if (isHeadshot && this.hp > 0) {
+            // Wróg przetrwał headshot (np. elita/boss), ale krew i tak rozbryzguje się na ziemi!
+            if (bloodCtx) {
+                bloodCtx.save();
+                let shotAngle = shooter ? Math.atan2(this.y - shooter.y, this.x - shooter.x) : Math.random() * Math.PI * 2;
+                
+                // Mniejsza wersja ciemnego rdzenia
+                bloodCtx.fillStyle = '#550000';
+                for (let i = 0; i < 15; i++) {
+                    let angle = shotAngle + (Math.random() - 0.5) * 0.8;
+                    let dist = Math.random() * 8;
+                    let bx = Math.floor(this.x + Math.cos(angle) * dist);
+                    let by = Math.floor(this.y + 4 + Math.sin(angle) * dist);
+                    let pSize = Math.random() > 0.4 ? 1 : 2;
+                    bloodCtx.fillRect(bx, by, pSize, pSize);
+                }
+
+                // Drobna smuga świeżej krwi mieszanej z jasną czerwienią
+                let colors = ['#8a0000', '#d01a1a', '#ff3333'];
+                const drops = 25 + Math.floor(Math.random() * 15);
+                for (let i = 0; i < drops; i++) {
+                    let dist = Math.random() * 35; // krótszy rozbryzg
+                    let spread = 0.3 + (dist / 35) * 0.45;
+                    let angle = shotAngle + (Math.random() - 0.5) * spread;
+                    
+                    let ox = (Math.random() - 0.5) * 3;
+                    let oy = (Math.random() - 0.5) * 3;
+                    let bx = Math.floor(this.x + ox + Math.cos(angle) * dist);
+                    let by = Math.floor(this.y + 4 + oy + Math.sin(angle) * dist);
+                    let pSize = Math.random() > 0.7 ? 2 : 1;
+                    
+                    bloodCtx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                    bloodCtx.fillRect(bx, by, pSize, pSize);
+                }
+                bloodCtx.restore();
+            }
+        }
         
         if (this.hp <= 0) {
             let deathType = shooter && shooter.weapon ? shooter.weapon.type : 'normal';
+            if (isHeadshot) deathType = 'headshot';
+            
             this.die(deathType);
             if (shooter && shooter.kills !== undefined) shooter.kills++;
             chargeDoctrines(); // Ładowanie Doktryn Taktycznych w locie
@@ -334,7 +377,17 @@ export class Enemy {
     }
 
     die(deathType) {
-        let isScorched = deathType === 'beam' || deathType === 'flame';
+        let vx = this.kbX || 0;
+        let vy = this.kbY || 0;
+        let force = Math.hypot(vx, vy);
+        if (force < 45) {
+            // Domyślny mały odrzut, jeśli śmierć nastąpiła bez knockbacku
+            let angle = Math.atan2(this.y - (state.camera ? state.camera.y : this.y), this.x - (state.camera ? state.camera.x : this.x));
+            vx = Math.cos(angle) * 75;
+            vy = Math.sin(angle) * 75;
+        }
+
+        let isScorched = deathType === 'flame' || deathType === 'beam';
         if (bloodCtx) {
             bloodCtx.save();
             
@@ -346,42 +399,54 @@ export class Enemy {
                     let dist = Math.random() * 12;
                     let bx = Math.floor((this.x + Math.cos(angle) * dist) / 2) * 2;
                     let by = Math.floor((this.y + Math.sin(angle) * dist) / 2) * 2;
-                    let size = Math.random() > 0.5 ? 2 : 4;
+                    let size = Math.random() > 0.5 ? 1 : 2; // Tylko drobne piksele
                     bloodCtx.fillRect(bx, by, size, size);
                 }
                 
-                let baseSprite = this.sprites[0];
-                bloodCtx.translate(this.x, this.y + 4);
-                bloodCtx.rotate((Math.random() - 0.5) * 1.2);
-                let drawScale = this.type === 'boss' ? 48 : 32;
-                let isElite = this.type !== 'standard';
-                let customDead = isElite ? ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyEliteDeadSkin && customSquadDesign.enemyEliteDeadSkin.complete && customSquadDesign.enemyEliteDeadSkin.width > 0) ? customSquadDesign.enemyEliteDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null)) : ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin && customSquadDesign.enemyDeadSkin.complete && customSquadDesign.enemyDeadSkin.width > 0) ? customSquadDesign.enemyDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null));
-                
-                if (customDead && customDead.width > 0 && customDead.height > 0) {
-                    let sW = Math.min(customDead.width, customDead.height);
-                    let sH = Math.min(customDead.height, customDead.width);
-                    bloodCtx.drawImage(customDead, 0, 0, sW, sH, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
-                } else if (baseSprite) {
-                    bloodCtx.drawImage(baseSprite, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
-                }
-                
-                // Zamiast wielkiego czarnego kwadratu zasłaniającego skórkę, rysujemy subtelny popiół i drobiny sadzy (2x2 px) na ciele wroga
                 bloodCtx.fillStyle = '#1a0d00';
                 for (let i = 0; i < 12; i++) {
-                    let rx = Math.floor((Math.random() - 0.5) * 16 / 2) * 2;
-                    let ry = Math.floor((Math.random() - 0.5) * 16 / 2) * 2;
-                    bloodCtx.fillRect(rx, ry, 2, 2);
-                }
-                
-                bloodCtx.fillStyle = deathType === 'beam' ? '#00ffff' : '#ff5500';
-                for (let i = 0; i < 4; i++) {
-                    let rx = Math.floor((Math.random() - 0.5) * 8 / 2) * 2;
-                    let ry = Math.floor((Math.random() - 0.5) * 8 / 2) * 2;
+                    let rx = Math.floor((this.x + (Math.random() - 0.5) * 16) / 2) * 2;
+                    let ry = Math.floor((this.y + (Math.random() - 0.5) * 16) / 2) * 2;
                     bloodCtx.fillRect(rx, ry, 2, 2);
                 }
                 
                 createParticles(this.x, this.y, '#3b240e', 10, 40);
                 createParticles(this.x, this.y, '#5c4d41', 8, 30);
+            } else if (deathType === 'headshot') {
+                // Kierunkowy rozbryzg krwi przy headshocie (smuga w kierunku lotu pocisku)
+                let shotAngle = Math.atan2(vy, vx);
+                
+                // 1. Podstawowy ciemny rdzeń wyjściowy przy głowie
+                bloodCtx.fillStyle = '#550000'; // Bardzo ciemna krew
+                for (let i = 0; i < 40; i++) {
+                    let angle = shotAngle + (Math.random() - 0.5) * 0.9;
+                    let dist = Math.random() * 12;
+                    let bx = Math.floor(this.x + Math.cos(angle) * dist);
+                    let by = Math.floor(this.y + 4 + Math.sin(angle) * dist);
+                    let pSize = Math.random() > 0.4 ? 1 : 2;
+                    bloodCtx.fillRect(bx, by, pSize, pSize);
+                }
+
+                // 2. Długa, rozproszona smuga jasnej/świeżej krwi lecąca w kierunku strzału (wydłużona do 75px, mieszana z jasnoczerwonym)
+                let colors = ['#8a0000', '#d01a1a', '#ff3333'];
+                const drops = 80 + Math.floor(Math.random() * 40);
+                for (let i = 0; i < drops; i++) {
+                    // Cząsteczki lecą do przodu - im dalej, tym bardziej się rozpraszają
+                    let dist = Math.random() * 75; 
+                    let spread = 0.25 + (dist / 75) * 0.5; // Stożkowy kształt rozbryzgu
+                    let angle = shotAngle + (Math.random() - 0.5) * spread;
+                    
+                    // Lekki randomowy offset punktu wylotowego (dla różnorodności)
+                    let ox = (Math.random() - 0.5) * 4;
+                    let oy = (Math.random() - 0.5) * 4;
+                    
+                    let bx = Math.floor(this.x + ox + Math.cos(angle) * dist);
+                    let by = Math.floor(this.y + 4 + oy + Math.sin(angle) * dist);
+                    let pSize = Math.random() > 0.7 ? 2 : 1; // Tylko 1 i 2 piksele!
+                    
+                    bloodCtx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                    bloodCtx.fillRect(bx, by, pSize, pSize);
+                }
             } else {
                 bloodCtx.fillStyle = '#8b0000';
                 const drops = 6 + Math.floor(Math.random() * 5);
@@ -395,36 +460,87 @@ export class Enemy {
                     by = Math.floor(by / 2) * 2;
                     bloodCtx.fillRect(bx, by, size, size);
                 }
-
-                let baseSprite = this.sprites[0];
-                bloodCtx.translate(this.x, this.y + 4);
-                bloodCtx.rotate((Math.random() - 0.5) * 1.2);
-                let drawScale = this.type === 'boss' ? 48 : 32;
-                let isElite = this.type !== 'standard';
-                let customDead = isElite ? ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyEliteDeadSkin && customSquadDesign.enemyEliteDeadSkin.complete && customSquadDesign.enemyEliteDeadSkin.width > 0) ? customSquadDesign.enemyEliteDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null)) : ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin && customSquadDesign.enemyDeadSkin.complete && customSquadDesign.enemyDeadSkin.width > 0) ? customSquadDesign.enemyDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null));
-                
-                if (customDead && customDead.width > 0 && customDead.height > 0) {
-                    let sW = Math.min(customDead.width, customDead.height);
-                    let sH = Math.min(customDead.height, customDead.width);
-                    bloodCtx.drawImage(customDead, 0, 0, sW, sH, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
-                } else if (baseSprite) {
-                    bloodCtx.drawImage(baseSprite, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
-                }
-
-                bloodCtx.fillStyle = '#ff0000';
-                for (let i = 0; i < 6; i++) {
-                    let rx = (Math.random() - 0.5) * 10;
-                    let ry = (Math.random() - 0.5) * 10;
-                    rx = Math.floor(rx / 2) * 2;
-                    ry = Math.floor(ry / 2) * 2;
-                    bloodCtx.fillRect(rx, ry, 2, 2);
-                }
             }
             bloodCtx.restore();
         }
 
-        corpses.push({ x: this.x, y: this.y, isScorched: isScorched, deathType: deathType, smokeTimer: isScorched ? 3.0 : 0, animTimer: 0, seed: Math.random() * 1000 });
-        if (corpses.length > 150) corpses.shift();
+        // --- OKREŚLENIE FIZYKI ŚMIERCI I DODANIE DO TABLICY ---
+        let approach = 'slide';
+        if (this.type === 'boss' || this.type !== 'standard') {
+            approach = 'heavy';
+        } else {
+            if (deathType === 'explosive') approach = 'bounce';
+            else if (deathType === 'headshot') approach = 'spin';
+        }
+
+        if (state.dyingBodies) {
+            let isSlide = approach === 'slide';
+            let tAngle = 0;
+            if (isSlide) {
+                tAngle = (vx > 0 ? 1 : -1) * (Math.PI / 2 + (Math.random() - 0.5) * 0.5);
+            } else if (approach === 'heavy') {
+                tAngle = -Math.PI / (5.0 + Math.random() * 2.0);
+            } else if (approach === 'bounce') {
+                tAngle = -Math.PI / 2.1 + (Math.random() - 0.5) * 0.35;
+            }
+
+            state.dyingBodies.push({
+                x: this.x,
+                y: this.y,
+                vx: vx * (isSlide ? 1.4 : 1.0), // Zwiększamy siłę ślizgu dla słabego wroga
+                vy: vy * (isSlide ? 1.4 : 1.0),
+                bY: 0,
+                bVy: approach === 'bounce' ? -150 - Math.random() * 50 : 0,
+                angle: 0,
+                targetAngle: tAngle,
+                spinSpeed: isSlide ? (Math.random() - 0.5) * 12 : (approach === 'spin' ? (vx > 0 ? 15 : -15) : 0),
+                timer: approach === 'heavy' ? 0.9 : (isSlide ? 1.1 : 0.65),
+                maxTimer: approach === 'heavy' ? 0.9 : (isSlide ? 1.1 : 0.65),
+                crumpleY: 0,
+                shake: this.type === 'boss' ? 7 : (approach === 'heavy' ? 4 : 0),
+                approach: approach,
+                deathType: deathType,
+                sprites: this.sprites,
+                customImageSkin: this.customImageSkin,
+                type: this.type,
+                facingLeft: this.facingLeft,
+                particles: [],
+                draw: function(ctx) {
+                    ctx.save();
+                    
+                    let ox = 0, oy = 0;
+                    if (this.approach === 'heavy' && this.shake > 0) {
+                        ox = (Math.random() - 0.5) * this.shake;
+                        oy = (Math.random() - 0.5) * this.shake;
+                    }
+                    
+                    ctx.translate(this.x + ox, this.y + (this.bY || 0) + oy);
+                    ctx.rotate(this.angle);
+                    
+                    let drawScale = this.type === 'boss' ? 48 : 32;
+                    let scaleY = this.approach === 'boss' ? Math.max(0.3, 1.0 - (this.crumpleY / 14)) : 1.0;
+                    if (this.approach === 'boss') {
+                        ctx.scale(1.2, scaleY);
+                    }
+                    
+                    let baseSprite = this.sprites ? this.sprites[0] : null;
+                    let isElite = this.type !== 'standard';
+                    let customDead = isElite ? 
+                        ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyEliteDeadSkin && customSquadDesign.enemyEliteDeadSkin.complete && customSquadDesign.enemyEliteDeadSkin.width > 0) ? customSquadDesign.enemyEliteDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null)) :
+                        ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin && customSquadDesign.enemyDeadSkin.complete && customSquadDesign.enemyDeadSkin.width > 0) ? customSquadDesign.enemyDeadSkin : (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 ? this.customImageSkin : null));
+                    
+                    if (customDead && customDead.width > 0 && customDead.height > 0) {
+                        let sW = Math.min(customDead.width, customDead.height);
+                        let sH = Math.min(customDead.height, customDead.width);
+                        ctx.drawImage(customDead, 0, 0, sW, sH, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
+                    } else if (baseSprite) {
+                        ctx.drawImage(baseSprite, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
+                    }
+                    
+                    ctx.restore();
+                }
+            });
+        }
 
         state.enemiesAlive--;
         // Eliminacja synchronicznego wymuszania przebudowy DOM (layout thrashing) w pętli kolizji

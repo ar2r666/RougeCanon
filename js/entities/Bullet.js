@@ -1,20 +1,24 @@
 import { stats, state, WEAPONS } from '../config.js';
-import { createParticles } from './Particle.js';
+import { createParticles, createDirectionalParticles, CritIndicator } from './Particle.js';
 import { Explosion } from './Explosion.js';
+import { playSound } from '../sfx.js';
 
 export class Bullet {
     constructor(shooter, x, y, angle, isEnemy, damage, weapon) {
         this.shooter = shooter;
         this.x = x;
         this.y = y;
-        // Szybkie kule ze strzelby (1.8x) oraz rakiety (1.3x)
+        // Szybkie kule ze strzelby (1.8x) oraz rakiety (1.3x). Snajper strzela ekstremalnie szybko (3.6x).
         let speedMult = (weapon && weapon.type === 'explosive') ? 1.3 : ((weapon && weapon.type === 'spread') ? 1.8 : 1.0);
+        if (shooter && shooter.soldierClass === 'SNIPER') {
+            speedMult = 3.6;
+        }
         this.vx = Math.cos(angle) * stats.bulletSpeed * speedMult;
         this.vy = Math.sin(angle) * stats.bulletSpeed * speedMult;
         this.isEnemy = isEnemy;
         this.damage = damage;
         this.weapon = weapon || WEAPONS.DEFAULT;
-        this.life = (weapon && weapon.type === 'explosive') ? 1.5 : 1.0; 
+        this.life = (weapon && weapon.type === 'explosive') ? 1.5 : (shooter && shooter.soldierClass === 'SNIPER' ? 0.6 : 1.0); 
         this.hitTargets = new Set(); // Bufor celów przebitych na wylot
     }
 
@@ -99,29 +103,43 @@ export class Bullet {
         if (this.weapon.type === 'explosive') {
             state.explosions.push(new Explosion(this.x, this.y, 60, this.damage, this.shooter));
             this.life = 0; 
-        } else if (this.weapon.type === 'spread') {
-            // Specjalna zdolność strzelby: kule przechodzą na wylot przez wrogów (Penetration / Piercing)
+        } else if (this.weapon.type === 'spread' || this.isCrit) {
+            // Specjalna zdolność strzelby lub strzału krytycznego Snajpera: kule przechodzą na wylot przez wrogów
             if (!this.hitTargets.has(t)) {
                 this.hitTargets.add(t);
-                t.takeDamage(this.damage, this.shooter);
-                createParticles(t.x, t.y, '#ffaa00', 2, 35);
+                t.takeDamage(this.damage, this.shooter, this.isCrit || false);
                 
-                // Zgodnie z wytycznymi: zbalansowany, realistyczny odrzut dla strzelby
+                if (this.isCrit) {
+                     // Krytyk / Headshot: znacznik krytyczny + potężna struga krwi w kierunku lotu + błysk + dźwięk headshota
+                     if (state.particles) {
+                         state.particles.push(new CritIndicator(t.x, t.y - 12));
+                     }
+                      let bulletAngle = Math.atan2(this.vy, this.vx);
+                      createDirectionalParticles(t.x, t.y, '#ff003c', 35, 180, bulletAngle, 0.65); // Szybsza i dłuższa kierunkowa struga krwi!
+                      createParticles(t.x, t.y, '#ffffff', 8, 40);  // Biały błysk
+                      playSound('sfx_shoot_head', 0.65); // Dźwięk headshota!
+                 } else {
+                     let splashColor = '#ffaa00';
+                     createParticles(t.x, t.y, splashColor, 2, 35);
+                 }
+
+                // Zgodnie z wytycznymi: zbalansowany, realistyczny odrzut
                 if (t.hp > 0 && typeof t.applyKnockback === 'function') {
                     let bAng = Math.atan2(this.vy, this.vx);
-                    t.applyKnockback(Math.cos(bAng) * 120, Math.sin(bAng) * 120);
+                    let force = this.isCrit ? 190 : 120; // Silniejszy odrzut krytyka
+                    t.applyKnockback(Math.cos(bAng) * force, Math.sin(bAng) * force);
                 }
             }
         } else {
-            t.takeDamage(this.damage, this.shooter);
+            t.takeDamage(this.damage, this.shooter, false);
             this.life = 0; 
         }
     }
 
     draw(ctx) {
         // Frustum culling: check if bullet is visible
-        const halfW = window.innerWidth / 2 + 20;
-        const halfH = window.innerHeight / 2 + 20;
+        const halfW = state.viewport.halfW + 20;
+        const halfH = state.viewport.halfH + 20;
         if (Math.abs(this.x - state.camera.x) > halfW || Math.abs(this.y - state.camera.y) > halfH) {
             return;
         }
@@ -132,23 +150,24 @@ export class Bullet {
             ctx.translate(this.x, this.y);
             ctx.rotate(angle);
             
-            // Zgodnie z instrukcją: rakieta jest bardziej podłużna w doskonałym stylu pixel art
             ctx.imageSmoothingEnabled = false;
             
-            // Ciemne lotki stabilizujące
             ctx.fillStyle = '#222222';
             ctx.fillRect(-6, -3, 2, 6);
             
-            // Wydłużony, stalowy korpus
             ctx.fillStyle = '#dddddd';
             ctx.fillRect(-4, -1.5, 8, 3);
             
-            // Gorąca, czerwona głowica bojowa
             ctx.fillStyle = '#ff3300';
             ctx.fillRect(4, -1.5, 3, 3);
-            // Połysk na czubku
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(5, -0.5, 1, 1);
+        } else if (this.isCrit) {
+            // Strzał krytyczny: fioletowa poświata i biały powiększony rdzeń pocisku
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = '#d03be3';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(this.x - 2, this.y - 2, 4, 4);
         } else {
             ctx.shadowBlur = 8;
             ctx.shadowColor = this.weapon.color;

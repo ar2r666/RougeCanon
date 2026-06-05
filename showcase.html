@@ -143,6 +143,7 @@
         <button class="tab-btn" onclick="switchTab('tab-weapons')">BRONIE & POCISKI</button>
         <button class="tab-btn" onclick="switchTab('tab-entities')">JEDNOSTKI</button>
         <button class="tab-btn" onclick="switchTab('tab-supplies')">ZAOPATRZENIE</button>
+        <button class="tab-btn" onclick="switchTab('tab-physics')">FIZYKA ŚMIERCI</button>
     </div>
 
     <!-- ZAKŁADKA 1: EKSPLOZJE -->
@@ -307,6 +308,46 @@
             </div>
         </div>
     </div>
+    <!-- ZAKŁADKA 5: FIZYKA ŚMIERCI -->
+    <div id="tab-physics" class="tab-content">
+        <div class="showcase-header">
+            <h2 style="font-size: 16px; color: #ffff00; margin-bottom: 20px;">MATRYCA 4 PODEJŚĆ DO FIZYKI ŚMIERCI (WROGOWIE SŁABI I SILNI)</h2>
+        </div>
+        <div class="grid-container">
+            <div class="card">
+                <div class="card-title">1. Ślizg z Ragdollem i Smugą Krwi</div>
+                <div class="card-desc">Długi odrzut w tył ze słabnącym tarciem, losową rotacją ragdolla i ciągłą smugą krwi rysowaną na ziemi.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-phys-slide" width="220" height="220"></canvas>
+                </div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerDeathPhysics('slide')">ZABIJ / STRZEL</button>
+            </div>
+            <div class="card">
+                <div class="card-title">2. Ragdoll z Rotacją (Średni)</div>
+                <div class="card-desc">Szybki odrzut z gwałtownym wirowaniem ciała (spin) i ciągłym śladem rozpryskiwanej krwi.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-phys-spin" width="220" height="220"></canvas>
+                </div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerDeathPhysics('spin')">ZABIJ / STRZEL</button>
+            </div>
+            <div class="card">
+                <div class="card-title">3. Koziołkowanie / Odbicie (Średni)</div>
+                <div class="card-desc">Odrzut z wertykalną parabolą lotu (odbicie od ziemi w połowie ślizgu) – typowy dla wybuchu/garanda.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-phys-bounce" width="220" height="220"></canvas>
+                </div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerDeathPhysics('bounce')">ZABIJ / STRZEL</button>
+            </div>
+            <div class="card">
+                <div class="card-title">4. Ciężki Odrzut Pancerny (Mocny)</div>
+                <div class="card-desc">Ciężki pancerz. Powolne przeciągnięcie w tył z tarciem, szarpaniem kamery i smugą pyłu/iskier.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-phys-heavy" width="220" height="220"></canvas>
+                </div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerDeathPhysics('heavy')">ZABIJ / STRZEL</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         function switchTab(tabId) {
@@ -363,6 +404,58 @@
             });
         }
 
+        // Płótna fizyki śmierci
+        const canPhysSlide = document.getElementById('can-phys-slide').getContext('2d', {alpha: false});
+        const canPhysSpin = document.getElementById('can-phys-spin').getContext('2d', {alpha: false});
+        const canPhysBounce = document.getElementById('can-phys-bounce').getContext('2d', {alpha: false});
+        const canPhysHeavy = document.getElementById('can-phys-heavy').getContext('2d', {alpha: false});
+
+        // Stany symulacji fizyki śmierci
+        let deathSims = {
+            slide: { x: 110, y: 110, vx: 0, vy: 0, angle: 0, spinSpeed: 0, timer: 0, active: false, particles: [], bloodPool: [] },
+            spin: { x: 110, y: 110, vx: 0, vy: 0, angle: 0, spinSpeed: 0, timer: 0, active: false, particles: [], bloodPool: [] },
+            bounce: { x: 110, y: 110, vx: 0, vy: 0, bY: 0, bVy: 0, timer: 0, active: false, particles: [], bloodPool: [] },
+            heavy: { x: 110, y: 110, vx: 0, vy: 0, timer: 0, active: false, shake: 0, particles: [], bloodPool: [] }
+        };
+
+        function triggerDeathPhysics(type) {
+            let sim = deathSims[type];
+            sim.x = 150; // Zaczynamy bardziej z prawej, żeby odrzucało w lewo na większą odległość
+            sim.y = 120;
+            sim.timer = 1.4;
+            sim.maxTimer = 1.4;
+            sim.active = true;
+            sim.particles = [];
+            sim.bloodPool = [];
+
+            if (type === 'slide') {
+                sim.vx = -170; // Szybki start długiego ślizgu
+                sim.vy = 0;
+                sim.angle = 0;
+                sim.targetAngle = Math.PI / 2 + (Math.random() - 0.5) * 0.35;
+            } else if (type === 'spin') {
+                sim.vx = -140;
+                sim.vy = -30;
+                sim.spinSpeed = 16;
+            } else if (type === 'bounce') {
+                sim.vx = -130;
+                sim.bY = 0;
+                sim.bVy = -160; // Parabola
+            } else if (type === 'heavy') {
+                sim.vx = -60;
+                sim.shake = 5;
+            }
+        }
+        window.triggerDeathPhysics = triggerDeathPhysics;
+
+        // Auto-wyzwalacz na start, aby cokolwiek się działo od razu
+        setTimeout(() => {
+            triggerDeathPhysics('slide');
+            triggerDeathPhysics('spin');
+            triggerDeathPhysics('bounce');
+            triggerDeathPhysics('heavy');
+        }, 300);
+
         let startTime = Date.now();
         const maxLife = 1.5;
         const blastDuration = 0.6;
@@ -394,7 +487,8 @@
 
             // Tła dżunglowe
             [canExp, canBazooka, canPlasma, canFlame, canSoldier, canMutant, canDog, canCrate, canRadio,
-             canCageBamboo, canCageBone, canCageLaser, canCageRust, canCageSlime, canCageIce, canCageGibbet, canCageAlien].forEach(ctx => {
+             canCageBamboo, canCageBone, canCageLaser, canCageRust, canCageSlime, canCageIce, canCageGibbet, canCageAlien,
+             canPhysSlide, canPhysSpin, canPhysBounce, canPhysHeavy].forEach(ctx => {
                 ctx.fillStyle = ctx.createPattern(tCanvas, 'repeat');
                 ctx.fillRect(0, 0, 220, 220);
             });
@@ -838,6 +932,166 @@
             canCageAlien.fillRect(-4, -2, 8, 2);
             canCageAlien.fillRect(-6, 8, 12, 2);
             canCageAlien.restore();
+
+
+            // === SYMULACJA 5 PODEJŚĆ DO FIZYKI ŚMIERCI ===
+            let dt = 1 / 60;
+
+            // Helper do rysowania ciała wroga
+            const drawEnemyBody = (ctx, x, y, angle, isElite = false) => {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                
+                // Cień pod stopami (zanika jeśli postać leży/odlatuje)
+                ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                ctx.fillRect(-8, 12, 16, 3);
+
+                // Głowa/Hełm
+                ctx.fillStyle = isElite ? '#4a1a68' : '#8c1111';
+                ctx.fillRect(-6, -14, 12, 9);
+                ctx.fillStyle = '#ffccaa'; // twarz
+                ctx.fillRect(-4, -7, 8, 4);
+                // Korpus
+                ctx.fillStyle = isElite ? '#311042' : '#b81d1d';
+                ctx.fillRect(-7, -5, 14, 14);
+                // Nogi
+                ctx.fillStyle = '#111111';
+                ctx.fillRect(-6, 9, 4, 4);
+                ctx.fillRect(2, 9, 4, 4);
+                
+                ctx.restore();
+            };
+
+            // 1. DŁUGI ŚLIZG Z RAGDOLLEM (Słaby wróg)
+            {
+                let sim = deathSims.slide;
+                if (sim.active) {
+                    sim.x += sim.vx * dt;
+                    sim.vx *= 0.93; // Bardzo niskie tarcie dla długiego ślizgu!
+                    sim.timer -= dt;
+                    
+                    let speed = Math.abs(sim.vx);
+                    let progress = Math.min(1.0, 1.0 - (sim.timer / sim.maxTimer));
+                    let eased = Math.sin(progress * Math.PI / 2); // płynne przechylanie cielska bez zwrotów akcji
+                    sim.angle = sim.targetAngle * eased;
+                    
+                    // Ciągła smuga krwi z malutkich pikseli
+                    if (speed > 3 && Math.random() < 0.75) {
+                        let pSize = Math.random() > 0.5 ? 2 : 1;
+                        sim.bloodPool.push({
+                            x: sim.x + (Math.random() - 0.5) * 4,
+                            y: sim.y + 12 + (Math.random() - 0.5) * 3,
+                            size: pSize
+                        });
+                    }
+                    if (sim.timer <= 0) {
+                        sim.active = false;
+                        setTimeout(() => triggerDeathPhysics('slide'), 1200);
+                    }
+                }
+                canPhysSlide.fillStyle = '#8b0000';
+                sim.bloodPool.forEach(b => canPhysSlide.fillRect(b.x, b.y, b.size, b.size));
+                drawEnemyBody(canPhysSlide, sim.x, sim.y, sim.angle, false);
+            }
+
+            // 2. RAGDOLL Z ROTACJĄ (Średni wróg)
+            {
+                let sim = deathSims.spin;
+                if (sim.active) {
+                    sim.x += sim.vx * dt;
+                    sim.y += sim.vy * dt;
+                    sim.vx *= 0.88;
+                    sim.vy *= 0.88;
+                    sim.angle += sim.spinSpeed * dt;
+                    sim.spinSpeed *= 0.90;
+                    sim.timer -= dt;
+
+                    if (Math.random() < 0.4 && Math.abs(sim.vx) > 5) {
+                        sim.bloodPool.push({ x: sim.x + (Math.random()-0.5)*6, y: sim.y + (Math.random()-0.5)*6, size: 2 + Math.floor(Math.random()*3) });
+                    }
+                    if (sim.timer <= 0) {
+                        sim.active = false;
+                        setTimeout(() => triggerDeathPhysics('spin'), 1200);
+                    }
+                }
+                canPhysSpin.fillStyle = '#aa0000';
+                sim.bloodPool.forEach(b => canPhysSpin.fillRect(b.x, b.y, b.size, b.size));
+                drawEnemyBody(canPhysSpin, sim.x, sim.y, sim.angle, false);
+            }
+
+            // 3. KOZIOŁKOWANIE / ODBICIE (Średni wróg)
+            {
+                let sim = deathSims.bounce;
+                if (sim.active) {
+                    sim.x += sim.vx * dt;
+                    sim.vx *= 0.88;
+                    
+                    sim.bY += sim.bVy * dt;
+                    sim.bVy += 420 * dt; // Grawitacja
+                    
+                    if (sim.bY >= 0) {
+                        sim.bY = 0;
+                        sim.bVy = -sim.bVy * 0.45; // Bounce
+                        if (Math.abs(sim.bVy) < 25) {
+                            sim.bVy = 0;
+                        } else {
+                            for(let k=0; k<5; k++) {
+                                sim.bloodPool.push({ x: sim.x + (Math.random()-0.5)*12, y: sim.y + 10 + (Math.random()-0.5)*4, size: 2 + Math.floor(Math.random()*2) });
+                            }
+                        }
+                    }
+                    
+                    sim.timer -= dt;
+                    if (sim.timer <= 0) {
+                        sim.active = false;
+                        setTimeout(() => triggerDeathPhysics('bounce'), 1200);
+                    }
+                }
+                canPhysBounce.fillStyle = '#8b0000';
+                sim.bloodPool.forEach(b => canPhysBounce.fillRect(b.x, b.y, b.size, b.size));
+                drawEnemyBody(canPhysBounce, sim.x, sim.y + sim.bY, sim.bY < 0 ? -0.25 : -Math.PI/2.1, false);
+            }
+
+            // 4. CIĘŻKI ODRZUT PANCERNY (Mocny wróg)
+            {
+                let sim = deathSims.heavy;
+                if (sim.active) {
+                    sim.x += sim.vx * dt;
+                    sim.vx *= 0.83;
+                    sim.timer -= dt;
+                    sim.shake *= 0.86;
+
+                    if (Math.random() < 0.5 && Math.abs(sim.vx) > 3) {
+                        sim.bloodPool.push({ x: sim.x + (Math.random()-0.5)*4, y: sim.y + 12 + (Math.random()-0.5)*3, size: Math.random() > 0.5 ? 2 : 1 });
+                        sim.particles.push({ x: sim.x + 4, y: sim.y + 10, vx: 30 + Math.random()*40, vy: -10 - Math.random()*20, life: 0.35 });
+                    }
+                    
+                    sim.particles.forEach(p => {
+                        p.x += p.vx * dt;
+                        p.y += p.vy * dt;
+                        p.vy += 100 * dt;
+                        p.life -= dt;
+                    });
+                    sim.particles = sim.particles.filter(p => p.life > 0);
+
+                    if (sim.timer <= 0) {
+                        sim.active = false;
+                        setTimeout(() => triggerDeathPhysics('heavy'), 1200);
+                    }
+                }
+                canPhysHeavy.fillStyle = '#660000';
+                sim.bloodPool.forEach(b => canPhysHeavy.fillRect(b.x, b.y, b.size, b.size));
+                
+                sim.particles.forEach(p => {
+                    canPhysHeavy.fillStyle = '#8a9396'; // iskry pancerza/pył
+                    canPhysHeavy.fillRect(p.x, p.y, 2, 2);
+                });
+
+                let ox = (Math.random() - 0.5) * sim.shake;
+                let oy = (Math.random() - 0.5) * sim.shake;
+                drawEnemyBody(canPhysHeavy, sim.x + ox, sim.y + oy, -Math.PI / 5.5, true);
+            }
 
             requestAnimationFrame(renderAll);
         }

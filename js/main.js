@@ -1,5 +1,5 @@
 import { state, stats, WEAPONS } from './config.js';
-import { terrainPattern, bloodCanvas, discoverCustomAssets } from './sprites.js';
+import { terrainPattern, bloodCanvas, bloodCtx, discoverCustomAssets } from './sprites.js';
 import { Soldier, corpses } from './entities/Soldier.js';
 import { Enemy } from './entities/Enemy.js';
 import { Crate } from './entities/Crate.js';
@@ -8,6 +8,7 @@ import { EnemyDepot } from './entities/EnemyDepot.js';
 import { Decoy } from './entities/Decoy.js';
 import { Explosion } from './entities/Explosion.js';
 import { AirstrikeBomb } from './entities/AirstrikeBomb.js';
+import { createParticles } from './entities/Particle.js';
 import { gameOver, showUpgrades, updateHUD, startGame } from './ui.js?v=1.0.5';
 import { initInput } from './input.js';
 
@@ -18,13 +19,15 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
 
 function resize() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    state.viewport.width = window.innerWidth;
+    state.viewport.height = window.innerHeight;
+    state.viewport.halfW = state.viewport.width / 2;
+    state.viewport.halfH = state.viewport.height / 2;
     
     // Wsparcie dla ekranów mobilnych o wysokim DPI (Retina)
     let dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
+    canvas.width = state.viewport.width * dpr;
+    canvas.height = state.viewport.height * dpr;
     ctx.scale(dpr, dpr);
 }
 
@@ -162,6 +165,9 @@ function update(dt) {
     if (state.decoys) {
         for (let i = 0; i < state.decoys.length; i++) state.decoys[i].update(dt);
     }
+    if (state.medkits) {
+        for (let i = 0; i < state.medkits.length; i++) state.medkits[i].update(dt);
+    }
     if (state.airstrikeBombs) {
         for (let i = 0; i < state.airstrikeBombs.length; i++) state.airstrikeBombs[i].update(dt);
     }
@@ -182,6 +188,106 @@ function update(dt) {
         state.fuelPools = state.fuelPools.filter(f => f.life > 0);
     }
 
+    // --- AKTUALIZACJA FIZYKI CIAŁ WROGÓW (Dying Bodies) ---
+    if (state.dyingBodies) {
+        for (let i = 0; i < state.dyingBodies.length; i++) {
+            let b = state.dyingBodies[i];
+            b.timer -= dt;
+
+            // Ruch z oporem (tarciem)
+            b.x += b.vx * dt;
+            b.y += b.vy * dt;
+
+            if (b.approach === 'slide') {
+                b.vx *= 0.93; // Bardzo niskie tarcie dla długiego ślizgu!
+                b.vy *= 0.93;
+                let progress = Math.min(1.0, 1.0 - (b.timer / b.maxTimer));
+                let eased = Math.sin(progress * Math.PI / 2); // Płynne przechylanie bez nagłych przeskoków i nawrotów
+                b.angle = b.targetAngle * eased;
+            } else if (b.approach === 'spin') {
+                b.vx *= 0.88;
+                b.vy *= 0.88;
+                b.angle += b.spinSpeed * dt;
+                b.spinSpeed *= 0.90;
+            } else if (b.approach === 'bounce') {
+                b.vx *= 0.88;
+                b.vy *= 0.88;
+                b.bY += b.bVy * dt;
+                b.bVy += 420 * dt; // grawitacja
+                if (b.bY >= 0) {
+                    b.bY = 0;
+                    b.bVy = -b.bVy * 0.45; // bounce
+                    if (Math.abs(b.bVy) < 25) b.bVy = 0;
+                }
+                b.angle += (b.targetAngle - b.angle) * 0.15; // Płynne pochylenie przy odbiciu
+            } else if (b.approach === 'heavy') {
+                b.vx *= 0.83;
+                b.vy *= 0.83;
+                b.shake *= 0.86;
+                b.angle += (b.targetAngle - b.angle) * 0.15; // Płynne pochylenie ciężkiego pancerza
+                if (Math.random() < 0.25 && Math.abs(b.vx) > 3) {
+                    createParticles(b.x, b.y + 10, '#8a9396', 1, 15); // szary pył pancerza
+                }
+            }
+
+            // --- SMUGA KRWI: Zostawianie śladu krwi na ziemi podczas ślizgu ---
+            if (bloodCtx && b.deathType !== 'flame' && b.deathType !== 'beam' && Math.hypot(b.vx, b.vy) > 8) {
+                if (Math.random() < 0.75) {
+                    bloodCtx.fillStyle = b.deathType === 'headshot' ? '#660000' : '#8b0000'; // ciemniejsza dla headshota
+                    let pSize = Math.random() > 0.5 ? 2 : 1; // Bardzo malutkie piksele
+                    let ox = (Math.random() - 0.5) * 4;
+                    let oy = (Math.random() - 0.5) * 4;
+                    bloodCtx.fillRect(b.x + ox, b.y + 6 + oy, pSize, pSize);
+                }
+            }
+
+            // Gdy czas dobiegnie końca, wypalamy ciało w tło
+            if (b.timer <= 0) {
+                if (bloodCtx) {
+                    bloodCtx.save();
+                    
+                    let baseSprite = b.sprites ? b.sprites[0] : null;
+                    bloodCtx.translate(b.x, b.y + 4);
+                    
+                    // Zachowanie kąta z końca ślizgu/ragdolla (zapobiega niepłynnemu przeskokowi stanu)
+                    let finalAngle = b.angle;
+                    bloodCtx.rotate(finalAngle);
+                    
+                    let drawScale = b.type === 'boss' ? 48 : 32;
+                    let isElite = b.type !== 'standard';
+                    let customDead = isElite ? 
+                        ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyEliteDeadSkin && customSquadDesign.enemyEliteDeadSkin.complete && customSquadDesign.enemyEliteDeadSkin.width > 0) ? customSquadDesign.enemyEliteDeadSkin : (b.customImageSkin && b.customImageSkin.complete && b.customImageSkin.width > 0 ? b.customImageSkin : null)) :
+                        ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin && customSquadDesign.enemyDeadSkin.complete && customSquadDesign.enemyDeadSkin.width > 0) ? customSquadDesign.enemyDeadSkin : (b.customImageSkin && b.customImageSkin.complete && b.customImageSkin.width > 0 ? b.customImageSkin : null));
+                    
+                    if (customDead && customDead.width > 0 && customDead.height > 0) {
+                        let sW = Math.min(customDead.width, customDead.height);
+                        let sH = Math.min(customDead.height, customDead.width);
+                        bloodCtx.drawImage(customDead, 0, 0, sW, sH, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
+                    } else if (baseSprite) {
+                        bloodCtx.drawImage(baseSprite, -drawScale / 2, -drawScale / 2, drawScale, drawScale);
+                    }
+                    
+                    bloodCtx.fillStyle = '#8b0000'; // Realistyczna krew
+                    let woundCount = b.type === 'boss' ? 12 : (b.deathType === 'headshot' ? 8 : 4);
+                    for (let w = 0; w < woundCount; w++) {
+                        let rx = Math.floor(((Math.random() - 0.5) * (drawScale * 0.5)) / 2) * 2;
+                        let ry = Math.floor(((Math.random() - 0.5) * (drawScale * 0.5)) / 2) * 2;
+                        let pSize = Math.random() > 0.5 ? 2 : 1; // Małe piksele 1-2
+                        bloodCtx.fillRect(rx, ry, pSize, pSize);
+                    }
+                    bloodCtx.restore();
+                }
+
+                if (typeof corpses !== 'undefined' && corpses) {
+                    let isScorched = b.deathType === 'flame' || b.deathType === 'beam';
+                    corpses.push({ x: b.x, y: b.y, isScorched: isScorched, deathType: b.deathType, smokeTimer: isScorched ? 3.0 : 0, animTimer: 0, seed: Math.random() * 1000 });
+                    if (corpses.length > 150) corpses.shift();
+                }
+            }
+        }
+        state.dyingBodies = state.dyingBodies.filter(b => b.timer > 0);
+    }
+
     // Clean dead entities
     let startEnemies = state.enemies.length;
     state.enemies = state.enemies.filter(e => e.hp > 0);
@@ -193,6 +299,7 @@ function update(dt) {
     if (state.prisonerCages) state.prisonerCages = state.prisonerCages.filter(pc => !pc.isDestroyed || pc.life > 0);
     if (state.enemyDepots) state.enemyDepots = state.enemyDepots.filter(ed => !ed.isDestroyed || ed.life > 0);
     if (state.decoys) state.decoys = state.decoys.filter(dec => !dec.isDestroyed || dec.life > 0);
+    if (state.medkits) state.medkits = state.medkits.filter(m => !m.isCollected && m.life > 0);
     if (state.airstrikeBombs) state.airstrikeBombs = state.airstrikeBombs.filter(b => !b.isDead);
 
     if (state.enemies.length !== startEnemies || state.squad.length === 0) {
@@ -219,24 +326,24 @@ function drawWaypoint(x, y) {
 function draw() {
     // Clear & Draw repeating background relative to camera
     ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+    ctx.fillRect(0, 0, state.viewport.width, state.viewport.height);
 
     ctx.save();
-    ctx.translate(window.innerWidth / 2 - state.camera.x, window.innerHeight / 2 - state.camera.y);
+    ctx.translate(state.viewport.halfW - state.camera.x, state.viewport.halfH - state.camera.y);
 
     // Fill terrain pattern (only what's visible roughly)
     if (terrainPattern) {
         ctx.fillStyle = terrainPattern;
-        ctx.fillRect(state.camera.x - window.innerWidth / 2, state.camera.y - window.innerHeight / 2, window.innerWidth, window.innerHeight);
+        ctx.fillRect(state.camera.x - state.viewport.halfW, state.camera.y - state.viewport.halfH, state.viewport.width, state.viewport.height);
     }
 
     // Draw Blood & Corpses layer
     if (bloodCanvas) {
         // Optymalizacja VRAM: zamiast przesyłać całą 576MB teksturę 12000x12000 co klatkę, renderujemy tylko widoczny obszar kamery
-        let vpW = window.innerWidth + 200;
-        let vpH = window.innerHeight + 200;
-        let sx = Math.max(0, Math.min(bloodCanvas.width - vpW, Math.floor(state.camera.x - window.innerWidth / 2 - 100)));
-        let sy = Math.max(0, Math.min(bloodCanvas.height - vpH, Math.floor(state.camera.y - window.innerHeight / 2 - 100)));
+        let vpW = state.viewport.width + 200;
+        let vpH = state.viewport.height + 200;
+        let sx = Math.max(0, Math.min(bloodCanvas.width - vpW, Math.floor(state.camera.x - state.viewport.halfW - 100)));
+        let sy = Math.max(0, Math.min(bloodCanvas.height - vpH, Math.floor(state.camera.y - state.viewport.halfH - 100)));
         
         ctx.drawImage(bloodCanvas, sx, sy, vpW, vpH, sx, sy, vpW, vpH);
     }
@@ -246,19 +353,32 @@ function draw() {
         drawWaypoint(state.targetPoint.x, state.targetPoint.y);
     }
 
-    // Draw Entities (sort by Y for basic depth)
-    let renderables = [...state.squad, ...state.companions, ...state.enemies, ...(state.crates || []), ...(state.prisonerCages || []), ...(state.enemyDepots || []), ...(state.decoys || []), ...(state.airstrikeBombs || [])];
-    
-    // Frustum culling: filter to only render visible entities
+    // Draw Entities (sort by Y for basic depth) - Optymalizacja: unikamy kopiowania wielkiej tablicy co klatkę
     let visibleRenderables = [];
-    const halfW = window.innerWidth / 2 + 64;
-    const halfH = window.innerHeight / 2 + 64;
-    for (let i = 0; i < renderables.length; i++) {
-        let r = renderables[i];
-        if (Math.abs(r.x - state.camera.x) < halfW && Math.abs(r.y - state.camera.y) < halfH) {
-            visibleRenderables.push(r);
+    const halfW = state.viewport.halfW + 64;
+    const halfH = state.viewport.halfH + 64;
+    
+    const addVisible = (arr) => {
+        if (!arr) return;
+        for (let i = 0; i < arr.length; i++) {
+            let r = arr[i];
+            if (Math.abs(r.x - state.camera.x) < halfW && Math.abs(r.y - state.camera.y) < halfH) {
+                visibleRenderables.push(r);
+            }
         }
-    }
+    };
+
+    addVisible(state.squad);
+    addVisible(state.companions);
+    addVisible(state.enemies);
+    addVisible(state.dyingBodies);
+    addVisible(state.crates);
+    addVisible(state.prisonerCages);
+    addVisible(state.enemyDepots);
+    addVisible(state.decoys);
+    addVisible(state.medkits);
+    addVisible(state.airstrikeBombs);
+
     visibleRenderables.sort((a, b) => a.y - b.y);
     
     for (let i = 0; i < state.explosions.length; i++) state.explosions[i].draw(ctx);
