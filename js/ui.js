@@ -22,20 +22,36 @@ export function startWave() {
     document.getElementById('upgradeScreen').classList.add('hidden');
     
     // Generowanie klatki z jeńcem co 3 poziomy przy niepełnym składzie (< 4 żołnierzy)
-    state.prisonerCages = [];
+    state.prisonerCages = state.prisonerCages.filter(pc => !pc.isDestroyed || pc.life > 0);
     state.enemyDepots = [];
     if (state.wave % 3 === 0) {
         let leader = state.squad[0] || { x: state.camera.x, y: state.camera.y };
         let spawnAng = Math.random() * Math.PI * 2;
         
         if (state.squad.length < 4) {
-            let spawnDist = 350 + Math.random() * 100; // 350-450 px od Dowódcy
+            // Gwarancja spawnowania poza polem widzenia gracza (na podstawie aktualnych wymiarów okna)
+            let spawnDist = Math.max(window.innerWidth, window.innerHeight) * 0.55 + 100 + Math.random() * 150;
             let cx = leader.x + Math.cos(spawnAng) * spawnDist;
             let cy = leader.y + Math.sin(spawnAng) * spawnDist;
             cx = Math.max(400, Math.min(11600, cx));
             cy = Math.max(400, Math.min(11600, cy));
             
-            state.prisonerCages.push(new PrisonerCage(cx, cy));
+            let cage = new PrisonerCage(cx, cy);
+            state.prisonerCages.push(cage);
+            
+            // Spawnowanie strażników wokół klatki (stado wrogów gromadzących się wokół ratunku)
+            let guardsCount = 5 + Math.floor(state.wave * 1.2);
+            for (let i = 0; i < guardsCount; i++) {
+                let ang = (i / guardsCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+                let dist = 40 + Math.random() * 40;
+                let ex = cx + Math.cos(ang) * dist;
+                let ey = cy + Math.sin(ang) * dist;
+                
+                let guard = new Enemy(ex, ey);
+                guard.guardingCage = cage;
+                state.enemies.push(guard);
+                state.enemiesAlive++; // Zwiększenie licznika wrogów do pokonania w fali
+            }
         } else {
             // EVENT Szturmu na Magazyn (Squad Size = 4) - Spawnowanie magazynu wroga i bossa
             let spawnDist = 400 + Math.random() * 100; // Dalej dla misji taktycznej

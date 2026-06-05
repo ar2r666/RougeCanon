@@ -372,30 +372,53 @@ function draw() {
                 
                 let distMeters = Math.floor(Math.hypot(cage.x - state.camera.x, cage.y - state.camera.y) / 10);
                 
-                ctx.save();
-                ctx.fillStyle = '#39ff14'; // Neonowa zieleń
-                ctx.strokeStyle = '#39ff14';
-                ctx.lineWidth = 2;
+                // Obliczanie pozycji dymku (cofnięty od krawędzi ekranu)
+                let bubbleX = ax - Math.cos(ang) * 15;
+                let bubbleY = ay - Math.sin(ang) * 15;
                 
-                // Rysowanie strzałki kierunkowej pointing to the cage
-                ctx.translate(ax, ay);
-                ctx.rotate(ang);
+                ctx.save();
+                
+                // Rysowanie delikatnego trójkątnego wskaźnika kierunku (ogonek dymku)
+                ctx.fillStyle = '#ffffff';
+                
                 ctx.beginPath();
-                ctx.moveTo(10, 0);
-                ctx.lineTo(-6, -5);
-                ctx.lineTo(-6, 5);
+                let baseAngle1 = ang + Math.PI / 2;
+                let baseAngle2 = ang - Math.PI / 2;
+                ctx.moveTo(bubbleX + Math.cos(baseAngle1) * 6, bubbleY + Math.sin(baseAngle1) * 6);
+                ctx.lineTo(ax, ay); // wierzchołek na krawędzi ekranu
+                ctx.lineTo(bubbleX + Math.cos(baseAngle2) * 6, bubbleY + Math.sin(baseAngle2) * 6);
                 ctx.closePath();
                 ctx.fill();
+                
+                // Rysowanie retro dymku dialogowego (kanciasty prostokąt)
+                let rectW = 54;
+                let rectH = 18;
+                let rx = bubbleX - rectW / 2;
+                let ry = bubbleY - rectH / 2;
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(rx, ry, rectW, rectH);
+                
+                // Napis "Help!" w środku dymku
+                ctx.fillStyle = '#e35442'; // Czerwony retro alarm
+                ctx.font = '8px "Press Start 2P"';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText("Help!", bubbleX, bubbleY + 1);
                 ctx.restore();
                 
-                // Rysowanie tekstu odległości (z przesunięciem w pionie, by nie nakładał się na strzałkę)
+                // Tekst odległości poniżej lub powyżej dymku
                 ctx.save();
                 ctx.fillStyle = '#39ff14';
                 ctx.font = '8px "Press Start 2P"';
                 ctx.textAlign = 'center';
-                ctx.shadowBlur = 4;
+                ctx.shadowBlur = 3;
                 ctx.shadowColor = '#39ff14';
-                ctx.fillText(`RATUNEK: ${distMeters}m`, ax, ay - 12);
+                let textY = bubbleY + 20;
+                if (ay > window.innerHeight - 50) {
+                    textY = bubbleY - 20;
+                }
+                ctx.fillText(`${distMeters}m`, bubbleX, textY);
                 ctx.restore();
             }
         }

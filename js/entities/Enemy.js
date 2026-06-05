@@ -65,6 +65,9 @@ export class Enemy {
         this.bobY = 0;
         this.isMoving = false;
         this.facingLeft = false;
+        this.guardingCage = null; // Klatka, którą ten wróg ma pilnować
+        this.guardTargetX = null;
+        this.guardTargetY = null;
         
         this.updateSprites();
     }
@@ -93,6 +96,25 @@ export class Enemy {
         for (let s of potentialTargets) {
             let d = Math.hypot(s.x - this.x, s.y - this.y);
             if (d < minDist) { minDist = d; closest = s; }
+        }
+
+        // Siły pilnowania klatki: jeśli wróg pilnuje klatki, a dowódca/oddział jest daleko, wraca/krąży wokół klatki
+        if (this.guardingCage && !this.guardingCage.isDestroyed) {
+            if (minDist > 220) {
+                // Dynamiczny patrol: wybierz losowy cel w pobliżu klatki i poruszaj się normalnie
+                if (this.guardTargetX === null || Math.hypot(this.x - this.guardTargetX, this.y - this.guardTargetY) < 15) {
+                    let patAng = Math.random() * Math.PI * 2;
+                    let patDist = 30 + Math.random() * 60; // promień patrolowania
+                    this.guardTargetX = this.guardingCage.x + Math.cos(patAng) * patDist;
+                    this.guardTargetY = this.guardingCage.y + Math.sin(patAng) * patDist;
+                }
+                closest = { x: this.guardTargetX, y: this.guardTargetY };
+            } else {
+                // Jeśli gracz podszedł blisko, "budzimy" wroga (zapomina o pilnowaniu)
+                this.guardingCage = null;
+                this.guardTargetX = null;
+                this.guardTargetY = null;
+            }
         }
 
         if (this.isPanicking && this.panicTimer > 0) {

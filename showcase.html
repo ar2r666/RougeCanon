@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Katalog Komponentów Gry - Cannon Rogues</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            overflow: auto;
+            background-color: #0a1108;
+            padding: 30px;
+            color: #fff;
+        }
+        .showcase-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .showcase-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #8bde38;
+            text-shadow: 3px 3px 0 #2b6611;
+        }
+        .showcase-header p {
+            font-size: 10px;
+            color: #a0a8ab;
+            line-height: 1.6;
+        }
+        .nav-bar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            border-bottom: 4px solid #2b6611;
+            padding-bottom: 15px;
+        }
+        .tab-btn {
+            background: #162214;
+            border: 4px solid #2b6611;
+            color: #8bde38;
+            padding: 12px 25px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab-btn:hover {
+            background: #2b6611;
+            color: #fff;
+        }
+        .tab-btn.active {
+            background: #55a828;
+            border-color: #ffff00;
+            color: #000;
+            box-shadow: 0 0 15px rgba(255,255,0,0.5);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #162214;
+            border: 4px solid #2b6611;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 8px 8px 0 #080d07;
+            position: relative;
+        }
+        .card-title {
+            font-size: 11px;
+            color: #8bde38;
+            margin-bottom: 8px;
+            text-align: center;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card-desc {
+            font-size: 9px;
+            color: #a0a8ab;
+            margin-bottom: 15px;
+            text-align: center;
+            height: 28px;
+        }
+        .canvas-wrap {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            border: 2px solid #3c5e37;
+            background-color: #3d731a; 
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .canvas-wrap canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+        .status-badge {
+            background: #2b6611;
+            color: #ffff00;
+            font-size: 9px;
+            padding: 6px 12px;
+            border: 2px solid #8bde38;
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nav-bar">
+        <a href="index.html" class="btn" style="width: auto; padding: 15px 30px; font-size: 11px; margin:0;">&larr; POWRÓT DO GRY</a>
+    </div>
+
+    <div class="showcase-header">
+        <h1>UNIWERSALNY KATALOG KOMPONENTÓW</h1>
+        <p>Wizualizacja i weryfikacja poszczególnych elementów architektonicznych gry w izolowanym środowisku 60 FPS.<br>Wszystkie komponenty rygorystycznie przestrzegają matrycy pikselowej 2x2 px oraz uniesionej perspektywy 3/4.</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-explosions')">EKSPLOZJE</button>
+        <button class="tab-btn" onclick="switchTab('tab-weapons')">BRONIE & POCISKI</button>
+        <button class="tab-btn" onclick="switchTab('tab-entities')">JEDNOSTKI</button>
+        <button class="tab-btn" onclick="switchTab('tab-supplies')">ZAOPATRZENIE</button>
+    </div>
+
+    <!-- ZAKŁADKA 1: EKSPLOZJE -->
+    <div id="tab-explosions" class="tab-content active">
+        <div class="grid-container">
+            <div class="card">
+                <div class="card-title">Ostateczny Wariant 2A</div>
+                <div class="card-desc">Surowy Arcade 4x4 w trybie Stop-Motion (8 klatek), przeskalowany o 50% z animowanym kraterem.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-exp-final" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">AKTYWNY W GRZE</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZAKŁADKA 2: BRONIE I POCISKI -->
+    <div id="tab-weapons" class="tab-content">
+        <div class="grid-container">
+            <div class="card">
+                <div class="card-title">Pocisk Bazooki</div>
+                <div class="card-desc">Oliwkowa bomba z żółtym pasem i lotkami lecąca w kierunku celu.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-wpn-bazooka" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">ZAAWANSOWANY WEKTOR</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Wiązka Plazmy</div>
+                <div class="card-desc">Błękitno-cyjanowy promień o wysokiej częstotliwości wyładowań.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-wpn-plasma" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">AKTYWNE WYŁADOWANIA</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Miotacz Ognia</div>
+                <div class="card-desc">Strumień kropel napalmu pozostawiający plamy ognia na podłożu.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-wpn-flame" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">FIZYKA KROPEL</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZAKŁADKA 3: JEDNOSTKI -->
+    <div id="tab-entities" class="tab-content">
+        <div class="grid-container">
+            <div class="card">
+                <div class="card-title">Żołnierz (Gracz / Wróżka)</div>
+                <div class="card-desc">Standardowy sprite 32x32 px w matrycy 2x2 px z uniesieniem 3/4.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-ent-soldier" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">STANDARD 2x2 PX</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Elitarny Mutant Zombie</div>
+                <div class="card-desc">Fioletowy pancerz, pomarańczowe świecące oczy i podwyższona postura.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-ent-mutant" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">JEDNOSTKA ELITARNA</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Pies Bojowy</div>
+                <div class="card-desc">Towarzysz wspierający oddział, zostawiający drobne odciski łap.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-ent-dog" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">TOWARZYSZ SQUADU</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZAKŁADKA 4: ZAOPATRZENIE I KLATKI -->
+    <div id="tab-supplies" class="tab-content">
+        <div class="showcase-header">
+            <h2 style="font-size: 16px; color: #ffff00; margin-bottom: 20px;">PROPOZYCJE PROJEKTÓW KLATKI WIĘZIENNEJ (8 TAKTYCZNYCH WARIANTÓW)</h2>
+        </div>
+        <div class="grid-container">
+            <div class="card">
+                <div class="card-title">1. Klatka Bambusowa</div>
+                <div class="card-desc">Styl dżunglowy. Pale z dzikiego bambusa powiązane lianami z drobnymi listkami.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-cage-bamboo" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">WARIANT RETRO DŻUNGLA</div>
+            </div>
+            <div class="card">
+                <div class="card-title">2. Klatka z Kości</div>
+                <div class="card-desc">Kościany szkielet z żeber mutantów spiętych skórzanymi rzemieniami.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-cage-bone" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">TRIBAL ZOMBIE STYLE</div>
+            </div>
+            <div class="card">
+                <div class="card-title">3. Klatka Laserowa</div>
+                <div class="card-desc">Stacja stazy Sci-Fi. Błękitno-cyjanowe wiązki energii plazmowej zamiast prętów.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-cage-laser" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">HIGH-TECH FORCEFIELD</div>
+            </div>
+            <div class="card">
+                <div class="card-title">4. Rdzawe Kraty</div>
+                <div class="card-desc">Stalowe pręty pokryte ciemnopomarańczową rdzą z ciężkim kłódeczkiem.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-cage-rust" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">POST-APO RUST</div>
+            </div>
+            <div class="card">
+                <div class="card-title">5. Bąbel Śluzowy (Bio-Pod)</div>
+                <div class="card-desc">Organiczny kokon mutantów. Śluzowaty, półprzezroczysty z fioletowymi kropelkami.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-cage-slime" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">MUTANT NEST COCOON</div>
+            </div>
+            <div class="card">
+                <div class="card-title">6. Blok Lodowy (Frozen Cage)</div>
+                <div class="card-desc">Żołnierz zamrożony w bryle lodu. Wymaga roztopienia pociskami lub ogniem.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-cage-ice" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">FROZEN IN ICE</div>
+            </div>
+            <div class="card">
+                <div class="card-title">7. Wisząca Klatka (Gibbet)</div>
+                <div class="card-desc">Klatka zawieszona na drewnianej szubienicy, kołysząca się na łańcuchu.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-cage-gibbet" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">HANGING CAGE</div>
+            </div>
+            <div class="card">
+                <div class="card-title">8. Sarkofag Obcych</div>
+                <div class="card-desc">Obsidianowy sarkofag obcych z pulsującymi czerwonymi neonowymi runami.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-cage-alien" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">ALIEN COFFIN</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Skrzynka Zaopatrzeniowa</div>
+                <div class="card-desc">Drewniana skrzynia z rzutem izometrycznym i cieniem na podłożu.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-sup-crate" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">MODEL 3/4</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Nadajnik Radiowy (Nalot)</div>
+                <div class="card-desc">Zielona stacja radiowa z anteną wzywająca wsparcie dywanowe.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-sup-radio" width="220" height="220"></canvas>
+                </div>
+                <div class="status-badge">PRZEDMIOT SPECJALNY</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+        window.switchTab = switchTab;
+
+        // Wzorzec trawy z gry
+        const tCanvas = document.createElement('canvas');
+        tCanvas.width = 64; tCanvas.height = 64;
+        const tCtx = tCanvas.getContext('2d');
+        for (let i=0; i<64; i+=2) {
+            for (let j=0; j<64; j+=2) {
+                tCtx.fillStyle = (Math.random() > 0.5) ? '#4b8522' : '#5a9e29';
+                tCtx.fillRect(i, j, 2, 2);
+                if (Math.random() > 0.98) {
+                    tCtx.fillStyle = '#6e5630';
+                    tCtx.fillRect(i, j, 4, 4);
+                }
+            }
+        }
+
+        // Konfiguracja i generowanie danych dla ostatecznej eksplozji (Wariant 2A, 50% skali)
+        const pal = {
+            fire1: '#e35442', fire2: '#ff8800', core: '#ffffcc', smk1: '#221e24', smk2: '#8e6371', smkEnd: '#5d4c60', smkHl: '#a37785', smkShad: '#4e3445'
+        };
+
+        let gp = [];
+        for (let i=0; i<18; i++) {
+            let sp = (Math.random()-0.5)*35; // 50% skali
+            gp.push({ xOffset: sp, yOffset: (Math.random()-0.5)*3, baseR: 8*(0.3+Math.random()*0.2), spX: (sp>0?1:-1)*25, delay: Math.random()*0.05 });
+        }
+
+        let pp = [];
+        for (let i=0; i<16; i++) {
+            let hRatio = i / 16;
+            let vOff = -hRatio * 35; // 50% wysokości (70 -> 35)
+            let hWidth = (hRatio > 0.5 ? (0.7 + (hRatio-0.5)*1.3) : 0.85) * 18;
+            let spX = (Math.random() - 0.5) * hWidth;
+            let pR = (hRatio > 0.5 ? (0.55+Math.random()*0.35) : (0.35+Math.random()*0.3)) * 15;
+            
+            pp.push({
+                xOffset: spX,
+                yOffset: vOff,
+                baseR: pR,
+                riseSpeed: (30+Math.random()*30)*(0.5+hRatio),
+                delay: hRatio*0.1,
+                cX: (Math.random()-0.5)*10,
+                cY: (Math.random()-0.5)*10
+            });
+        }
+
+        let startTime = Date.now();
+        const maxLife = 1.5;
+        const blastDuration = 0.6;
+
+        // Płótna podglądu
+        const canExp = document.getElementById('can-exp-final').getContext('2d', {alpha: false});
+        const canBazooka = document.getElementById('can-wpn-bazooka').getContext('2d', {alpha: false});
+        const canPlasma = document.getElementById('can-wpn-plasma').getContext('2d', {alpha: false});
+        const canFlame = document.getElementById('can-wpn-flame').getContext('2d', {alpha: false});
+        const canSoldier = document.getElementById('can-ent-soldier').getContext('2d', {alpha: false});
+        const canMutant = document.getElementById('can-ent-mutant').getContext('2d', {alpha: false});
+        const canDog = document.getElementById('can-ent-dog').getContext('2d', {alpha: false});
+        const canCrate = document.getElementById('can-sup-crate').getContext('2d', {alpha: false});
+        const canRadio = document.getElementById('can-sup-radio').getContext('2d', {alpha: false});
+
+        // 8 wariantów klatki PrisonerCage
+        const canCageBamboo = document.getElementById('can-cage-bamboo').getContext('2d', {alpha: false});
+        const canCageBone = document.getElementById('can-cage-bone').getContext('2d', {alpha: false});
+        const canCageLaser = document.getElementById('can-cage-laser').getContext('2d', {alpha: false});
+        const canCageRust = document.getElementById('can-cage-rust').getContext('2d', {alpha: false});
+        const canCageSlime = document.getElementById('can-cage-slime').getContext('2d', {alpha: false});
+        const canCageIce = document.getElementById('can-cage-ice').getContext('2d', {alpha: false});
+        const canCageGibbet = document.getElementById('can-cage-gibbet').getContext('2d', {alpha: false});
+        const canCageAlien = document.getElementById('can-cage-alien').getContext('2d', {alpha: false});
+
+        function renderAll() {
+            let elapsed = (Date.now() - startTime) / 1000;
+            let activeTime = elapsed % maxLife;
+
+            // Tła dżunglowe
+            [canExp, canBazooka, canPlasma, canFlame, canSoldier, canMutant, canDog, canCrate, canRadio,
+             canCageBamboo, canCageBone, canCageLaser, canCageRust, canCageSlime, canCageIce, canCageGibbet, canCageAlien].forEach(ctx => {
+                ctx.fillStyle = ctx.createPattern(tCanvas, 'repeat');
+                ctx.fillRect(0, 0, 220, 220);
+            });
+
+            // 1. RENDER EKSPLOZJI (2A, 50% skali, krater)
+            canExp.save();
+            canExp.translate(110, 165);
+
+            let craterProg = Math.min(1, activeTime / 0.18);
+            if (craterProg > 0) {
+                let craterR = 22; // 50% ze 42
+                let outerShades = ['#2b170b', '#3a2212', '#4c2d18', '#3d2314', '#5c3826', '#402010'];
+                let coreShades = ['#050201', '#0a0502', '#000000', '#0f0804', '#150a03', '#1c1008'];
+                let seed = 12345;
+                let pseudoRand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+                
+                for (let i = 0; i < 250; i++) {
+                    let ang = pseudoRand() * Math.PI * 2;
+                    let maxD = Math.pow(pseudoRand(), 0.7) * craterR;
+                    let currentD = maxD < craterR * 0.4 ? maxD : maxD * Math.sin(craterProg * Math.PI / 2);
+                    let rx = Math.floor((Math.cos(ang) * currentD) / 2) * 2;
+                    let ry = Math.floor((Math.sin(ang) * currentD * 0.55) / 2) * 2;
+                    let pSize = pseudoRand() > 0.65 ? 2 : 1;
+                    let shadePool = maxD < craterR * 0.5 ? coreShades : outerShades;
+                    canExp.fillStyle = shadePool[Math.floor(pseudoRand() * shadePool.length)];
+                    canExp.fillRect(rx, ry, pSize, pSize);
+                }
+            }
+
+            let rawProgress = Math.min(1, activeTime / blastDuration);
+            let progress = Math.floor(rawProgress * 8) / 8; // Wariant 2A Stop-Motion
+            let scale = progress < 0.2 ? (progress/0.2) : Math.sin((1-progress)/0.8 * Math.PI/2);
+            let animAlpha = progress < 0.8 ? 1.0 : Math.max(0, (1-progress)/0.2);
+            const step = 4; // Styl automatowy ma 4x4 klastry
+
+            canExp.globalAlpha = animAlpha * 0.85;
+            canExp.fillStyle = progress < 0.35 ? '#f7d84a' : '#8b5a2b';
+            gp.forEach(puff => {
+                if (activeTime < puff.delay) return;
+                let pProg = (activeTime - puff.delay) / (blastDuration - puff.delay);
+                let cx = puff.xOffset + puff.spX * pProg * 0.4;
+                let r = puff.baseR * scale * (1 + pProg*0.2);
+                for (let dy=-r; dy<=r; dy+=step) {
+                    for (let dx=-r; dx<=r; dx+=step) {
+                        if (dx*dx+dy*dy < r*r && Math.random() < 0.85) {
+                            let px = Math.floor((cx+dx)/step)*step;
+                            let py = Math.floor((puff.yOffset+dy)/step)*step;
+                            canExp.fillRect(px, py, step, step);
+                        }
+                    }
+                }
+            });
+
+            canExp.globalAlpha = animAlpha * 0.9;
+            pp.forEach(puff => {
+                if (activeTime < puff.delay) return;
+                let puffProg = (activeTime - puff.delay) / (blastDuration - puff.delay);
+                let currentScale = scale * (1 + puffProg * 0.25);
+                let baseR = puff.baseR * currentScale;
+                let cx = puff.xOffset * (1 + puffProg*0.2);
+                let cy = puff.yOffset - puffProg*puff.riseSpeed;
+
+                let fillCol, hlCol;
+                if (progress < 0.18) {
+                    fillCol = '#ffffff'; hlCol = '#f7d84a';
+                } else if (progress < 0.45) {
+                    let isBot = (puff.yOffset / -35) < 0.35;
+                    fillCol = isBot ? pal.fire1 : pal.fire2; hlCol = '#ffd700';
+                } else if (progress < 0.75) {
+                    let fade = (progress-0.45)/0.3;
+                    fillCol = fade < 0.5 ? pal.fire1 : pal.smk2; hlCol = fade < 0.5 ? pal.fire2 : pal.smk1;
+                } else {
+                    fillCol = pal.smkEnd; hlCol = pal.smkShad;
+                }
+
+                canExp.fillStyle = fillCol;
+                for (let dy=-baseR-4; dy<=baseR+4; dy+=step) {
+                    for (let dx=-baseR-4; dx<=baseR+4; dx+=step) {
+                        let ang = Math.atan2(dy, dx);
+                        let irreg = baseR + Math.sin(ang*4 + puff.cX)*(baseR*0.25);
+                        if (dx*dx+dy*dy < irreg*irreg) {
+                            let px = Math.floor((cx+dx)/step)*step;
+                            let py = Math.floor((cy+dy)/step)*step;
+                            canExp.fillRect(px, py, step, step);
+                        }
+                    }
+                }
+
+                canExp.fillStyle = hlCol;
+                let hR = baseR * 0.75;
+                for (let dy=-hR; dy<=hR; dy+=step) {
+                    for (let dx=-hR; dx<=hR; dx+=step) {
+                        let ang = Math.atan2(dy, dx);
+                        let irreg = hR + Math.sin(ang*4 + puff.cY)*(hR*0.2);
+                        if (dx*dx+dy*dy < irreg*irreg) {
+                            let px = Math.floor((cx+2+dx)/step)*step;
+                            let py = Math.floor((cy-2+dy)/step)*step;
+                            canExp.fillRect(px, py, step, step);
+                        }
+                    }
+                }
+            });
+            canExp.restore();
+
+            // 2. RENDER BAZOOKA POCISKU
+            canBazooka.save();
+            canBazooka.translate(110, 110);
+            let bFly = (elapsed * 150) % 160 - 80;
+            canBazooka.fillStyle = '#2e4a1f'; // Oliwka
+            canBazooka.fillRect(bFly - 8, -4, 16, 8);
+            canBazooka.fillStyle = '#ffd700'; // Żółty pas
+            canBazooka.fillRect(bFly - 2, -4, 4, 8);
+            canBazooka.fillStyle = '#1a2b12'; // Lotki
+            canBazooka.fillRect(bFly - 10, -6, 4, 12);
+            canBazooka.restore();
+
+            // 3. RENDER PLAZMY
+            canPlasma.save();
+            canPlasma.translate(110, 110);
+            canPlasma.strokeStyle = '#00ffff';
+            canPlasma.lineWidth = 4;
+            canPlasma.beginPath();
+            canPlasma.moveTo(-80, 0);
+            for (let x=-80; x<=80; x+=10) {
+                canPlasma.lineTo(x, (Math.random()-0.5)*15);
+            }
+            canPlasma.stroke();
+            canPlasma.restore();
+
+            // 4. RENDER MIOTACZA OGNIA
+            canFlame.save();
+            canFlame.translate(110, 110);
+            for (let i=0; i<15; i++) {
+                let fx = (elapsed * 180 + i*20) % 160 - 80;
+                let fy = Math.sin(fx*0.1 + elapsed*5) * 10;
+                canFlame.fillStyle = ['#ff3300', '#ff8800', '#ffff00', '#333333'][Math.floor(Math.random()*4)];
+                canFlame.fillRect(fx, fy, 4, 4);
+            }
+            canFlame.restore();
+
+            // 5. RENDER ŻOŁNIERZA
+            canSoldier.save();
+            canSoldier.translate(110, 110);
+            canSoldier.fillStyle = '#113311'; // Hełm
+            canSoldier.fillRect(-8, -16, 16, 12);
+            canSoldier.fillStyle = '#ffccaa'; // Twarz
+            canSoldier.fillRect(-6, -6, 12, 6);
+            canSoldier.fillStyle = '#225522'; // Korpus
+            canSoldier.fillRect(-8, 0, 16, 14);
+            canSoldier.fillStyle = '#111111'; // Buty
+            canSoldier.fillRect(-8, 14, 6, 6);
+            canSoldier.fillRect(2, 14, 6, 6);
+            canSoldier.restore();
+
+            // 6. RENDER MUTANTA ZOMBIE
+            canMutant.save();
+            canMutant.translate(110, 110);
+            canMutant.fillStyle = '#4a1a68'; // Fioletowy pancerz
+            canMutant.fillRect(-10, -20, 20, 16);
+            canMutant.fillStyle = '#ff4500'; // Świecące oczy
+            canMutant.fillRect(-6, -14, 4, 4);
+            canMutant.fillRect(2, -14, 4, 4);
+            canMutant.fillStyle = '#311042'; // Korpus
+            canMutant.fillRect(-10, -4, 20, 20);
+            canMutant.fillStyle = '#111111';
+            canMutant.fillRect(-10, 16, 8, 8);
+            canMutant.fillRect(2, 16, 8, 8);
+            canMutant.restore();
+
+            // 7. RENDER PSA BOJOWEGO
+            canDog.save();
+            canDog.translate(110, 120);
+            canDog.fillStyle = '#8b5a2b'; // Sierść
+            canDog.fillRect(-12, -8, 24, 12);
+            canDog.fillStyle = '#3b240e'; // Głowa
+            canDog.fillRect(8, -14, 10, 10);
+            canDog.fillStyle = '#111111'; // Łapy i nos
+            canDog.fillRect(-10, 4, 4, 8);
+            canDog.fillRect(-2, 4, 4, 8);
+            canDog.fillRect(6, 4, 4, 8);
+            canDog.fillRect(16, -12, 4, 4);
+            canDog.restore();
+
+            // 8. RENDER SKRZYNKI
+            canCrate.save();
+            canCrate.translate(110, 110);
+            canCrate.fillStyle = '#1c1008'; // Cień
+            canCrate.fillRect(-16, 10, 32, 8);
+            canCrate.fillStyle = '#8b5a2b'; // Skrzynia
+            canCrate.fillRect(-16, -16, 32, 30);
+            canCrate.fillStyle = '#ffd700'; // Okucia
+            canCrate.fillRect(-16, -16, 6, 6);
+            canCrate.fillRect(10, -16, 6, 6);
+            canCrate.fillRect(-16, 8, 6, 6);
+            canCrate.fillRect(10, 8, 6, 6);
+            canCrate.restore();
+
+            // 9. RENDER RADIA
+            canRadio.save();
+            canRadio.translate(110, 110);
+            canRadio.fillStyle = '#2e4a1f'; // Zielone radio
+            canRadio.fillRect(-10, -10, 20, 20);
+            canRadio.restore();
+
+            let bobY = Math.sin(elapsed * 4) * 2;
+
+            // 1. RENDER BAMBUSOWEJ (Jeniec: Medyk Polowy z beretem i czerwonym krzyżem)
+            canCageBamboo.save();
+            canCageBamboo.translate(110, 110);
+            
+            // Jeniec - Medyk
+            canCageBamboo.fillStyle = 'rgba(0,0,0,0.3)';
+            canCageBamboo.fillRect(-8, 15, 16, 4);
+            canCageBamboo.fillStyle = '#ffccaa'; // Twarz
+            canCageBamboo.fillRect(-4, -4 + bobY, 8, 8);
+            canCageBamboo.fillStyle = '#1b4a0c'; // Beret
+            canCageBamboo.fillRect(-5, -6 + bobY, 10, 3);
+            canCageBamboo.fillStyle = '#2b6611'; // Mundur
+            canCageBamboo.fillRect(-6, 4 + bobY, 12, 12);
+            canCageBamboo.fillStyle = '#ffffff'; // Biały krzyż medyczny
+            canCageBamboo.fillRect(-1, 8 + bobY, 2, 4);
+            canCageBamboo.fillRect(-2, 9 + bobY, 4, 2);
+
+            canCageBamboo.fillStyle = '#808000'; // bambusowe góra-dół
+            canCageBamboo.fillRect(-20, -20, 40, 6);
+            canCageBamboo.fillRect(-20, 16, 40, 6);
+            canCageBamboo.fillStyle = '#4b8522'; // słupki zielone bambusy
+            for (let ox = -18; ox <= 18; ox += 9) {
+                canCageBamboo.fillRect(ox, -14, 3, 30);
+            }
+            canCageBamboo.fillStyle = '#8b5a2b'; // wiązania
+            canCageBamboo.fillRect(-19, -13, 2, 2);
+            canCageBamboo.fillRect(17, -13, 2, 2);
+            canCageBamboo.restore();
+
+            // 2. RENDER KOŚCIANEJ (Jeniec: Inżynier z hełmem ONZ i pancerzem)
+            canCageBone.save();
+            canCageBone.translate(110, 110);
+            
+            // Jeniec - Inżynier
+            canCageBone.fillStyle = '#ffccaa'; // twarz
+            canCageBone.fillRect(-4, -4 + bobY, 8, 8);
+            canCageBone.fillStyle = '#2255aa'; // Hełm ONZ (niebieski)
+            canCageBone.fillRect(-5, -7 + bobY, 10, 4);
+            canCageBone.fillStyle = '#ffff00'; // Oznaczenie hełmu
+            canCageBone.fillRect(-1, -6 + bobY, 2, 2);
+            canCageBone.fillStyle = '#778899'; // Stalowy Pancerz
+            canCageBone.fillRect(-6, 4 + bobY, 12, 12);
+
+            canCageBone.fillStyle = '#f5f5dc'; // Kości
+            canCageBone.fillRect(-22, -22, 44, 6);
+            canCageBone.fillRect(-22, 18, 44, 6);
+            for (let ox = -18; ox <= 18; ox += 9) {
+                canCageBone.fillRect(ox, -16, 4, 34);
+                canCageBone.fillRect(ox - 1, -18, 6, 2);
+                canCageBone.fillRect(ox - 1, 18, 6, 2);
+            }
+            canCageBone.restore();
+
+            // 3. RENDER LASEROWEJ (Jeniec: Snajper z opaską Rambo i czarnym strojem)
+            canCageLaser.save();
+            canCageLaser.translate(110, 110);
+            
+            // Jeniec - Snajper
+            canCageLaser.fillStyle = '#ffccaa'; // twarz
+            canCageLaser.fillRect(-4, -4 + bobY, 8, 8);
+            canCageLaser.fillStyle = '#cc2200'; // Czerwona bandana Rambo
+            canCageLaser.fillRect(-5, -5 + bobY, 10, 2);
+            canCageLaser.fillRect(4, -4 + bobY, 3, 4); // Węzeł bandany
+            canCageLaser.fillStyle = '#15151c'; // Black Ops
+            canCageLaser.fillRect(-6, 4 + bobY, 12, 12);
+
+            canCageLaser.fillStyle = '#1a1a1a'; // Mroczna obudowa
+            canCageLaser.fillRect(-22, -22, 44, 8);
+            canCageLaser.fillRect(-22, 16, 44, 8);
+            canCageLaser.fillStyle = '#00ffff';
+            canCageLaser.fillRect(-18, -20, 36, 2);
+            canCageLaser.fillRect(-18, 18, 36, 2);
+            let alpha = 0.4 + Math.abs(Math.sin(elapsed * 8)) * 0.6;
+            canCageLaser.fillStyle = `rgba(0, 255, 255, ${alpha})`;
+            for (let ox = -16; ox <= 16; ox += 10) {
+                canCageLaser.fillRect(ox, -14, 3, 30);
+            }
+            canCageLaser.restore();
+
+            // 4. RENDER RDZAWYCH KRAT (Jeniec: Heavy Gunner z pasem amunicji i pustynnym mundurem)
+            canCageRust.save();
+            canCageRust.translate(110, 110);
+            
+            // Jeniec - Heavy Gunner
+            canCageRust.fillStyle = '#ffccaa'; // twarz
+            canCageRust.fillRect(-4, -4 + bobY, 8, 8);
+            canCageRust.fillStyle = '#1b4a0c'; // Standardowy zielony hełm
+            canCageRust.fillRect(-5, -6 + bobY, 10, 3);
+            canCageRust.fillStyle = '#a18d72'; // Pustynny mundur
+            canCageRust.fillRect(-6, 4 + bobY, 12, 12);
+            canCageRust.fillStyle = '#a87020'; // Skrzyżowany pas z amunicją
+            canCageRust.fillRect(-4, 4 + bobY, 2, 10);
+            canCageRust.fillRect(2, 4 + bobY, 2, 10);
+
+            canCageRust.fillStyle = '#5c2c16'; // Rdzawy dach-dół
+            canCageRust.fillRect(-20, -20, 40, 6);
+            canCageRust.fillRect(-20, 16, 40, 6);
+            canCageRust.fillStyle = '#8c431f'; // Kraty pionowe
+            for (let ox = -16; ox <= 16; ox += 8) {
+                canCageRust.fillRect(ox, -14, 2, 30);
+            }
+            canCageRust.fillStyle = '#a86f2c';
+            canCageRust.fillRect(-3, 0, 6, 8);
+            canCageRust.fillStyle = '#111';
+            canCageRust.fillRect(-1, 3, 2, 3);
+            canCageRust.restore();
+
+            // 5. RENDER ŚLUZOWEGO KOKONU (Jeniec: Zmutowany, zakażony oficer w bio-kokonie)
+            canCageSlime.save();
+            canCageSlime.translate(110, 110);
+            canCageSlime.fillStyle = 'rgba(10, 0, 15, 0.45)';
+            canCageSlime.beginPath();
+            canCageSlime.ellipse(0, 15, 20, 10, 0, 0, Math.PI*2);
+            canCageSlime.fill();
+            
+            // Zakażony Jeniec
+            canCageSlime.fillStyle = '#7d3bb3'; // fioletowa zmutowana twarz
+            canCageSlime.fillRect(-4, -4 + bobY, 8, 8);
+            canCageSlime.fillStyle = '#ff8800'; // świecące zmutowane oczy
+            canCageSlime.fillRect(-2, -1 + bobY, 1, 1);
+            canCageSlime.fillRect(1, -1 + bobY, 1, 1);
+            canCageSlime.fillStyle = '#3b0c5c'; // zmutowany ciemny strój
+            canCageSlime.fillRect(-6, 4 + bobY, 12, 12);
+
+            let glow = 0.5 + Math.sin(elapsed * 3.5) * 0.15;
+            canCageSlime.fillStyle = `rgba(120, 30, 180, ${glow})`;
+            canCageSlime.beginPath();
+            canCageSlime.arc(0, 0, 24, 0, Math.PI*2);
+            canCageSlime.fill();
+            canCageSlime.fillStyle = '#571080';
+            canCageSlime.fillRect(-22, -10, 3, 18);
+            canCageSlime.fillRect(19, -8, 3, 15);
+            canCageSlime.restore();
+
+            // 6. RENDER BLOKU LODU (Jeniec: Zamrożony Dowódca w oficerskiej złotej czapce)
+            canCageIce.save();
+            canCageIce.translate(110, 110);
+            
+            // Jeniec - Dowódca
+            canCageIce.fillStyle = '#ffccaa'; // twarz
+            canCageIce.fillRect(-4, -4 + bobY, 8, 8);
+            canCageIce.fillStyle = '#d4af37'; // Oficerska złota czapa
+            canCageIce.fillRect(-5, -6 + bobY, 10, 3);
+            canCageIce.fillStyle = '#1e3d59'; // Niebieski mundur paradny
+            canCageIce.fillRect(-6, 4 + bobY, 12, 12);
+
+            canCageIce.fillStyle = 'rgba(130, 210, 255, 0.65)';
+            canCageIce.fillRect(-22, -22, 44, 40);
+            canCageIce.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            canCageIce.fillRect(-20, -20, 42, 2);
+            canCageIce.fillRect(-20, -18, 2, 36);
+            canCageIce.fillStyle = 'rgba(70, 160, 230, 0.7)';
+            canCageIce.fillRect(-10, -10, 12, 2);
+            canCageIce.fillRect(0, -10, 2, 15);
+            canCageIce.fillRect(6, 0, 10, 2);
+            canCageIce.restore();
+
+            // 7. RENDER WISZĄCEJ KLATKI (Jeniec: Legendarny Ocalony z beretem, ranami i spętanymi linami)
+            canCageGibbet.save();
+            canCageGibbet.translate(110, 115);
+            canCageGibbet.fillStyle = '#5c3a21'; // Słup
+            canCageGibbet.fillRect(-35, -40, 6, 70);
+            canCageGibbet.fillRect(-35, -40, 40, 6);
+            canCageGibbet.fillStyle = '#666';
+            canCageGibbet.fillRect(3, -34, 2, 12);
+            
+            let swingAng = Math.sin(elapsed * 2.5) * 0.08;
+            canCageGibbet.translate(4, -22);
+            canCageGibbet.rotate(swingAng);
+            canCageGibbet.translate(-4, 22); // origin jeńca
+            
+            // Rysowanie spętanego jeńca (relatywnie)
+            canCageGibbet.fillStyle = 'rgba(0,0,0,0.3)';
+            canCageGibbet.fillRect(-8, 15, 16, 4);
+            canCageGibbet.save();
+            canCageGibbet.translate(0, bobY);
+            
+            canCageGibbet.fillStyle = '#ffccaa'; // twarz
+            canCageGibbet.fillRect(-4, -4, 8, 8);
+            canCageGibbet.fillStyle = '#1b4a0c'; // zielony beret medyka
+            canCageGibbet.fillRect(-5, -6, 10, 3);
+            canCageGibbet.fillRect(-3, -7, 7, 1);
+            canCageGibbet.fillStyle = '#5c3a21'; // brązowe włosy
+            canCageGibbet.fillRect(-5, -2, 1, 4);
+            canCageGibbet.fillRect(4, -2, 1, 4);
+            
+            if (Math.floor(elapsed * 3) % 6 !== 0) {
+                canCageGibbet.fillStyle = '#111111'; // blinking eyes
+                canCageGibbet.fillRect(-2, -1, 1, 1);
+                canCageGibbet.fillRect(1, -1, 1, 1);
+            }
+            canCageGibbet.fillStyle = '#8b0000'; // rany krwi
+            canCageGibbet.fillRect(2, 1, 1, 1);
+            
+            canCageGibbet.fillStyle = '#2b6611'; // mundur
+            canCageGibbet.fillRect(-6, 4, 12, 12);
+            canCageGibbet.fillStyle = '#8b5a2b'; // spętane brązowe liny
+            canCageGibbet.fillRect(-6, 7, 12, 2);
+            canCageGibbet.fillRect(-6, 11, 12, 2);
+            canCageGibbet.fillRect(-1, 4, 2, 12);
+            canCageGibbet.restore();
+            
+            // Klatka wisząca
+            canCageGibbet.fillStyle = '#444';
+            canCageGibbet.fillRect(-16, -16, 32, 4);
+            canCageGibbet.fillRect(-16, 12, 32, 4);
+            for (let ox = -12; ox <= 12; ox += 6) {
+                canCageGibbet.fillRect(ox, -12, 2, 24);
+            }
+            canCageGibbet.restore();
+
+            // 8. RENDER SARKOFAGU OBCYCH (Jeniec: Cyborg z laserowym wizjerem w stazie obcych)
+            canCageAlien.save();
+            canCageAlien.translate(110, 110);
+            
+            // Półprzezroczysty Cyborg wewnątrz
+            canCageAlien.fillStyle = '#888888'; // stalowa głowa cyborga
+            canCageAlien.fillRect(-4, -4 + bobY, 8, 8);
+            canCageAlien.fillStyle = '#00ffff'; // glowing cyan laser visor
+            canCageAlien.fillRect(-5, -2 + bobY, 10, 2);
+            canCageAlien.fillStyle = '#555555'; // mechaniczny szary korpus
+            canCageAlien.fillRect(-6, 4 + bobY, 12, 12);
+
+            canCageAlien.fillStyle = '#15181f'; // obsidian
+            canCageAlien.fillRect(-16, -24, 32, 46);
+            canCageAlien.fillStyle = '#383d48';
+            canCageAlien.fillRect(-18, -26, 36, 3);
+            canCageAlien.fillRect(-18, 21, 36, 3);
+            canCageAlien.fillRect(-18, -23, 3, 44);
+            canCageAlien.fillRect(15, -23, 3, 44);
+            
+            let runeAlpha = 0.3 + Math.abs(Math.sin(elapsed * 5)) * 0.7;
+            canCageAlien.fillStyle = `rgba(255, 0, 50, ${runeAlpha})`;
+            canCageAlien.fillRect(-6, -12, 12, 2);
+            canCageAlien.fillRect(-4, -2, 8, 2);
+            canCageAlien.fillRect(-6, 8, 12, 2);
+            canCageAlien.restore();
+
+            requestAnimationFrame(renderAll);
+        }
+        requestAnimationFrame(renderAll);
+    </script>
+</body>
+</html>
