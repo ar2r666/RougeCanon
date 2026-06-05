@@ -1,9 +1,15 @@
 // --- HIGHT-PERFORMANCE, ZERO-LATENCY WEB AUDIO API SOUND MANAGER ---
 
-let audioCtx = null;
-const audioBuffers = {};
-const soundCache = {}; // Błyskawiczna alternatywa awaryjna (Fallback)
-const lastPrimaryPlayTime = {};
+// Stan współdzielony globalnie na obiekcie window (rozwiązuje problem z cache na komórkach)
+window.audioCtx = window.audioCtx || null;
+window.audioBuffers = window.audioBuffers || {};
+window.soundCache = window.soundCache || {};
+window.lastPrimaryPlayTime = window.lastPrimaryPlayTime || {};
+
+let audioCtx = window.audioCtx;
+const audioBuffers = window.audioBuffers;
+const soundCache = window.soundCache;
+const lastPrimaryPlayTime = window.lastPrimaryPlayTime;
 let isMuted = false;
 
 function getAudioContext() {
@@ -11,6 +17,7 @@ function getAudioContext() {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (AudioContextClass) {
             audioCtx = new AudioContextClass();
+            window.audioCtx = audioCtx;
         }
     }
     // Wznowienie sprzętowego miksera po odblokowaniu przez dotyk użytkownika

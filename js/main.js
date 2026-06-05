@@ -11,7 +11,7 @@ import { AirstrikeBomb } from './entities/AirstrikeBomb.js';
 import { createParticles } from './entities/Particle.js';
 import { gameOver, showUpgrades, updateHUD, startGame } from './ui.js?v=1.0.5';
 import { initInput } from './input.js';
-import { preloadSounds } from './sfx.js';
+import { preloadSounds } from './sfx.js?v=1.0.6';
 
 const afterBurningImg = new Image();
 afterBurningImg.src = 'img/after_burning.png';
