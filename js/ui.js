@@ -4,6 +4,8 @@ import { Dog } from './entities/Dog.js';
 import { PrisonerCage } from './entities/PrisonerCage.js';
 import { EnemyDepot } from './entities/EnemyDepot.js';
 import { Enemy } from './entities/Enemy.js';
+import { Decoy } from './entities/Decoy.js';
+import { Bush } from './entities/Bush.js';
 import { clearBloodCanvas } from './sprites.js';
 import { playSound } from './sfx.js';
 
@@ -22,8 +24,28 @@ export function startWave() {
     
     const screens = document.getElementById('screens');
     screens.classList.add('hidden');
-    screens.classList.remove('upgrade-mode'); // Przywróć ciemne tło dla innych ekranów
+    screens.classList.remove('upgrade-mode'); 
     document.getElementById('upgradeScreen').classList.add('hidden');
+    
+    // 7. WABIK DECOY (Spawnuje 3 wabiki na starcie fali)
+    if (state.passiveDecoyActive) {
+        let leader = state.squad[0] || { x: state.camera.x, y: state.camera.y };
+        for (let i = 0; i < 3; i++) {
+            let ang = (i / 3) * Math.PI * 2 + Math.random() * 0.5;
+            let dist = 60 + Math.random() * 40;
+            state.decoys.push(new Decoy(leader.x + Math.cos(ang) * dist, leader.y + Math.sin(ang) * dist));
+        }
+    }
+
+    // Zarośla dżungli (Mistrz Maskowania)
+    if (!state.bushes || state.bushes.length === 0) {
+        state.bushes = [];
+        for (let i = 0; i < 14; i++) {
+            let cx = 1500 + Math.random() * 9000;
+            let cy = 1500 + Math.random() * 9000;
+            state.bushes.push(new Bush(cx, cy));
+        }
+    }
     
     // Generowanie klatki z jeńcem co 3 poziomy przy niepełnym składzie (< 4 żołnierzy)
     state.prisonerCages = state.prisonerCages.filter(pc => !pc.isDestroyed || pc.life > 0);
@@ -81,25 +103,50 @@ export function startWave() {
 }
 
 const UPGRADES = [
-    { name: "PAS AMUNICJI", desc: "+25% szybszego przeładowania składu", apply: () => { state.passiveAmmoBeltActive = true; } },
-    { name: "ODWET WETERANA", desc: "Granat po zgonie żołnierza + 50% szans na skrzynię", apply: () => { state.passiveMartyrdomActive = true; } },
-    { name: "SZRAPNEL SHIELD", desc: "Brak odrzutu oddziału i -100% obrażeń AoE", apply: () => { state.passiveShrapnelArmorActive = true; } },
-    { name: "PIES BOJOWY", desc: "Autonomiczny pies bojowy wspierający skład", apply: () => { state.companions.push(new Dog(state.camera.x, state.camera.y)); } },
-    { name: "MOCNE NABOJE", desc: "+1 do bazowych obrażeń pocisków", apply: () => stats.damage++ },
-    { name: "ADRENALINA", desc: "+20% szybkości poruszania się", apply: () => stats.speed *= 1.2 },
-    { name: "KAWA MILITARNA", desc: "+15% wyższej szybkostrzelności broni", apply: () => stats.fireRate *= 0.85 },
-    { name: "SOKOLE OKO", desc: "+20% większego zasięgu strzału", apply: () => stats.range *= 1.2 },
-    { name: "APTECZKA POLOWA", desc: "Pełne uleczenie wszystkich żołnierzy", apply: () => { state.squad.forEach(s => s.hp = s.maxHp); } }
+    { name: "PAS AMUNICJI", desc: "+ BŁYSKAWICZNE<br>ŁADOWANIE", apply: () => { state.passiveAmmoBeltActive = true; } },
+    { name: "MOCNE NABOJE", desc: "+ WIĘKSZE<br>OBRAŻENIA", apply: () => stats.damage++ },
+    { name: "ADRENALINA", desc: "+ SZYBSZY<br>BIEG", apply: () => stats.speed *= 1.2 },
+    { name: "KAWA POLOWA", desc: "+ SZYBKOSTRZELNOŚĆ", apply: () => stats.fireRate *= 0.85 },
+    { name: "SKUPIENIE", desc: "+ PRECYZJA<br>W BEZRUCHU", apply: () => { state.passiveSniperFocusActive = true; } },
+    { name: "KAMIZELKA", desc: "+ KAMIZELKA<br>KEVLAROWA", apply: () => {
+        state.kevlarArmorLevel = Math.min(3, (state.kevlarArmorLevel || 0) + 1);
+        state.squad.forEach(s => { s.maxArmor = state.kevlarArmorLevel; s.armor = state.kevlarArmorLevel; });
+    }},
+    { name: "ZIMNA KREW", desc: "+ OGIEŃ<br>W BÓLU", apply: () => { state.coldBloodLevel = Math.min(stats.maxSquad || 4, (state.coldBloodLevel || 0) + 1); } },
+    { name: "MISTRZ MASKOWANIA", desc: "+ MISTRZ<br>MASKOWANIA", apply: () => { state.camoMasterLevel = Math.min(3, (state.camoMasterLevel || 0) + 1); } }
+];
+
+// --- 9 AUTORYTATYWNYCH DOKTRYN NIESTANDARDOWYCH (User Requested) ---
+export const NON_STANDARD_DOCTRINES = [
+    { name: "ZWARTA GRUPA", desc: "+ ZWARTE<br>SZYKI", apply: () => { state.passiveFlockingBoostActive = true; } },
+    { name: "BAGNETY", desc: "+ OSTRZA<br>W ZWARCIU", apply: () => { state.passiveBayonetsActive = true; } },
+    { name: "BOOBY TRAP", desc: "+ MINY<br>W ZWŁOKACH", apply: () => { state.passiveBoobyTrapActive = true; } },
+    { name: "STRZAŁ W NOGI", desc: "+ CZOŁGAJĄCY SIĘ<br>WRÓG", apply: () => { state.passiveKneecapShotActive = true; } },
+    { name: "MINER POLOWY", desc: "+ STAWIA MINY<br>NA TRAWIE", apply: () => { state.passiveFieldMinerActive = true; } },
+    { name: "PERVITIN", desc: "+ MOC<br>ZA ZDROWIE", apply: () => { 
+        state.passivePervitinActive = true;
+        stats.fireRate *= 0.5;
+        stats.speed *= 1.4;
+        state.squad.forEach(s => s.maxHp = Math.max(1, (s.maxHp || 3) - 1));
+        state.squad.forEach(s => s.hp = Math.min(s.hp, s.maxHp));
+    }},
+    { name: "WABIK DECOY", desc: "+ 1 WABIK<br>CO FALĘ", apply: () => { state.passiveDecoyActive = true; } },
+    { name: "ZAPALAJĄCE", desc: "+ PŁONĄCE<br>KULE", apply: () => { state.passiveIncendiaryActive = true; } },
+    { name: "PIES BOJOWY", desc: "+ AUTONOMICZNY<br>PIES", apply: () => { state.companions.push(new Dog(state.camera.x, state.camera.y)); } }
 ];
 
 let tagCounter = 0;
 
-function buildDogTagCard(title, desc, onClick) {
+function buildDogTagCard(title, desc, onClick, isBlackTag = false) {
     tagCounter++;
     const maskId = `tag-mask-${tagCounter}`;
     
     const card = document.createElement('div');
-    card.className = 'upgrade-card';
+    card.className = isBlackTag ? 'upgrade-card black-tag' : 'upgrade-card';
+    
+    let tagBg = isBlackTag ? '#1e272c' : '#9aa7af';
+    let tagHighlight = isBlackTag ? '#f39c12' : '#ffffff';
+    let tagShadow = isBlackTag ? '#11181b' : '#4f5d65';
     
     // Zawsze jeden losowy róg jest delikatnie naderwany (0: TL, 1: TR, 2: BR, 3: BL)
     const tornCorner = Math.floor(Math.random() * 4);
@@ -216,25 +263,25 @@ function buildDogTagCard(title, desc, onClick) {
                 <!-- Szyjka / dzyndzel u góry -->
                 <rect x="14" y="18" width="12" height="5" fill="#000000" />
 
-                <!-- Stalowe wypełnienie (Srebro) -->
-                <rect x="1" y="26" width="38" height="54" fill="#9aa7af" class="tag-silver-fill" />
-                <rect x="2" y="24" width="36" height="58" fill="#9aa7af" class="tag-silver-fill" />
-                <rect x="3" y="23" width="34" height="60" fill="#9aa7af" class="tag-silver-fill" />
+                <!-- Stalowe wypełnienie (Srebro lub Carbon) -->
+                <rect x="1" y="26" width="38" height="54" fill="${tagBg}" class="tag-silver-fill" />
+                <rect x="2" y="24" width="36" height="58" fill="${tagBg}" class="tag-silver-fill" />
+                <rect x="3" y="23" width="34" height="60" fill="${tagBg}" class="tag-silver-fill" />
                 <!-- Wypełnienie dzyndzla -->
-                <rect x="15" y="19" width="10" height="4" fill="#9aa7af" class="tag-silver-fill" />
+                <rect x="15" y="19" width="10" height="4" fill="${tagBg}" class="tag-silver-fill" />
 
-                <!-- Pixel Art Oświetlenie krawędzi (Biel) -->
-                <rect x="1" y="26" width="1" height="54" fill="#ffffff" />
-                <rect x="2" y="24" width="1" height="2" fill="#ffffff" />
-                <rect x="3" y="23" width="34" height="1" fill="#ffffff" />
-                <rect x="15" y="19" width="10" height="1" fill="#ffffff" />
-                <rect x="15" y="20" width="1" height="3" fill="#ffffff" />
+                <!-- Pixel Art Oświetlenie krawędzi (Biel lub Złoto) -->
+                <rect x="1" y="26" width="1" height="54" fill="${tagHighlight}" />
+                <rect x="2" y="24" width="1" height="2" fill="${tagHighlight}" />
+                <rect x="3" y="23" width="34" height="1" fill="${tagHighlight}" />
+                <rect x="15" y="19" width="10" height="1" fill="${tagHighlight}" />
+                <rect x="15" y="20" width="1" height="3" fill="${tagHighlight}" />
 
-                <!-- Wewnętrzny Pixel Art Cień (Ciemny Szary) -->
-                <rect x="38" y="26" width="1" height="54" fill="#4f5d65" />
-                <rect x="37" y="80" width="1" height="2" fill="#4f5d65" />
-                <rect x="3" y="82" width="35" height="1" fill="#4f5d65" />
-                <rect x="24" y="20" width="1" height="3" fill="#4f5d65" />
+                <!-- Wewnętrzny Pixel Art Cień (Ciemny Szary lub Głęboka Czerń) -->
+                <rect x="38" y="26" width="1" height="54" fill="${tagShadow}" />
+                <rect x="37" y="80" width="1" height="2" fill="${tagShadow}" />
+                <rect x="3" y="82" width="35" height="1" fill="${tagShadow}" />
+                <rect x="24" y="20" width="1" height="3" fill="${tagShadow}" />
                 
                 <!-- Wycięta stalowa dziurka w dzyndzlu na łańcuszek -->
                 <rect x="17" y="20" width="6" height="3" fill="#000000" />
@@ -245,10 +292,9 @@ function buildDogTagCard(title, desc, onClick) {
             ${tornFractureRim}
         </svg>
 
-        <!-- Warstwa z napisami umieszczona dokładnie na blachach -->
+        <!-- Warstwa z napisami umieszczona dokładnie na blachach (Tylko funkcja doktryny) -->
         <div class="dogtag-content">
-            <div class="upgrade-card-title">${title}</div>
-            <div class="upgrade-card-desc">${desc}</div>
+            <div class="upgrade-card-title solo-function">${desc}</div>
         </div>
     `;
     
@@ -274,7 +320,7 @@ export function showUpgrades() {
         state.squad.forEach(soldier => {
             const card = buildDogTagCard(
                 soldier.name,
-                `AWANSUJ: ${soldier.soldierClass || 'REKRUTA'}<br><br>+1 Max HP<br>+20% Szybkostrzelności<br>Ranga Oficera`,
+                `★ AWANS NA OFICERA`,
                 () => {
                     soldier.maxHp = (soldier.maxHp || 3) + 1;
                     soldier.hp = soldier.maxHp;
@@ -293,22 +339,21 @@ export function showUpgrades() {
         return;
     }
     
-    // Co 3 fale oferujemy specjalną broń (zrzut)
+    // Co 3 fale oferujemy do wyboru jeden z 3 niestandardowych dogtagów ("Outside the Box")
     if (state.wave % 3 === 0 && state.squad.length > 0) {
-        let randomSoldiers = [...state.squad].sort(() => 0.5 - Math.random()).slice(0, 3);
-        let availableWeapons = [WEAPONS.SHOTGUN, WEAPONS.HEAVY_SAW, WEAPONS.BAZOOKA];
+        let shuffledBlack = [...NON_STANDARD_DOCTRINES].sort(() => 0.5 - Math.random());
+        let blackMarketOptions = shuffledBlack.slice(0, 3);
         
-        randomSoldiers.forEach(soldier => {
-            let randomWeapon = availableWeapons[Math.floor(Math.random() * availableWeapons.length)];
+        blackMarketOptions.forEach(option => {
             const card = buildDogTagCard(
-                soldier.name,
-                `OTRZYMUJE:<br><br><span style="color:${randomWeapon.color}; font-weight:bold;">${randomWeapon.name}</span>`,
+                option.name,
+                option.desc,
                 () => {
-                    soldier.weapon = randomWeapon;
-                    soldier.updateSprites();
+                    option.apply();
                     state.wave++;
                     startWave();
-                }
+                },
+                true // isBlackTag = true
             );
             optionsDiv.appendChild(card);
         });
@@ -601,3 +646,36 @@ window.adminToggleControlMode = adminToggleControlMode;
 window.adminRespawnSoldier = adminRespawnSoldier;
 window.showUpgrades = showUpgrades;
 window.chargeDoctrines = chargeDoctrines;
+
+// --- Funkcja testowa Niestandardowych Doktryn (Dla panelu debug) ---
+export function testCustomDoctrinesScreen() {
+    state.gameState = 'UPGRADE';
+    const screens = document.getElementById('screens');
+    screens.classList.remove('hidden');
+    screens.classList.add('upgrade-mode');
+    document.getElementById('upgradeScreen').classList.remove('hidden');
+    
+    const adminPanel = document.getElementById('adminPanel');
+    if (adminPanel) adminPanel.classList.remove('open');
+    
+    let optionsDiv = document.getElementById('upgradeOptions');
+    optionsDiv.innerHTML = '';
+
+    let shuffledBlack = [...NON_STANDARD_DOCTRINES].sort(() => 0.5 - Math.random());
+    let blackMarketOptions = shuffledBlack.slice(0, 3);
+    
+    blackMarketOptions.forEach(option => {
+        const card = buildDogTagCard(
+            option.name,
+            option.desc,
+            () => {
+                option.apply();
+                state.wave++;
+                startWave();
+            },
+            true // isBlackTag = true
+        );
+        optionsDiv.appendChild(card);
+    });
+}
+window.testCustomDoctrinesScreen = testCustomDoctrinesScreen;

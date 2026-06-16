@@ -71,7 +71,7 @@ function getCircleSprite(color, radius, step) {
 }
 
 export class Explosion {
-    constructor(x, y, radius, damage, shooter, isAirstrike = false) {
+    constructor(x, y, radius, damage, shooter, isAirstrike = false, isMineExplosion = false) {
         this.x = x; 
         this.y = y; 
         this.radius = radius; 
@@ -84,8 +84,10 @@ export class Explosion {
         if (isAirstrike) {
             playSound('sfx_shoot_bazooka', 0.85);
             playSound('sfx_crate_destroy', 0.9);
+        } else if (isMineExplosion) {
+            playSound(Math.random() < 0.5 ? 'sfx_shoot_mine1' : 'sfx_shoot_mine2', 0.95);
         } else {
-            playSound('sfx_explode_bazooka', 0.75);
+            playSound('sfx_explosion_default', 0.85);
         }
         
         const activeChoice = localStorage.getItem('cannon_explosion_style') || '5_A';

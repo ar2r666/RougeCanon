@@ -6,9 +6,8 @@ Plik śledzi bieżący stan prac, wybrane kierunki architektoniczne oraz najważ
 - **Faza**: Rozbudowa mechanik rozgrywki i optymalizacja UX/UI.
 - **Bieżące osiągnięcie**:
   - Wdrożenie **sterowania klawiaturą (WASD/Strzałki)** z zachowaniem flockingu oddziału.
-  - Wdrożenie **trybu celowania myszą (Aim-Only Mode)** odczepiającego ruch od kursora i wprowadzającego manualne strzelanie/celowanie.
-  - Ulepszenie fizyki koziołkowania i odbijania się poległych ciał (framerate-independent).
-  - Wdrożenie **Półprzezroczystego "Bullet-Time" Decku** ulepszeń: karty wyświetlane są horyzontalnie, posiadają czytelne ikony pixel-art i zwięzłe opisy, a ekran nie ciemnieje (zamiast tego czas gry zwalnia do 4%, tworząc efekt kinowy).
+  - Wdrożenie **trybu celowania myszą (Aim-Only Mode)** odczepiającego ruch od kursora.
+  - Wdrożenie **Wojskowych Nieśmiertelników (Dog Tags)** z góry ekranu w czystym stylu Retro Pixel Art: blachy posiadają nierozerwalnie połączony łańcuszek kulkowy, podłużne wojskowe proporcje oraz jeden losowo naderwany róg odsłaniający pole bitwy w tle (kinowy Bullet-Time 4%).
 
 ## Struktura Modułów (Zrealizowana)
 - `index.html` – Główny plik ładujący warstwy UI oraz wejściowy moduł `main.js`.
@@ -16,13 +15,14 @@ Plik śledzi bieżący stan prac, wybrane kierunki architektoniczne oraz najważ
 - `js/config.js` – Konfiguracja stałych, definicje palety, tablice ASCII oraz współdzielony stan (`state`) i statystyki (`stats`).
 - `js/sprites.js` – Generator grafik z systemem buforowania oraz obsługa trwałego płótna z krwią.
 - `js/entities/*.js` – Klasy jednostek (`Soldier`, `Dog`, `Bullet`, `Explosion`, `Particle`, `Medkit`, `Turret`, `Crate`, `PrisonerCage`).
-- `js/ui.js` – Logika interfejsu, ekranów ulepszeń w zwolnionym tempie i panelu admina.
+- `js/ui.js` – Logika interfejsu, ekranów ulepszeń (nieśmiertelników) i panelu admina.
 - `js/input.js` – Detekcja zdarzeń wskaźnika oraz klawiatury.
-- `js/main.js` – Silnik, pętla renderowania klatki oraz obsługa zwolnienia czasu (Bullet-Time).
+- `js/main.js` – Silnik, pętla renderowania klatki oraz obsługa spowolnienia czasu (Bullet-Time).
 
 ## Zaległości i Plany (Backlog)
-- **Mechanika Jednorękiego Bandyty (Lucky Spin):** Trzymana w odwodzie koncepcja losowania nagród za pomocą rolki slot-maszyny z dźwiękiem monet (np. jako bonusowa skrzynka, nagroda za wyzwanie lub alternatywny tryb gry).
-- **Misje Poboczne / Zdarzenia Taktyczne (Hold Territory):** Zdarzenie na mapie polegające na utrzymaniu wyznaczonej strefy przez określony czas (np. ochrona i naprawa nadajnika radiowego przez 30 sekund pod naporem fal wrogów), nagradzane zrzutem specjalnej skrzyni zaopatrzenia.
+- **Paski Arcade (Retro Stat Bars):** Odłożone do wdrożenia w menu pauzy graficzne wskaźniki (paski/gwiazdki) pokazujące graczowi dokładny poziom rozwoju statystyk oddziału po zatrzymaniu gry.
+- **Mechanika Jednorękiego Bandyty (Lucky Spin):** Trzymana w odwodzie koncepcja losowania nagród za pomocą rolki slot-maszyny z dźwiękiem monet.
+- **Misje Poboczne / Zdarzenia Taktyczne (Hold Territory):** Zdarzenie na mapie polegające na utrzymaniu wyznaczonej strefy (np. ochrona i naprawa nadajnika radiowego przez 30 sekund pod naporem fal wrogów), nagradzane zrzutem potężnej skrzyni zaopatrzenia.
 
 ## Historia Decyzji
 - **2026-06-15**:

@@ -127,7 +127,10 @@ export function preloadSounds() {
         'sfx_click',
         'sfx_hit',
         'sfx_crate_destroy',
-        'sfx_explosion_default'
+        'sfx_explosion_default',
+        'sfx_shoot_stab',
+        'sfx_shoot_mine1',
+        'sfx_shoot_mine2'
     ];
     
     // Uruchamiamy ładowanie po krótkiej chwili, aby nie blokować początkowego renderowania strony

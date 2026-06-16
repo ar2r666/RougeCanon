@@ -278,13 +278,16 @@ export const state = {
     explosions: [],
     crates: [],
     crateSpawnTimer: 15,
+    fieldMines: [],    // Aktywne miny polowe (Saper Lider)
+    fieldMinerTimer: 0, // Timer stawiania min przez lidera
     prisonerCages: [], // Klatki z jeńcami do ocalenia (fale 3, 6, 9...)
     enemyDepots: [], // Magazyny wroga do szturmu przy pełnym składzie
     pendingLevelUp: false, // Czy oczekuje wybór awansu żołnierza
     tacticalDoctrines: [], // Ekwipunek Doktryn Taktycznych (zbierane przez gracza)
     decoys: [], // Aktywne wabiki (Decoys) na polu walki
     medkits: [], // Aktywne apteczki (Medyk) na polu walki
-    companions: [], // Towarzysze wybiegający poza okrąg (np. Psy)
+    bushes: [],  // Zarośla dżungli na mapie (Mistrz maskowania)
+    companions: [], // Towarzysze wybiegający poza okrąg (Psy, Cyber-Zombie)
     airstrikeTimer: 0,
     airstrikeBombTimer: 0,
     airstrikeBombs: [],
@@ -293,10 +296,21 @@ export const state = {
     aimPoint: { x: 6000, y: 6000 },
     aimOnlyMode: false,
     
-    // Flagi aktywnych globalnych pasywów drużyny
-    passiveShrapnelArmorActive: false, // Szrapnelowe pancerze (brak knockbacku, -100% AoE dmg)
-    passiveAmmoBeltActive: false,      // Pas z Amunicją (+25% reload speed)
-    passiveMartyrdomActive: false,     // Martyrdom (wybuch + 50% skrzynka)
+    // Flagi aktywnych globalnych pasywów Niestandardowych Doktryn (User Requested)
+    passiveFlockingBoostActive: false, // 1. ZWARTA GRUPA (2x siła flockingu)
+    passiveBayonetsActive: false,      // 2. BAGNETY (Obrażenia wrogom w zwarciu)
+    passiveBoobyTrapActive: false,     // 3. BOOBY TRAP (30% na minę w ciele poległego wroga)
+    passiveKneecapShotActive: false,   // 4. STRZAŁ W NOGI (50% na czołgającego się wroga)
+    passiveFieldMinerActive: false,    // 5. MINER POLOWY (Stawia minę co 6 sekund)
+    passivePervitinActive: false,      // 6. PERVITIN (-1 HP, ale ekstremalne bonusy statystyk)
+    passiveDecoyActive: false,         // 7. WABIK DECOY (Spawnuje 3 wabiki co falę)
+    passiveIncendiaryActive: false,    // 8. POCISKI ZAPALAJĄCE (Kule podpalają wrogów)
     
-    isPaused: false // Flaga wstrzymania aktualizacji logiki (aktywna pauza)
+    // Flagi 4 Nowych Doktryn Klasycznych
+    passiveSniperFocusActive: false, // 1. SKUPIENIE (+ PRECYZJA W BEZRUCHU)
+    kevlarArmorLevel: 0,             // 2. KAMIZELKA KEVLAROWA (Pasek z armorem pod HP max 3)
+    coldBloodLevel: 0,               // 3. ZIMNA KREW (Większa szybkostrzelność przy 1 HP)
+    camoMasterLevel: 0,              // 4. MISTRZ MASKOWANIA (Ukrywanie w krzakach)
+    
+    isPaused: false // Flaga wstrzymania aktualizacji logiki
 };

@@ -8,6 +8,7 @@ import { EnemyDepot } from './entities/EnemyDepot.js';
 import { Decoy } from './entities/Decoy.js';
 import { Explosion } from './entities/Explosion.js';
 import { AirstrikeBomb } from './entities/AirstrikeBomb.js';
+import { FieldMine } from './entities/FieldMine.js';
 import { createParticles } from './entities/Particle.js';
 import { gameOver, showUpgrades, updateHUD, startGame } from './ui.js?v=1.0.5';
 import { initInput } from './input.js';
@@ -179,6 +180,18 @@ function update(dt) {
         }
     }
 
+    // Obsługa min stawianych przez Lidera (Saper Lider)
+    if (state.gameState === 'PLAY' && state.passiveFieldMinerActive && state.squad.length > 0) {
+        state.fieldMinerTimer = (state.fieldMinerTimer || 0) - dt;
+        if (state.fieldMinerTimer <= 0) {
+            let leader = state.squad[0];
+            if (leader && state.fieldMines) {
+                state.fieldMines.push(new FieldMine(leader.x, leader.y, leader));
+            }
+            state.fieldMinerTimer = 6.0; // Co 6 sekund zostawia minę na trawie
+        }
+    }
+
     // Update Entities
     for (let i = 0; i < state.squad.length; i++) state.squad[i].update(dt);
     for (let i = 0; i < state.companions.length; i++) state.companions[i].update(dt);
@@ -186,8 +199,19 @@ function update(dt) {
     for (let i = 0; i < state.bullets.length; i++) state.bullets[i].update(dt);
     for (let i = 0; i < state.particles.length; i++) state.particles[i].update(dt);
     for (let i = 0; i < state.explosions.length; i++) state.explosions[i].update(dt);
+    if (state.bushes) {
+        for (let i = 0; i < state.bushes.length; i++) state.bushes[i].update(dt);
+    }
     if (state.crates) {
         for (let i = 0; i < state.crates.length; i++) state.crates[i].update(dt);
+    }
+    if (state.fieldMines) {
+        for (let i = state.fieldMines.length - 1; i >= 0; i--) {
+            state.fieldMines[i].update(dt);
+            if (state.fieldMines[i].isTriggered) {
+                state.fieldMines.splice(i, 1);
+            }
+        }
     }
     if (state.prisonerCages) {
         for (let i = 0; i < state.prisonerCages.length; i++) state.prisonerCages[i].update(dt);
@@ -420,6 +444,8 @@ function draw() {
     addVisible(state.enemies);
     addVisible(state.dyingBodies);
     addVisible(state.crates);
+    addVisible(state.bushes);
+    addVisible(state.fieldMines);
     addVisible(state.prisonerCages);
     addVisible(state.enemyDepots);
     addVisible(state.decoys);

@@ -3,6 +3,7 @@ import { getSoldierSprites, getSoldierBodySprites, getWeaponSprite, bloodCtx } f
 import { createParticles } from './Particle.js';
 import { corpses } from './Soldier.js';
 import { updateHUD, chargeDoctrines } from '../ui.js';
+import { CyberZombie } from './CyberZombie.js';
 
 export class Enemy {
     constructor(x, y, forcedType = null) {
@@ -13,6 +14,7 @@ export class Enemy {
         this.lastShot = 0;   
         
         // Przypisanie zaawansowanych wariantów wrogów na podstawie fali i losowości
+        // ... (zostawiamy bez zmian aż do takeDamage)
         let rand = Math.random();
         if (forcedType === 'boss' || (state.wave > 5 && rand < 0.1)) {
             this.type = 'boss';
@@ -88,9 +90,9 @@ export class Enemy {
         let closest = null;
         let minDist = Infinity;
         
-        let potentialTargets = [...state.squad];
+        let potentialTargets = state.squad.filter(s => !s.isHiddenInBush); // 4. MISTRZ MASKOWANIA (Wrogowie ignorują ukrytych)
         if (state.decoys && state.decoys.length > 0) {
-            potentialTargets = [...state.squad, ...state.decoys.filter(d => !d.isDestroyed)];
+            potentialTargets = [...potentialTargets, ...state.decoys.filter(d => !d.isDestroyed)];
         }
         
         for (let s of potentialTargets) {
@@ -140,9 +142,11 @@ export class Enemy {
             }
         } else if (closest) {
             let angle = Math.atan2(closest.y - this.y, closest.x - this.x);
-            let moveX = Math.cos(angle) * this.speed * dt;
+            this.crawlAngle = angle; 
+            let effectiveSpeed = this.isCrippled ? this.speed * 0.15 : this.speed; // 4. STRZAŁ W NOGI (Czołga się w stronę bohatera o 85% wolniej)
+            let moveX = Math.cos(angle) * effectiveSpeed * dt;
             this.x += moveX;
-            this.y += Math.sin(angle) * this.speed * dt;
+            this.y += Math.sin(angle) * effectiveSpeed * dt;
 
             if (Math.abs(moveX) > 0.1) {
                 this.facingLeft = moveX < 0;
@@ -184,7 +188,16 @@ export class Enemy {
         }
 
         if (this.lastShot > 0) this.lastShot -= dt;
-        if (this.onFireTimer > 0) this.onFireTimer -= dt;
+        
+        // 8. POCISKI ZAPALAJĄCE (Ciągłe obrażenia od ognia)
+        if (this.onFireTimer > 0) {
+            this.onFireTimer -= dt;
+            this.takeDamage(dt * 3, { kills: 0 }); 
+            if (Math.random() < 0.45) {
+                createParticles(this.x, this.y, '#ff4500', 3, 30);
+                createParticles(this.x, this.y - 8, '#222222', 2, 25);
+            }
+        }
 
         let distMoved = Math.hypot(this.x - oldX, this.y - oldY);
         let actualSpeed = distMoved / dt;
@@ -193,7 +206,17 @@ export class Enemy {
             this.isMoving = true;
             this.walkCycle += dt * 10 * this.animSpeedMult;
             this.animFrame = Math.floor(this.walkCycle) % 4;
-            this.bobY = Math.abs(Math.sin(this.walkCycle * Math.PI)) * (this.type === 'boss' ? 3 : 2);
+            this.bobY = Math.abs(Math.sin(this.walkCycle * Math.PI)) * (this.type === 'boss' ? 3 : (this.isCrippled ? 0.5 : 2));
+
+            // Zostawianie subtelnego śladu krwi podczas czołgania się (STRZAŁ W NOGI)
+            if (this.isCrippled && bloodCtx) {
+                if (Math.random() < 0.15) { // Bardzo rzadkie krople (zdecydowanie mniejsza smuga)
+                    bloodCtx.fillStyle = '#8b0000';
+                    let bx = Math.floor((this.x + (Math.random() - 0.5) * 4) / 2) * 2;
+                    let by = Math.floor((this.y + 6 + (Math.random() - 0.5) * 4) / 2) * 2;
+                    bloodCtx.fillRect(bx, by, 1, 1);
+                }
+            }
         } else {
             this.isMoving = false;
             this.animFrame = 0;
@@ -205,21 +228,54 @@ export class Enemy {
         ctx.save();
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         let rOffset = this.type === 'boss' ? 4 : 0;
-        ctx.fillRect(this.x - 5 - rOffset, this.y + 10, 10 + rOffset*2, 2);
-        ctx.fillRect(this.x - 7 - rOffset, this.y + 12, 14 + rOffset*2, 3);
-        ctx.fillRect(this.x - 5 - rOffset, this.y + 15, 10 + rOffset*2, 2);
+        if (this.isCrippled) {
+            ctx.save();
+            ctx.translate(this.x, this.y + 6);
+            ctx.rotate((this.crawlAngle || 0) + Math.PI / 2);
+            // Podłużny, obracający się cień idealnie dopasowany do leżącej sylwetki czołgającego się wroga
+            ctx.fillRect(-10 - rOffset, -14 - rOffset, 20 + rOffset*2, 28 + rOffset*2);
+            ctx.restore();
+        } else {
+            ctx.fillRect(this.x - 5 - rOffset, this.y + 10, 10 + rOffset*2, 2);
+            ctx.fillRect(this.x - 7 - rOffset, this.y + 12, 14 + rOffset*2, 3);
+            ctx.fillRect(this.x - 5 - rOffset, this.y + 15, 10 + rOffset*2, 2);
+        }
         ctx.restore();
         
-        // 1. Czyste ciało wroga
+        let drawScale = this.type === 'boss' ? 48 : 32;
+        let offsetXY = this.type === 'boss' ? -24 : -16;
+
+        // Transformacja czołgania się (Używa grafiki leżących zwłok obróconych dokładnie głową do bohatera)
+        if (this.isCrippled) {
+            ctx.save();
+            ctx.translate(this.x, this.y + 6); // Obniżone do poziomu gruntu/cienia
+            ctx.rotate((this.crawlAngle || 0) + Math.PI / 2); // Głowa wskazuje bezbłędnie w stronę bohatera
+            ctx.imageSmoothingEnabled = false;
+
+            let isElite = this.type !== 'standard';
+            let customDead = isElite ? 
+                ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyEliteDeadSkin && customSquadDesign.enemyEliteDeadSkin.complete && customSquadDesign.enemyEliteDeadSkin.width > 0) ? customSquadDesign.enemyEliteDeadSkin : null) :
+                ((typeof customSquadDesign !== 'undefined' && customSquadDesign && customSquadDesign.enemyDeadSkin && customSquadDesign.enemyDeadSkin.complete && customSquadDesign.enemyDeadSkin.width > 0) ? customSquadDesign.enemyDeadSkin : null);
+
+            if (customDead) {
+                let sW = Math.min(customDead.width, customDead.height);
+                let sH = Math.min(customDead.height, customDead.width);
+                ctx.drawImage(customDead, 0, 0, sW, sH, offsetXY, offsetXY, drawScale, drawScale);
+            } else {
+                let sprite = (this.bodySprites ? this.bodySprites[this.animFrame] : null) || this.sprites[this.animFrame] || this.sprites[0];
+                ctx.drawImage(sprite, offsetXY, offsetXY, drawScale, drawScale);
+            }
+            ctx.restore();
+            return;
+        }
+
+        // 1. Czyste stojące ciało wroga (Dla normalnego chodu)
         ctx.save();
         ctx.translate(this.x, this.y - this.bobY);
         if (this.facingLeft) {
             ctx.scale(-1, 1);
         }
-
         ctx.imageSmoothingEnabled = false;
-        let drawScale = this.type === 'boss' ? 48 : 32;
-        let offsetXY = this.type === 'boss' ? -24 : -16;
 
         if (this.customImageSkin && this.customImageSkin.complete && this.customImageSkin.width > 0 && this.customImageSkin.height > 0) {
             let fh = this.customImageSkin.height;
@@ -369,9 +425,19 @@ export class Enemy {
         if (this.hp <= 0) {
             let deathType = shooter && shooter.weapon ? shooter.weapon.type : 'normal';
             if (isHeadshot) deathType = 'headshot';
+            if (this.onFireTimer > 0 || state.passiveIncendiaryActive) deathType = 'flame'; // 8. ZAPALAJĄCE (zwłoki płoną)
             
             this.die(deathType);
             if (shooter && shooter.kills !== undefined) shooter.kills++;
+            
+            // Ożywianie wroga jako przyjaznego Cyber-Zombie (Nekromancja)
+            if (state.passiveNecromancyActive && Math.random() < 0.1) {
+                if (state.companions) {
+                    state.companions.push(new CyberZombie(this.x, this.y));
+                    createParticles(this.x, this.y, '#2ecc71', 15, 60); // Zielony wybuch reanimacji
+                }
+            }
+
             chargeDoctrines(); // Ładowanie Doktryn Taktycznych w locie
         }
     }

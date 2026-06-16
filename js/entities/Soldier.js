@@ -8,6 +8,7 @@ import { Explosion } from './Explosion.js';
 import { Crate } from './Crate.js';
 import { Medkit } from './Medkit.js';
 import { Turret } from './Turret.js';
+import { FieldMine } from './FieldMine.js';
 
 const gunFireImg = new Image();
 gunFireImg.src = 'img/gun_fire.png';
@@ -33,8 +34,14 @@ export class Soldier {
         this.y = y;
         this.isEnemy = false;
         this.speed = stats.speed;
-        this.hp = 3;
-        this.maxHp = 3;
+        this.maxHp = state.passivePervitinActive ? 2 : 3;
+        this.hp = this.maxHp;
+        this.maxArmor = state.kevlarArmorLevel || 0; // 2. KAMIZELKA KEVLAROWA
+        this.armor = this.maxArmor;
+        this.standStillTimer = 0;   // 1. SKUPIENIE
+        this.isLaserFocused = false;
+        this.isHiddenInBush = false; // 4. MISTRZ MASKOWANIA
+        this.bushStealthTimer = 0;
         this.radius = 8;
         this.lastShot = 0;
         
@@ -225,14 +232,43 @@ export class Soldier {
             }
         }
 
+        // 1. SKUPIENIE (+ PRECYZJA W BEZRUCHU)
+        if (Math.hypot(this.x - oldX, this.y - oldY) < 0.1) {
+            this.standStillTimer += dt;
+            if (this.standStillTimer > 0.6 && state.passiveSniperFocusActive) {
+                this.isLaserFocused = true;
+            }
+        } else {
+            this.standStillTimer = 0;
+            this.isLaserFocused = false;
+        }
+
+        // 4. MISTRZ MASKOWANIA (Ukrywanie w krzakach)
+        if (state.camoMasterLevel && state.camoMasterLevel > 0 && state.bushes) {
+            let inBush = state.bushes.some(b => Math.hypot(b.x - this.x, b.y - this.y) < b.radius);
+            if (inBush) {
+                this.isHiddenInBush = true;
+                this.bushStealthTimer = state.camoMasterLevel === 3 ? 999 : (state.camoMasterLevel === 2 ? 6.0 : 3.0);
+            } else {
+                if (this.bushStealthTimer > 0) {
+                    this.bushStealthTimer -= dt;
+                } else {
+                    this.isHiddenInBush = false;
+                }
+            }
+        } else {
+            this.isHiddenInBush = false;
+        }
+
         // Flocking oddziału gracza
         let forceX = 0;
         let forceY = 0;
+        let flockStrength = state.passiveFlockingBoostActive ? 7.5 : 3; // 1. ZWARTA GRUPA (Ponad 2x siła przyciągania!)
         for (let other of state.squad) {
             if (other !== this) {
                 let d = Math.hypot(other.x - this.x, other.y - this.y);
                 if (d < 45 && d > 0) { 
-                    let push = (45 - d) * 3;
+                    let push = (45 - d) * flockStrength;
                     let angle = Math.atan2(this.y - other.y, this.x - other.x);
                     forceX += Math.cos(angle) * push;
                     forceY += Math.sin(angle) * push;
@@ -242,6 +278,18 @@ export class Soldier {
         this.x += forceX * dt;
         this.y += forceY * dt;
         
+        // 1. Dodatkowe dociąganie do Lidera (ZWARTA GRUPA) dla absolutnej dyscypliny w marszu
+        if (state.passiveFlockingBoostActive && this !== state.squad[0] && state.squad[0]) {
+            let leader = state.squad[0];
+            let d = Math.hypot(leader.x - this.x, leader.y - this.y);
+            if (d > 25) {
+                let ang = Math.atan2(leader.y - this.y, leader.x - this.x);
+                let pull = (d - 25) * 10;
+                this.x += Math.cos(ang) * pull * dt;
+                this.y += Math.sin(ang) * pull * dt;
+            }
+        }
+
         // Aplikacja knockbacku fizycznego na sojusznika (wyhamowanie w dżungli)
         this.kbX = this.kbX || 0;
         this.kbY = this.kbY || 0;
@@ -262,6 +310,47 @@ export class Soldier {
             let clampAngle = Math.atan2(this.y - centerRef.y, this.x - centerRef.x);
             this.x = centerRef.x + Math.cos(clampAngle) * maxAllowedDist;
             this.y = centerRef.y + Math.sin(clampAngle) * maxAllowedDist;
+        }
+
+        // 2. BAGNETY (Zbalansowana walka w zwarciu: 2 obrażenia, łagodny odrzut, 1.2s cooldownu)
+        if (state.passiveBayonetsActive && state.enemies) {
+            this.bayonetCooldown = (this.bayonetCooldown || 0) - dt;
+            if (this.bayonetCooldown <= 0) {
+                for (let e of state.enemies) {
+                    if (e.hp > 0 && Math.hypot(e.x - this.x, e.y - this.y) < this.radius + e.radius + 5) {
+                        e.takeDamage(2, { kills: 0 }); 
+                        createParticles(e.x, e.y, '#ff0000', 6, 35);
+                        playSound('sfx_shoot_stab', 0.55);
+                        if (typeof e.applyKnockback === 'function') {
+                            let ang = Math.atan2(e.y - this.y, e.x - this.x);
+                            e.applyKnockback(Math.cos(ang) * 120, Math.sin(ang) * 120); 
+                        }
+                        this.bayonetCooldown = 1.2; // Indywidualna blokada przed ciągłym spamem
+                        break; // Tylko 1 cel na pchnięcie
+                    }
+                }
+            }
+        }
+
+        // 3. BOOBY TRAP (30% na założenie miny przy przejściu przez zwłoki)
+        if (state.passiveBoobyTrapActive && typeof corpses !== 'undefined' && corpses) {
+            this.boobyTrapCooldown = (this.boobyTrapCooldown || 0) - dt;
+            if (this.boobyTrapCooldown <= 0) {
+                for (let c of corpses) {
+                    if (!c.hasBoobyTrap && Math.hypot(c.x - this.x, c.y - this.y) < 18) {
+                        c.hasBoobyTrap = true;
+                        if (Math.random() < 0.30) {
+                            if (state.fieldMines) {
+                                state.fieldMines.push(new FieldMine(c.x, c.y, this, true));
+                                createParticles(c.x, c.y, '#ffaa00', 10, 30);
+                                playSound('sfx_click', 0.5);
+                            }
+                        }
+                        this.boobyTrapCooldown = 0.4;
+                        break;
+                    }
+                }
+            }
         }
 
         // Automatyczny ogień do wrogów, skrzynek, klatek z jeńcami oraz ufortyfikowanych magazynów wroga
@@ -337,7 +426,12 @@ export class Soldier {
             let angle = this.aimAngle;
             let fireRate = (stats.fireRate * this.weapon.fireRateMult) / 1000;
             if (state.passiveAmmoBeltActive) {
-                fireRate *= 0.8; // +25% reload speed (skrócenie o 20% interwału)
+                fireRate *= 0.8; 
+            }
+            // 3. ZIMNA KREW (Większa szybkostrzelność przy 1 HP)
+            if (this.hp === 1 && state.coldBloodLevel && state.squad.indexOf(this) < state.coldBloodLevel) {
+                fireRate *= 0.5; // +100% Fire Rate!
+                createParticles(this.x, this.y - 8, '#ff5500', 1, 15);
             }
             let dmg = stats.damage * this.weapon.damageMult;
             
@@ -430,34 +524,32 @@ export class Soldier {
                     if (burstCount < 3 && state.squad.includes(this) && this.hp > 0) {
                         // Pobieramy aktualny kąt celowania, aby seria M16 płynnie podążała za obrotem lufy
                         let currentAngle = this.aimAngle;
-                        let spreadAng = currentAngle + (Math.random() - 0.5) * 0.04;
+                        let spreadAng = currentAngle + (this.isLaserFocused ? 0 : (Math.random() - 0.5) * 0.04);
                         state.bullets.push(new Bullet(this, this.x, this.y, spreadAng, false, dmg * 0.8, this.weapon));
-                        playSound('sfx_shoot_m16', 0.22); // Dźwięk dedykowany M16
+                        playSound('sfx_shoot_m16', 0.22); 
                         createParticles(this.x + Math.cos(spreadAng)*10, this.y + Math.sin(spreadAng)*10, '#ffff00', 1, 25);
                         burstCount++;
-                        setTimeout(fireBurst, 55); // Odstęp 55ms między strzałami w serii
+                        setTimeout(fireBurst, 55); 
                     }
                 };
                 fireBurst();
             } else if (this.weapon.type === 'rapid') {
-                // PM Uzi (Pistolet) lub M249 SAW
-                let spreadAng = angle + (Math.random() - 0.5) * 0.3;
+                // PM Uzi lub M249 SAW
+                let spreadAng = angle + (this.isLaserFocused ? 0 : (Math.random() - 0.5) * 0.3);
                 state.bullets.push(new Bullet(this, this.x, this.y, spreadAng, false, dmg, this.weapon));
                 if (this.weapon === WEAPONS.RIFLE_SMG) {
-                    // PM Uzi (Pistolet) strzela szybką serią z lżejszym, bardziej dopasowanym dźwiękiem pistoletu
                     playSound('sfx_shoot_default', 0.18);
                 } else {
-                    // M249 SAW strzela z ciężkim odgłosem karabinu maszynowego
                     playSound('sfx_shoot_machinegun', 0.2);
                 }
             } else if (this.weapon.type === 'fullauto') {
-                // FN FAL w pełni automatyczny z odczuwalnym rozrzutem kątowym (spread)
-                let spreadAng = angle + (Math.random() - 0.5) * 0.12;
+                // FN FAL
+                let spreadAng = angle + (this.isLaserFocused ? 0 : (Math.random() - 0.5) * 0.12);
                 state.bullets.push(new Bullet(this, this.x, this.y, spreadAng, false, dmg, this.weapon));
                 playSound('sfx_shoot_machinegun', 0.2);
             } else {
-                angle += (Math.random() - 0.5) * 0.1; 
-                state.bullets.push(new Bullet(this, this.x, this.y, angle, false, dmg, this.weapon));
+                let spreadAng = angle + (this.isLaserFocused ? 0 : (Math.random() - 0.5) * 0.1);
+                state.bullets.push(new Bullet(this, this.x, this.y, spreadAng, false, dmg, this.weapon));
                 let vol = this.weapon.type === 'explosive' ? 0.3 : 0.08;
                 playSound(this.weapon.type === 'explosive' ? 'sfx_shoot_bazooka' : 'sfx_shoot_default', vol);
             }
@@ -803,6 +895,35 @@ export class Soldier {
             ctx.fillStyle = (i < this.hp) ? '#39ff14' : '#ff0000'; // Neonowy zielony / czerwony
             ctx.fillRect(Math.floor(startX + i * (blockW + gap)), Math.floor(hpY), blockW, blockH);
         }
+
+        // 2. KAMIZELKA KEVLAROWA (Pasek z armorem pod zdrowiem - na początku jeden pasek max 3)
+        if (this.maxArmor && this.maxArmor > 0) {
+            let armY = hpY + 4; 
+            let startArmX = this.x - (blockW * this.maxArmor + gap * (this.maxArmor - 1)) / 2;
+            for (let i = 0; i < this.maxArmor; i++) {
+                ctx.fillStyle = (i < this.armor) ? '#00ffff' : '#334455'; // Cyan (aktywny) / Ciemny (zużyty)
+                ctx.fillRect(Math.floor(startArmX + i * (blockW + gap)), Math.floor(armY), blockW, blockH);
+            }
+        }
+        
+        // 1. SKUPIENIE (+ PRECYZJA W BEZRUCHU - Złoty wskaźnik nad głową)
+        if (this.isLaserFocused) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255, 255, 0, 0.85)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y - 10 - this.bobY, 13, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(this.x - 1, this.y - 26 - this.bobY, 2, 2);
+            ctx.restore();
+        }
+
+        // Mistrz Maskowania - duchowa przezroczystość
+        if (this.isHiddenInBush) {
+            ctx.fillStyle = '#52b788';
+            ctx.fillRect(this.x - 2, this.y - 30 - this.bobY, 4, 2);
+        }
         
         // Pasek przeładowania strzelby widoczny przez cały cykl od razu po strzale
         if (this.weapon.type === 'spread' && this.lastShot > 0) {
@@ -832,6 +953,17 @@ export class Soldier {
 
     takeDamage(amount) {
         if (this.hp <= 0) return;
+        
+        // 2. KAMIZELKA KEVLAROWA (Absorpcja obrażeń)
+        if (this.armor && this.armor > 0) {
+            let absorbed = Math.min(this.armor, amount);
+            this.armor -= absorbed;
+            amount -= absorbed;
+            playSound('sfx_hit', 0.4);
+            createParticles(this.x, this.y, '#00ffff', 5, 30);
+            if (amount <= 0) return;
+        }
+
         this.hp -= amount;
         createParticles(this.x, this.y, '#ff0000', 3, 60);
         if (this.hp <= 0) {

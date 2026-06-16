@@ -20,6 +20,7 @@ export class Bullet {
         this.weapon = weapon || WEAPONS.DEFAULT;
         this.life = (weapon && weapon.type === 'explosive') ? 1.5 : (shooter && shooter.soldierClass === 'SNIPER' ? 0.6 : 1.0); 
         this.hitTargets = new Set(); // Bufor celów przebitych na wylot
+        this.bouncesLeft = (state.passiveRicochetActive && !isEnemy && (!weapon || weapon.type !== 'explosive')) ? 3 : 0;
     }
 
     update(dt) {
@@ -100,6 +101,18 @@ export class Bullet {
     }
 
     handleCollision(t) {
+        if (!this.isEnemy && t && t.isEnemy) {
+            // 4. STRZAŁ W NOGI (50% na czołganie się wroga)
+            if (state.passiveKneecapShotActive && Math.random() < 0.5) {
+                t.isCrippled = true;
+                createParticles(t.x, t.y + 4, '#8b0000', 6, 25);
+            }
+            // 8. POCISKI ZAPALAJĄCE (Podpalenie na 3 sekundy)
+            if (state.passiveIncendiaryActive) {
+                t.onFireTimer = 3.0;
+            }
+        }
+
         if (this.weapon.type === 'explosive') {
             state.explosions.push(new Explosion(this.x, this.y, 60, this.damage, this.shooter));
             this.life = 0; 
@@ -110,28 +123,55 @@ export class Bullet {
                 t.takeDamage(this.damage, this.shooter, this.isCrit || false);
                 
                 if (this.isCrit) {
-                     // Krytyk / Headshot: znacznik krytyczny + potężna struga krwi w kierunku lotu + błysk + dźwięk headshota
                      if (state.particles) {
                          state.particles.push(new CritIndicator(t.x, t.y - 12));
                      }
                       let bulletAngle = Math.atan2(this.vy, this.vx);
-                      createDirectionalParticles(t.x, t.y, '#ff003c', 35, 180, bulletAngle, 0.65); // Szybsza i dłuższa kierunkowa struga krwi!
-                      createParticles(t.x, t.y, '#ffffff', 8, 40);  // Biały błysk
-                      playSound('sfx_shoot_head', 0.65); // Dźwięk headshota!
+                      createDirectionalParticles(t.x, t.y, '#ff003c', 35, 180, bulletAngle, 0.65);
+                      createParticles(t.x, t.y, '#ffffff', 8, 40);
+                      playSound('sfx_shoot_head', 0.65);
                  } else {
-                     let splashColor = '#ffaa00';
-                     createParticles(t.x, t.y, splashColor, 2, 35);
+                     createParticles(t.x, t.y, '#ffaa00', 2, 35);
                  }
 
-                // Zgodnie z wytycznymi: zbalansowany, realistyczny odrzut
                 if (t.hp > 0 && typeof t.applyKnockback === 'function') {
                     let bAng = Math.atan2(this.vy, this.vx);
-                    let force = this.isCrit ? 190 : 120; // Silniejszy odrzut krytyka
+                    let force = this.isCrit ? 190 : 120;
                     t.applyKnockback(Math.cos(bAng) * force, Math.sin(bAng) * force);
                 }
             }
         } else {
             t.takeDamage(this.damage, this.shooter, false);
+            
+            // Obsługa rykoszetu (Pinball Lufki)
+            if (this.bouncesLeft > 0) {
+                let nextTarget = null;
+                let minDist = 500;
+                for (let i = 0; i < state.enemies.length; i++) {
+                    let e = state.enemies[i];
+                    if (e.hp > 0 && e !== t && !this.hitTargets.has(e)) {
+                        let d = Math.hypot(e.x - this.x, e.y - this.y);
+                        if (d < minDist) {
+                            minDist = d;
+                            nextTarget = e;
+                        }
+                    }
+                }
+
+                if (nextTarget) {
+                    this.hitTargets.add(t);
+                    this.bouncesLeft--;
+                    let newAng = Math.atan2(nextTarget.y - this.y, nextTarget.x - this.x);
+                    let speed = Math.hypot(this.vx, this.vy);
+                    this.vx = Math.cos(newAng) * speed;
+                    this.vy = Math.sin(newAng) * speed;
+                    this.life = 1.0; // Przedłużamy lot rykoszetu
+                    createParticles(this.x, this.y, '#00ffff', 8, 50); // Cyjanowe iskry pinballa
+                    playSound('sfx_click', 0.6);
+                    return;
+                }
+            }
+
             this.life = 0; 
         }
     }
