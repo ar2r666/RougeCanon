@@ -19,7 +19,10 @@ export function startWave() {
     state.enemiesAlive = state.enemiesToSpawn;
     state.enemySpawnTimer = 0;
     state.gameState = 'PLAY';
-    document.getElementById('screens').classList.add('hidden');
+    
+    const screens = document.getElementById('screens');
+    screens.classList.add('hidden');
+    screens.classList.remove('upgrade-mode'); // Przywróć ciemne tło dla innych ekranów
     document.getElementById('upgradeScreen').classList.add('hidden');
     
     // Generowanie klatki z jeńcem co 3 poziomy przy niepełnym składzie (< 4 żołnierzy)
@@ -78,94 +81,252 @@ export function startWave() {
 }
 
 const UPGRADES = [
-    { name: "Pas z Amunicją", desc: "+25% szybszego przeładowania całego składu", apply: () => { state.passiveAmmoBeltActive = true; } },
-    { name: "Eksplozywny Odwet", desc: "Granat po zgonie weterana + 50% szans na skrzynię", apply: () => { state.passiveMartyrdomActive = true; } },
-    { name: "Szrapnelowe Pancerze", desc: "Redukcja 100% AoE z kamikadze i brak odrzutu", apply: () => { state.passiveShrapnelArmorActive = true; } },
-    { name: "Pies Bojowy", desc: "Atakuje cele poza okręgiem", apply: () => { state.companions.push(new Dog(state.camera.x, state.camera.y)); } },
-    { name: "Ciężka Amunicja", desc: "+1 Obrażenia", apply: () => stats.damage++ },
-    { name: "Adrenalina", desc: "+20% Prędkości", apply: () => stats.speed *= 1.2 },
-    { name: "Racje Kawy", desc: "+15% Szybkostrzelności", apply: () => stats.fireRate *= 0.85 },
-    { name: "Sokole Oko", desc: "+20% Zasięgu", apply: () => stats.range *= 1.2 },
-    { name: "Apteczka", desc: "Leczy Cały Skład", apply: () => { state.squad.forEach(s => s.hp = s.maxHp); } }
+    { name: "PAS AMUNICJI", desc: "+25% szybszego przeładowania składu", apply: () => { state.passiveAmmoBeltActive = true; } },
+    { name: "ODWET WETERANA", desc: "Granat po zgonie żołnierza + 50% szans na skrzynię", apply: () => { state.passiveMartyrdomActive = true; } },
+    { name: "SZRAPNEL SHIELD", desc: "Brak odrzutu oddziału i -100% obrażeń AoE", apply: () => { state.passiveShrapnelArmorActive = true; } },
+    { name: "PIES BOJOWY", desc: "Autonomiczny pies bojowy wspierający skład", apply: () => { state.companions.push(new Dog(state.camera.x, state.camera.y)); } },
+    { name: "MOCNE NABOJE", desc: "+1 do bazowych obrażeń pocisków", apply: () => stats.damage++ },
+    { name: "ADRENALINA", desc: "+20% szybkości poruszania się", apply: () => stats.speed *= 1.2 },
+    { name: "KAWA MILITARNA", desc: "+15% wyższej szybkostrzelności broni", apply: () => stats.fireRate *= 0.85 },
+    { name: "SOKOLE OKO", desc: "+20% większego zasięgu strzału", apply: () => stats.range *= 1.2 },
+    { name: "APTECZKA POLOWA", desc: "Pełne uleczenie wszystkich żołnierzy", apply: () => { state.squad.forEach(s => s.hp = s.maxHp); } }
 ];
+
+let tagCounter = 0;
+
+function buildDogTagCard(title, desc, onClick) {
+    tagCounter++;
+    const maskId = `tag-mask-${tagCounter}`;
+    
+    const card = document.createElement('div');
+    card.className = 'upgrade-card';
+    
+    // Zawsze jeden losowy róg jest delikatnie naderwany (0: TL, 1: TR, 2: BR, 3: BL)
+    const tornCorner = Math.floor(Math.random() * 4);
+    
+    let maskCutouts = '';
+    let tornFractureRim = '';
+    
+    if (tornCorner === 0) { // Top-Left
+        maskCutouts = `
+            <rect x="0" y="22" width="9" height="7" fill="#000000" />
+            <rect x="0" y="29" width="6" height="5" fill="#000000" />
+            <rect x="0" y="34" width="3" height="4" fill="#000000" />
+        `;
+        tornFractureRim = `
+            <!-- Rant pęknięcia TL -->
+            <rect x="9" y="22" width="1" height="7" fill="#000000" />
+            <rect x="6" y="29" width="3" height="1" fill="#000000" />
+            <rect x="6" y="30" width="1" height="4" fill="#000000" />
+            <rect x="3" y="34" width="3" height="1" fill="#000000" />
+            <rect x="3" y="35" width="1" height="3" fill="#000000" />
+            
+            <rect x="10" y="23" width="1" height="6" fill="#ffffff" />
+            <rect x="7" y="30" width="1" height="4" fill="#ffffff" />
+            <rect x="4" y="35" width="1" height="3" fill="#ffffff" />
+        `;
+    } else if (tornCorner === 1) { // Top-Right
+        maskCutouts = `
+            <rect x="31" y="22" width="9" height="7" fill="#000000" />
+            <rect x="34" y="29" width="6" height="5" fill="#000000" />
+            <rect x="37" y="34" width="3" height="4" fill="#000000" />
+        `;
+        tornFractureRim = `
+            <!-- Rant pęknięcia TR -->
+            <rect x="30" y="22" width="1" height="7" fill="#000000" />
+            <rect x="31" y="29" width="3" height="1" fill="#000000" />
+            <rect x="33" y="30" width="1" height="4" fill="#000000" />
+            <rect x="34" y="34" width="3" height="1" fill="#000000" />
+            <rect x="36" y="35" width="1" height="3" fill="#000000" />
+            
+            <rect x="29" y="23" width="1" height="6" fill="#4f5d65" />
+            <rect x="32" y="30" width="1" height="4" fill="#4f5d65" />
+            <rect x="35" y="35" width="1" height="3" fill="#4f5d65" />
+        `;
+    } else if (tornCorner === 2) { // Bottom-Right
+        maskCutouts = `
+            <rect x="31" y="78" width="9" height="7" fill="#000000" />
+            <rect x="34" y="73" width="6" height="5" fill="#000000" />
+            <rect x="37" y="69" width="3" height="4" fill="#000000" />
+        `;
+        tornFractureRim = `
+            <!-- Rant pęknięcia BR -->
+            <rect x="30" y="78" width="1" height="7" fill="#000000" />
+            <rect x="31" y="77" width="3" height="1" fill="#000000" />
+            <rect x="33" y="73" width="1" height="4" fill="#000000" />
+            <rect x="34" y="72" width="3" height="1" fill="#000000" />
+            <rect x="36" y="69" width="1" height="3" fill="#000000" />
+            
+            <rect x="29" y="78" width="1" height="6" fill="#4f5d65" />
+            <rect x="32" y="73" width="1" height="4" fill="#4f5d65" />
+            <rect x="35" y="69" width="1" height="3" fill="#4f5d65" />
+        `;
+    } else if (tornCorner === 3) { // Bottom-Left
+        maskCutouts = `
+            <rect x="0" y="78" width="9" height="7" fill="#000000" />
+            <rect x="0" y="73" width="6" height="5" fill="#000000" />
+            <rect x="0" y="69" width="3" height="4" fill="#000000" />
+        `;
+        tornFractureRim = `
+            <!-- Rant pęknięcia BL -->
+            <rect x="9" y="78" width="1" height="7" fill="#000000" />
+            <rect x="6" y="77" width="3" height="1" fill="#000000" />
+            <rect x="6" y="73" width="1" height="4" fill="#000000" />
+            <rect x="3" y="72" width="3" height="1" fill="#000000" />
+            <rect x="3" y="69" width="1" height="3" fill="#000000" />
+            
+            <rect x="10" y="78" width="1" height="6" fill="#ffffff" />
+            <rect x="7" y="73" width="1" height="4" fill="#ffffff" />
+            <rect x="4" y="69" width="1" height="3" fill="#ffffff" />
+        `;
+    }
+
+    card.innerHTML = `
+        <svg class="unified-dogtag-svg" viewBox="0 0 40 88" width="160" height="352">
+            <defs>
+                <!-- Wzór łańcuszka kulkowego 16-bit w skali 2x2px -->
+                <pattern id="bead-pattern-${tagCounter}" x="0" y="0" width="3" height="4" patternUnits="userSpaceOnUse">
+                    <!-- Pionowy czarny łącznik -->
+                    <rect x="1" y="0" width="1" height="1" fill="#1b2225" />
+                    <rect x="1" y="3" width="1" height="1" fill="#1b2225" />
+                    <!-- Srebrna kuleczka militarna -->
+                    <rect x="0.5" y="1" width="2" height="2" fill="#000000" />
+                    <rect x="0" y="1.5" width="3" height="1" fill="#000000" />
+                    <rect x="0.5" y="1.5" width="2" height="1" fill="#9aa7af" />
+                    <rect x="0.5" y="1.25" width="0.5" height="0.5" fill="#ffffff" />
+                    <rect x="2" y="2" width="0.5" height="0.5" fill="#4f5d65" />
+                </pattern>
+                
+                <!-- Maska do wycięcia naderwanego rogu -->
+                <mask id="${maskId}">
+                    <rect x="0" y="0" width="40" height="88" fill="#ffffff" />
+                    ${maskCutouts}
+                </mask>
+            </defs>
+            
+            <!-- 1. ŁAŃCUSZEK KULKOWY (Zwisający od y=0 do y=21, wchodzący w dziurkę blachy) -->
+            <rect x="18.5" y="0" width="3" height="21" fill="url(#bead-pattern-${tagCounter})" />
+            
+            <!-- 2. ZMASKAWANY NIEŚMIERTELNIK (Plate body od y=18 do y=84) -->
+            <g mask="url(#${maskId})">
+                <!-- Czarny zewnętrzny schodkowy kontur -->
+                <rect x="0" y="25" width="40" height="56" fill="#000000" />
+                <rect x="1" y="23" width="38" height="60" fill="#000000" />
+                <rect x="2" y="22" width="36" height="62" fill="#000000" />
+                <!-- Szyjka / dzyndzel u góry -->
+                <rect x="14" y="18" width="12" height="5" fill="#000000" />
+
+                <!-- Stalowe wypełnienie (Srebro) -->
+                <rect x="1" y="26" width="38" height="54" fill="#9aa7af" class="tag-silver-fill" />
+                <rect x="2" y="24" width="36" height="58" fill="#9aa7af" class="tag-silver-fill" />
+                <rect x="3" y="23" width="34" height="60" fill="#9aa7af" class="tag-silver-fill" />
+                <!-- Wypełnienie dzyndzla -->
+                <rect x="15" y="19" width="10" height="4" fill="#9aa7af" class="tag-silver-fill" />
+
+                <!-- Pixel Art Oświetlenie krawędzi (Biel) -->
+                <rect x="1" y="26" width="1" height="54" fill="#ffffff" />
+                <rect x="2" y="24" width="1" height="2" fill="#ffffff" />
+                <rect x="3" y="23" width="34" height="1" fill="#ffffff" />
+                <rect x="15" y="19" width="10" height="1" fill="#ffffff" />
+                <rect x="15" y="20" width="1" height="3" fill="#ffffff" />
+
+                <!-- Wewnętrzny Pixel Art Cień (Ciemny Szary) -->
+                <rect x="38" y="26" width="1" height="54" fill="#4f5d65" />
+                <rect x="37" y="80" width="1" height="2" fill="#4f5d65" />
+                <rect x="3" y="82" width="35" height="1" fill="#4f5d65" />
+                <rect x="24" y="20" width="1" height="3" fill="#4f5d65" />
+                
+                <!-- Wycięta stalowa dziurka w dzyndzlu na łańcuszek -->
+                <rect x="17" y="20" width="6" height="3" fill="#000000" />
+                <rect x="17" y="23" width="6" height="1" fill="#ffffff" />
+            </g>
+            
+            <!-- Ranty pęknięcia po naderwanym rogu (nanoszone na wierzch) -->
+            ${tornFractureRim}
+        </svg>
+
+        <!-- Warstwa z napisami umieszczona dokładnie na blachach -->
+        <div class="dogtag-content">
+            <div class="upgrade-card-title">${title}</div>
+            <div class="upgrade-card-desc">${desc}</div>
+        </div>
+    `;
+    
+    card.onclick = onClick;
+    return card;
+}
 
 export function showUpgrades() {
     state.gameState = 'UPGRADE';
-    document.getElementById('screens').classList.remove('hidden');
+    const screens = document.getElementById('screens');
+    screens.classList.remove('hidden');
+    screens.classList.add('upgrade-mode');
     document.getElementById('upgradeScreen').classList.remove('hidden');
+    
+    const adminPanel = document.getElementById('adminPanel');
+    if (adminPanel) adminPanel.classList.remove('open');
     
     let optionsDiv = document.getElementById('upgradeOptions');
     optionsDiv.innerHTML = '';
     
     // Awans poziomu (Level Up) po szturmie na Magazyn
     if (state.pendingLevelUp && state.squad.length > 0) {
-        document.getElementById('upgradeTitle').innerText = "ZGLISZCZA MAGAZYNU";
-        document.getElementById('upgradeSubtitle').innerText = "WYBIERZ SPECJALISTĘ DO AWANSU";
-        
         state.squad.forEach(soldier => {
-            let btn = document.createElement('button');
-            btn.className = 'btn';
-            btn.innerHTML = `AWANSUJ: ${soldier.name} [${soldier.soldierClass || 'REKRUT'}]<div class="upgrade-desc">+1 Max HP, +20% Szybkostrzelności, Awans na Oficera!</div>`;
-            btn.onclick = () => {
-                soldier.maxHp = (soldier.maxHp || 3) + 1;
-                soldier.hp = soldier.maxHp; // Pełne leczenie przy awansie
-                soldier.baseDamage = (soldier.baseDamage || 1) + 1;
-                soldier.isPromoted = true; // Odblokowanie unikalnej legendarnej cechy!
-                
-                // Wizualny awans na Oficera (Czapka oficerska = index 5)
-                soldier.helmetIdx = 5;
-                soldier.updateSprites();
-                
-                state.pendingLevelUp = false;
-                state.wave++;
-                startWave();
-            };
-            optionsDiv.appendChild(btn);
+            const card = buildDogTagCard(
+                soldier.name,
+                `AWANSUJ: ${soldier.soldierClass || 'REKRUTA'}<br><br>+1 Max HP<br>+20% Szybkostrzelności<br>Ranga Oficera`,
+                () => {
+                    soldier.maxHp = (soldier.maxHp || 3) + 1;
+                    soldier.hp = soldier.maxHp;
+                    soldier.baseDamage = (soldier.baseDamage || 1) + 1;
+                    soldier.isPromoted = true;
+                    soldier.helmetIdx = 5;
+                    soldier.updateSprites();
+                    
+                    state.pendingLevelUp = false;
+                    state.wave++;
+                    startWave();
+                }
+            );
+            optionsDiv.appendChild(card);
         });
         return;
     }
     
     // Co 3 fale oferujemy specjalną broń (zrzut)
     if (state.wave % 3 === 0 && state.squad.length > 0) {
-        document.getElementById('upgradeTitle').innerText = "ZRZUT ZAOPATRZENIA";
-        document.getElementById('upgradeSubtitle').innerText = "PRZYDZIEL NOWĄ BROŃ";
-        
-        // Wybierz do 3 losowych żyjących żołnierzy
         let randomSoldiers = [...state.squad].sort(() => 0.5 - Math.random()).slice(0, 3);
         let availableWeapons = [WEAPONS.SHOTGUN, WEAPONS.HEAVY_SAW, WEAPONS.BAZOOKA];
         
         randomSoldiers.forEach(soldier => {
             let randomWeapon = availableWeapons[Math.floor(Math.random() * availableWeapons.length)];
-            
-            let btn = document.createElement('button');
-            btn.className = 'btn';
-            btn.innerHTML = `${soldier.name} otrzymuje:<br><br><span style="color:${randomWeapon.color}">${randomWeapon.name}</span>`;
-            btn.onclick = () => {
-                soldier.weapon = randomWeapon;
-                soldier.updateSprites(); // Odśwież wygląd postaci nową bronią!
-                state.wave++;
-                startWave();
-            };
-            optionsDiv.appendChild(btn);
+            const card = buildDogTagCard(
+                soldier.name,
+                `OTRZYMUJE:<br><br><span style="color:${randomWeapon.color}; font-weight:bold;">${randomWeapon.name}</span>`,
+                () => {
+                    soldier.weapon = randomWeapon;
+                    soldier.updateSprites();
+                    state.wave++;
+                    startWave();
+                }
+            );
+            optionsDiv.appendChild(card);
         });
     } else {
-        // Standardowe ulepszenia ogólne
-        document.getElementById('upgradeTitle').innerText = "FALA POKONANA";
-        document.getElementById('upgradeSubtitle').innerText = "WYBIERZ WSPARCIE";
-        
         let shuffled = [...UPGRADES].sort(() => 0.5 - Math.random());
         let choices = shuffled.slice(0, 3);
 
         choices.forEach(choice => {
-            let btn = document.createElement('button');
-            btn.className = 'btn';
-            btn.innerHTML = `${choice.name}<div class="upgrade-desc">${choice.desc}</div>`;
-            btn.onclick = () => {
-                choice.apply();
-                state.wave++;
-                startWave();
-            };
-            optionsDiv.appendChild(btn);
+            const card = buildDogTagCard(
+                choice.name,
+                choice.desc,
+                () => {
+                    choice.apply();
+                    state.wave++;
+                    startWave();
+                }
+            );
+            optionsDiv.appendChild(card);
         });
     }
 }
@@ -381,6 +542,51 @@ export function adminPromoteSquad() {
     playSound('sfx_click', 0.6);
 }
 
+export function adminToggleControlMode() {
+    state.aimOnlyMode = !state.aimOnlyMode;
+    const btn = document.getElementById('adminToggleControlModeBtn');
+    if (btn) {
+        btn.innerText = state.aimOnlyMode ? "TRYB: CELOWANIE MYSZKĄ" : "TRYB: RUCH MYSZKĄ";
+    }
+    
+    // Zresetuj celownik ruchu do pozycji lidera, aby uniknąć automatycznego chodzenia do starego celu
+    let leader = state.squad[0];
+    if (leader) {
+        state.targetPoint.x = leader.x;
+        state.targetPoint.y = leader.y;
+    }
+    playSound('sfx_click', 0.6);
+}
+
+export function adminRespawnSoldier(className) {
+    let spawnX = state.camera.x;
+    let spawnY = state.camera.y;
+    if (state.squad && state.squad.length > 0) {
+        spawnX = state.squad[0].x;
+        spawnY = state.squad[0].y;
+    }
+    
+    // Czyszczenie składu bez wywoływania Game Over w tej samej klatce (ponieważ natychmiast dodamy nowego żołnierza)
+    state.squad = [];
+    stats.maxSquad = 1;
+    
+    const newSoldier = new Soldier(spawnX, spawnY, className);
+    state.squad.push(newSoldier);
+    
+    state.camera.x = spawnX;
+    state.camera.y = spawnY;
+    
+    // Zresetuj celownik ruchu i celownik myszy do pozycji nowego żołnierza
+    state.targetPoint.x = spawnX;
+    state.targetPoint.y = spawnY;
+    state.aimPoint.x = spawnX;
+    state.aimPoint.y = spawnY;
+    
+    lastDisplayedSquad = -1;
+    updateHUD();
+    playSound('sfx_click', 0.6);
+}
+
 // Rejestracja w obiekcie window
 window.toggleAdminPanel = toggleAdminPanel;
 window.togglePause = togglePause;
@@ -391,4 +597,7 @@ window.adminApplyUpgrade = adminApplyUpgrade;
 window.adminGiveAirstrike = adminGiveAirstrike;
 window.adminUploadSkin = adminUploadSkin;
 window.adminPromoteSquad = adminPromoteSquad;
+window.adminToggleControlMode = adminToggleControlMode;
+window.adminRespawnSoldier = adminRespawnSoldier;
+window.showUpgrades = showUpgrades;
 window.chargeDoctrines = chargeDoctrines;

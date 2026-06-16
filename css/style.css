@@ -244,3 +244,119 @@ h1 {
     100% { border-color: #ffff00; }
 }
 
+
+/* --- BULLET-TIME UPGRADE CARDS (PIXEL ART STYLE) --- */
+#screens.upgrade-mode {
+    background: transparent;          /* Całkowicie przezroczyste tło */
+    backdrop-filter: none;            /* Brak jakiegokolwiek rozmycia (bluru) */
+    -webkit-backdrop-filter: none;
+    pointer-events: none;             /* Pozwala na klikanie przez ekran, jeśli gracz nie trafi w kartę */
+}
+
+#upgradeOptions {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;          /* Nieśmiertelniki zwisają od samej góry */
+    gap: 35px;
+    padding: 0 20px;
+    pointer-events: none;             /* Kontener nie blokuje myszy */
+}
+
+@media (max-width: 768px) {
+    #upgradeOptions {
+        gap: 15px;
+        padding: 0 10px;
+    }
+}
+
+/* --- MILITARY DOG TAGS (NIEŚMIERTELNIKI NA ŁAŃCUSZKACH) --- */
+/* --- MILITARY DOUBLE DOG TAGS (NIEŚMIERTELNIKI NA WZÓR REFERENCJI) --- */
+/* --- MILITARY OVAL DOG TAGS (OWALNE NIEŚMIERTELNIKI NA KULKOWYM ŁAŃCUSZKU) --- */
+/* Interaktywny kontener całej karty nieśmiertelnika */
+.upgrade-card {
+    position: relative;
+    width: 160px;
+    min-height: 352px;
+    margin-top: 0px; /* Łańcuszek zwisa od samej góry ekranu */
+    cursor: pointer;
+    pointer-events: auto;
+    transform-origin: 50% 0px; /* Punkt obrotu wahadła na samej górze ekranu (top łańcuszka) */
+    animation: dogtag-swing 4s infinite ease-in-out alternate;
+    transition: transform 0.2s ease-out;
+    filter: drop-shadow(10px 10px 0px rgba(0, 0, 0, 0.8));
+}
+
+/* Wstrzymanie bujania i przyciągnięcie do gracza na hover */
+.upgrade-card:hover {
+    animation-play-state: paused;
+    transform: rotate(0deg) translateY(-8px) scale(1.05) !important;
+    z-index: 20;
+    filter: drop-shadow(16px 16px 0px rgba(0, 0, 0, 0.95));
+}
+
+.upgrade-card:active {
+    transform: rotate(0deg) translateY(2px) scale(0.98) !important;
+}
+
+.unified-dogtag-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    shape-rendering: crispEdges;
+}
+
+/* Rozświetlenie warstwy SVG na hover */
+.upgrade-card:hover .unified-dogtag-svg rect.tag-silver-fill {
+    fill: #b2bfc7;
+}
+
+/* Kontener na napisy, umieszczony w blaszanej części SVG (od y=22 do y=84 -> 88px do 336px) */
+.dogtag-content {
+    position: absolute;
+    top: 88px; /* Zaczyna się dokładnie na blasze */
+    left: 0;
+    width: 100%;
+    height: 248px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+    text-align: center;
+    z-index: 2;
+}
+
+/* Wgniecione (debossed) napisy wyryte w blachę */
+.upgrade-card-title {
+    font-size: 13px;
+    color: #1a2225;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.85);
+    line-height: 1.4;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.upgrade-card-desc {
+    font-size: 9px;
+    color: #263339;
+    line-height: 1.6;
+    text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.7);
+    font-weight: bold;
+}
+
+/* Animacja minimalnego kołysania się (Subtelne Wahadło) */
+@keyframes dogtag-swing {
+    0% { transform: rotate(-1deg); }
+    100% { transform: rotate(1deg); }
+}
+
+/* Asynchroniczne kołysanie się poszczególnych nieśmiertelników */
+.upgrade-card:nth-child(1) { animation-delay: -1s; }
+.upgrade-card:nth-child(2) { animation-delay: -2.5s; }
+.upgrade-card:nth-child(3) { animation-delay: -0.5s; }

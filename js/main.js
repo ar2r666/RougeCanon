@@ -58,8 +58,40 @@ window.adminSpawnCrate = (type) => {
 
 // --- PĘTLA AKTUALIZACJI LOGIKI (Update) ---
 function update(dt) {
-    if (state.gameState !== 'PLAY') return;
+    if (state.gameState !== 'PLAY' && state.gameState !== 'UPGRADE') return;
     if (state.isPaused) return; // Aktywna pauza - pominie logikę, zostawi renderowanie klatki
+    
+    if (state.gameState === 'UPGRADE') {
+        dt = dt * 0.04; // Zwolnienie czasu (Bullet-Time)
+    }
+
+    // --- OBSŁUGA KLAWIATURY (WASD / Strzałki) ---
+    if (state.inputMode === 'keyboard') {
+        let kx = 0;
+        let ky = 0;
+        if (state.keys['KeyW'] || state.keys['ArrowUp']) ky -= 1;
+        if (state.keys['KeyS'] || state.keys['ArrowDown']) ky += 1;
+        if (state.keys['KeyA'] || state.keys['ArrowLeft']) kx -= 1;
+        if (state.keys['KeyD'] || state.keys['ArrowRight']) kx += 1;
+        
+        let leader = state.squad[0];
+        if (leader) {
+            if (kx !== 0 || ky !== 0) {
+                // Normalizujemy wektor kierunku
+                let len = Math.hypot(kx, ky);
+                kx /= len;
+                ky /= len;
+                
+                // Ustawiamy cel ruchu z przodu przed dowódcą
+                state.targetPoint.x = leader.x + kx * stats.range * 0.85;
+                state.targetPoint.y = leader.y + ky * stats.range * 0.85;
+            } else {
+                // Gdy brak aktywnych klawiszy, zatrzymujemy oddział w miejscu dowódcy
+                state.targetPoint.x = leader.x;
+                state.targetPoint.y = leader.y;
+            }
+        }
+    }
 
     // Camera follow squad center
     if (state.squad.length > 0) {
@@ -111,7 +143,7 @@ function update(dt) {
     }
 
     // Spawn Enemies outside camera view
-    if (state.enemiesToSpawn > 0) {
+    if (state.gameState === 'PLAY' && state.enemiesToSpawn > 0) {
         state.enemySpawnTimer -= dt;
         if (state.enemySpawnTimer <= 0) {
             let angle = Math.random() * Math.PI * 2;
@@ -130,7 +162,7 @@ function update(dt) {
     }
 
     // Spawnowanie skrzynek na mapie
-    if (state.crates && state.crateSpawnTimer !== undefined) {
+    if (state.gameState === 'PLAY' && state.crates && state.crateSpawnTimer !== undefined) {
         state.crateSpawnTimer -= dt;
         if (state.crateSpawnTimer <= 0) {
             let ang = Math.random() * Math.PI * 2;
@@ -200,32 +232,46 @@ function update(dt) {
             b.y += b.vy * dt;
 
             if (b.approach === 'slide') {
-                b.vx *= 0.93; // Bardzo niskie tarcie dla długiego ślizgu!
-                b.vy *= 0.93;
+                b.vx *= Math.pow(0.93, dt * 60);
+                b.vy *= Math.pow(0.93, dt * 60);
                 let progress = Math.min(1.0, 1.0 - (b.timer / b.maxTimer));
                 let eased = Math.sin(progress * Math.PI / 2); // Płynne przechylanie bez nagłych przeskoków i nawrotów
                 b.angle = b.targetAngle * eased;
             } else if (b.approach === 'spin') {
-                b.vx *= 0.88;
-                b.vy *= 0.88;
+                b.vx *= Math.pow(0.88, dt * 60);
+                b.vy *= Math.pow(0.88, dt * 60);
                 b.angle += b.spinSpeed * dt;
-                b.spinSpeed *= 0.90;
+                b.spinSpeed *= Math.pow(0.90, dt * 60);
             } else if (b.approach === 'bounce') {
-                b.vx *= 0.88;
-                b.vy *= 0.88;
+                // Gdy w powietrzu (b.bY < 0), tarcie powietrza jest znikome. Na ziemi tarcie jest znaczące.
+                let airResistance = b.bY < 0 ? 0.985 : 0.60;
+                b.vx *= Math.pow(airResistance, dt * 60);
+                b.vy *= Math.pow(airResistance, dt * 60);
+                
                 b.bY += b.bVy * dt;
-                b.bVy += 420 * dt; // grawitacja
+                b.bVy += 1600 * dt; // Znacznie większa grawitacja dla poczucia ciężaru ciała (upada szybciej)
+                
                 if (b.bY >= 0) {
                     b.bY = 0;
-                    b.bVy = -b.bVy * 0.45; // bounce
-                    if (Math.abs(b.bVy) < 25) b.bVy = 0;
+                    b.bVy = -b.bVy * 0.40; // Odbicie od ziemi (damped bounce)
+                    if (Math.abs(b.bVy) < 30) b.bVy = 0;
+                    
+                    // Przy uderzeniu o ziemię: wytracenie rotacji i płynne wyrównanie do leżenia płasko
+                    b.spinSpeed *= Math.pow(0.4, dt * 60);
+                    let angleDiff = b.targetAngle - b.angle;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    b.angle += angleDiff * (1 - Math.pow(0.75, dt * 60));
+                } else {
+                    // W powietrzu: dynamiczne koziołkowanie ciała
+                    b.angle += b.spinSpeed * dt;
+                    b.spinSpeed *= Math.pow(0.985, dt * 60);
                 }
-                b.angle += (b.targetAngle - b.angle) * 0.15; // Płynne pochylenie przy odbiciu
             } else if (b.approach === 'heavy') {
-                b.vx *= 0.83;
-                b.vy *= 0.83;
-                b.shake *= 0.86;
-                b.angle += (b.targetAngle - b.angle) * 0.15; // Płynne pochylenie ciężkiego pancerza
+                b.vx *= Math.pow(0.83, dt * 60);
+                b.vy *= Math.pow(0.83, dt * 60);
+                b.shake *= Math.pow(0.86, dt * 60);
+                b.angle += (b.targetAngle - b.angle) * (1 - Math.pow(0.85, dt * 60)); // Płynne pochylenie ciężkiego pancerza
                 if (Math.random() < 0.25 && Math.abs(b.vx) > 3) {
                     createParticles(b.x, b.y + 10, '#8a9396', 1, 15); // szary pył pancerza
                 }
@@ -308,7 +354,7 @@ function update(dt) {
     }
 
     // Wave End Check
-    if (state.enemiesToSpawn <= 0 && state.enemiesAlive <= 0) {
+    if (state.gameState === 'PLAY' && state.enemiesToSpawn <= 0 && state.enemiesAlive <= 0) {
         showUpgrades();
     }
 }

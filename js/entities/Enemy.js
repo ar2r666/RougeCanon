@@ -487,15 +487,15 @@ export class Enemy {
             state.dyingBodies.push({
                 x: this.x,
                 y: this.y,
-                vx: vx * (isSlide ? 1.4 : 1.0), // Zwiększamy siłę ślizgu dla słabego wroga
-                vy: vy * (isSlide ? 1.4 : 1.0),
+                vx: vx * (isSlide ? 1.4 : (approach === 'bounce' ? 1.3 : 1.0)), // Zwiększony poziomy odrzut przy wybuchu
+                vy: vy * (isSlide ? 1.4 : (approach === 'bounce' ? 1.3 : 1.0)),
                 bY: 0,
-                bVy: approach === 'bounce' ? -150 - Math.random() * 50 : 0,
+                bVy: approach === 'bounce' ? -320 - Math.random() * 180 : 0, // Zwiększona prędkość pionowa (mocniejszy wyskok)
                 angle: 0,
                 targetAngle: tAngle,
-                spinSpeed: isSlide ? (Math.random() - 0.5) * 12 : (approach === 'spin' ? (vx > 0 ? 15 : -15) : 0),
-                timer: approach === 'heavy' ? 0.9 : (isSlide ? 1.1 : 0.65),
-                maxTimer: approach === 'heavy' ? 0.9 : (isSlide ? 1.1 : 0.65),
+                spinSpeed: isSlide ? (Math.random() - 0.5) * 12 : (approach === 'spin' ? (vx > 0 ? 15 : -15) : (approach === 'bounce' ? (vx > 0 ? 14 + Math.random() * 8 : -14 - Math.random() * 8) : 0)), // Koziołkowanie w locie przy wybuchu
+                timer: approach === 'heavy' ? 0.9 : (approach === 'bounce' ? 1.25 : (isSlide ? 1.1 : 0.65)), // Wydłużony czas życia dla odbijających się ciał, aby dokończyły ruch
+                maxTimer: approach === 'heavy' ? 0.9 : (approach === 'bounce' ? 1.25 : (isSlide ? 1.1 : 0.65)),
                 crumpleY: 0,
                 shake: this.type === 'boss' ? 7 : (approach === 'heavy' ? 4 : 0),
                 approach: approach,

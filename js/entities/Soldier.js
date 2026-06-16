@@ -28,7 +28,7 @@ export function clearCorpses() {
 }
 
 export class Soldier {
-    constructor(x, y) {
+    constructor(x, y, classOverride = null) {
         this.x = x;
         this.y = y;
         this.isEnemy = false;
@@ -67,10 +67,29 @@ export class Soldier {
         let squadIndex = state.squad ? state.squad.length : 0;
         let activeClasses = state.squad ? state.squad.map(s => s.soldierClass).filter(Boolean) : [];
         
-        // Jeśli brak Dowódcy (np. na starcie), pierwszy zyskuje tę klasę
-        if (squadIndex === 0 && !activeClasses.includes('COMMANDER')) {
+        let chosenClass = classOverride;
+        if (!chosenClass) {
+            // Jeśli brak Dowódcy (np. na starcie), pierwszy zyskuje tę klasę
+            if (squadIndex === 0 && !activeClasses.includes('COMMANDER')) {
+                chosenClass = 'COMMANDER';
+            } else if (!activeClasses.includes('MEDIC')) {
+                chosenClass = 'MEDIC';
+            } else if (!activeClasses.includes('ENGINEER')) {
+                chosenClass = 'ENGINEER';
+            } else if (!activeClasses.includes('SNIPER')) {
+                chosenClass = 'SNIPER';
+            } else if (!activeClasses.includes('HEAVY_GUNNER')) {
+                chosenClass = 'HEAVY_GUNNER';
+            } else {
+                // W razie posiadania już wszystkich, następny staje się kolejnym Heavy Gunnerem
+                chosenClass = 'HEAVY_GUNNER';
+            }
+        }
+        
+        this.soldierClass = chosenClass;
+        
+        if (chosenClass === 'COMMANDER') {
             // DOWÓDCA (Squad Commander) - podlega modyfikacjom z kreatora ADMIN
-            this.soldierClass = 'COMMANDER';
             let targetCfg = customSquadDesign.hero;
             if (targetCfg && targetCfg.isCustomized) {
                 this.helmetIdx = targetCfg.helmetIdx;
@@ -99,23 +118,6 @@ export class Soldier {
                 this.weapon = WEAPONS.DEFAULT;
             }
         } else {
-            // Wybór pierwszej brakującej klasy ze zbalansowanej wirtualnej talii (RNG draft protection)
-            let chosenClass = 'MEDIC';
-            if (!activeClasses.includes('MEDIC')) {
-                chosenClass = 'MEDIC';
-            } else if (!activeClasses.includes('ENGINEER')) {
-                chosenClass = 'ENGINEER';
-            } else if (!activeClasses.includes('SNIPER')) {
-                chosenClass = 'SNIPER';
-            } else if (!activeClasses.includes('HEAVY_GUNNER')) {
-                chosenClass = 'HEAVY_GUNNER';
-            } else {
-                // W razie posiadania już wszystkich, następny staje się kolejnym Heavy Gunnerem
-                chosenClass = 'HEAVY_GUNNER';
-            }
-            
-            this.soldierClass = chosenClass;
-            
             if (chosenClass === 'MEDIC') {
                 // MEDYK (Medic) - PM Uzi, Czapka, Mundur Medyka, Plecak Radio
                 this.helmetIdx = 4;
@@ -272,14 +274,37 @@ export class Soldier {
         let closest = null;
         let baseRange = this.soldierClass === 'SNIPER' ? stats.range * 2.2 : stats.range;
         let minDist = this.weapon.type === 'beam' ? baseRange * 1.5 : (this.weapon.type === 'explosive' ? baseRange * 1.3 : baseRange);
-        for (let e of possibleTargets) {
-            let d = Math.hypot(e.x - this.x, e.y - this.y);
-            if (d < minDist) { minDist = d; closest = e; }
+        
+        let aimTarget = null;
+        if (state.aimOnlyMode) {
+            // Szukamy wroga w promieniu 45px od celownika myszy
+            let cursorTargets = possibleTargets.filter(e => Math.hypot(e.x - state.aimPoint.x, e.y - state.aimPoint.y) < 45);
+            let nearestToCursor = null;
+            let minCursorDist = Infinity;
+            for (let e of cursorTargets) {
+                let d = Math.hypot(e.x - state.aimPoint.x, e.y - state.aimPoint.y);
+                if (d < minCursorDist) { minCursorDist = d; nearestToCursor = e; }
+            }
+            
+            // Celujemy zawsze w kierunku wskaźnika myszy
+            aimTarget = { x: state.aimPoint.x, y: state.aimPoint.y };
+            
+            // Strzelamy tylko wtedy, gdy wciśnięty jest przycisk myszy
+            if (state.isPointerDown) {
+                closest = nearestToCursor || { x: state.aimPoint.x, y: state.aimPoint.y, hp: 9999, takeDamage: () => {} };
+            }
+        } else {
+            // Domyślny tryb: auto-aim na najbliższy cel w zasięgu
+            for (let e of possibleTargets) {
+                let d = Math.hypot(e.x - this.x, e.y - this.y);
+                if (d < minDist) { minDist = d; closest = e; }
+            }
+            aimTarget = closest;
         }
 
-        // Płynny obrót w stronę celu
-        if (closest) {
-            let targetAngle = Math.atan2(closest.y - this.y, closest.x - this.x);
+        // Płynny obrót w stronę celu celowania
+        if (aimTarget) {
+            let targetAngle = Math.atan2(aimTarget.y - this.y, aimTarget.x - this.x);
             let diff = targetAngle - this.aimAngle;
             while (diff < -Math.PI) diff += Math.PI * 2;
             while (diff > Math.PI) diff -= Math.PI * 2;

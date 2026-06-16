@@ -55,20 +55,15 @@
             <input type="file" id="admin-upload-skin" accept="image/png" style="display: none;" onchange="adminUploadSkin(this)">
         </label>
         <button class="admin-btn pause-btn" onclick="togglePause()">PAUZA / WZNIÓW</button>
+        <button class="admin-btn" id="adminToggleControlModeBtn" onclick="adminToggleControlMode()">TRYB: RUCH MYSZKĄ</button>
         <button class="admin-btn" onclick="adminSpawnRecruit()">+1 REKRUT</button>
         <button class="admin-btn" onclick="adminSpawnDog()">+1 PIES</button>
-        <button class="admin-btn" onclick="adminSpawnCrate('PLASMA')">+1 BROŃ LEŻĄCA (PLAZMA)</button>
-        <button class="admin-btn" onclick="adminSpawnCrate('FLAME')">+1 BROŃ LEŻĄCA (OGIEŃ)</button>
-        <button class="admin-btn" onclick="adminGiveWeapon('M16')">BROŃ: M16</button>
-        <button class="admin-btn" onclick="adminGiveWeapon('SHOTGUN')">BROŃ: STRZELBA</button>
-        <button class="admin-btn" onclick="adminGiveWeapon('MACHINEGUN')">BROŃ: KARABIN MASZ.</button>
-        <button class="admin-btn" onclick="adminGiveWeapon('BAZOOKA')">BROŃ: BAZOOKA</button>
-        <button class="admin-btn" onclick="adminGiveAirstrike()">+1 RADIO NALOTU (SKŁAD)</button>
-        <button class="admin-btn" onclick="adminSpawnCrate('AIRSTRIKE')">+1 BROŃ LEŻĄCA (NALOT)</button>
-        <button class="admin-btn" onclick="adminApplyUpgrade('damage')">+1 OBRAŻENIA</button>
-        <button class="admin-btn" onclick="adminApplyUpgrade('speed')">+20% PRĘDKOŚCI</button>
-        <button class="admin-btn" onclick="adminApplyUpgrade('heal')">LECZ SKŁAD</button>
-        <button class="admin-btn" style="background: #2b6611; color: #fff; border-color: #8bde38;" onclick="adminPromoteSquad()">AWANSUJ SKŁAD (LEGENDY)</button>
+        <button class="admin-btn" style="background: #8e1c1c; color: #fff; border-color: #f75c5c; font-weight: bold;" onclick="adminRespawnSoldier('COMMANDER')">RESPAWN: DOWÓDCA</button>
+        <button class="admin-btn" style="background: #1166aa; color: #fff; border-color: #33aaff; font-weight: bold;" onclick="adminRespawnSoldier('MEDIC')">RESPAWN: MEDYK</button>
+        <button class="admin-btn" style="background: #aa7711; color: #fff; border-color: #ffaa33; font-weight: bold;" onclick="adminRespawnSoldier('ENGINEER')">RESPAWN: INŻYNIER</button>
+        <button class="admin-btn" style="background: #3b7a1e; color: #fff; border-color: #7ce844; font-weight: bold;" onclick="adminRespawnSoldier('SNIPER')">RESPAWN: SNAJPER</button>
+        <button class="admin-btn" style="background: #62198c; color: #fff; border-color: #b757ed; font-weight: bold;" onclick="adminRespawnSoldier('HEAVY_GUNNER')">RESPAWN: CIĘŻKI STRZELEC</button>
+        <button class="admin-btn" style="background: #2b6611; color: #fff; border-color: #ffff00; font-weight: bold; margin-top: 10px;" onclick="showUpgrades()">+ TESTUJ NIEŚMIERTELNIKI</button>
         <button class="admin-btn" style="background: #2b6611; color: #fff; border-color: #8bde38; margin-top: 15px; font-weight: bold;" onclick="window.open('showcase.html', '_blank')">KATALOG KOMPONENTÓW</button>
     </div>
 
@@ -85,7 +80,7 @@
 
     <div id="screens" class="hidden">
         <!-- Main Menu -->
-        <div id="mainMenu">
+        <div id="mainMenu" class="hidden">
             <h1>CANNON<br>ROGUES</h1>
             <button class="btn" onclick="startGame()">ROZPOCZNIJ MISJĘ</button>
             <p style="color: #aaa; font-size: 10px; text-align: center; margin-top: 20px; line-height: 1.5;">
@@ -95,9 +90,9 @@
 
         <!-- Upgrade Screen -->
         <div id="upgradeScreen" class="hidden">
-            <h1 id="upgradeTitle" style="font-size: 20px; margin-bottom: 20px;">FALA POKONANA</h1>
-            <p id="upgradeSubtitle" style="color: white; font-size: 10px; margin-bottom: 30px;">WYBIERZ WSPARCIE</p>
-            <div id="upgradeOptions" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <h1 id="upgradeTitle" class="hidden">FALA POKONANA</h1>
+            <p id="upgradeSubtitle" class="hidden">WYBIERZ WSPARCIE</p>
+            <div id="upgradeOptions">
                 <!-- Generated dynamically -->
             </div>
         </div>

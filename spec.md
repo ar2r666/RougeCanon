@@ -49,11 +49,20 @@ Gra wdraża dynamiczną, modularną pętlę rekrutacji polowej, która wyklucza 
    - Gracz może odblokować wsparcie w postaci Psa Bojowego.
    - Pies porusza się swobodnie, wybiegając poza okrąg ochronny oddziału w celu eliminacji pojedynczych wrogów w walce wręcz (gryzienie), po czym posłusznie wraca do właścicieli.
    - Zostawia miniaturowe odciski łap po przejściu przez poległe ciała.
+
 4. **Fale Wrogów, Elita i Roguelike Progression**:
    - Rozgrywka podzielona jest na rosnące w siłę fale (Waves).
    - Standardowi wrogowie (czerwoni) respią się tuż poza ekranem i nacierają na gracza w oparciu o flocking.
    - **Elitarne Zombie (Mutanty)**: Zaczynają respić się po 3. fali (z 35% szansą). Wyróżniają się fioletowym pancerzem, świecącymi na pomarańczowo oczami, trzykrotnie wyższym zdrowiem oraz znacznie szybszym sprintem.
-   - Po pokonaniu fali gracz wybiera losowe ulepszenia, a co 3 fale otrzymuje zrzut potężnych broni.
+   - Po pokonaniu fali gracz wybiera ulepszenia na półprzezroczystym decku kart w zwolnionym tempie (Bullet-Time), a co 3 fale otrzymuje zrzut potężnych broni.
+
+## 5. Zdarzenia Taktyczne - Misja Obrony Terenu (Hold Territory / Repair Transmitter)
+W trakcie rozgrywki na mapie może wygenerować się specjalna misja poboczna (event):
+- **Cel:** Naprawa uszkodzonego Nadajnika Radiowego wroga.
+- **Mechanika:** Gracz musi odnaleźć nadajnik na mapie i oddelegować swój oddział do oznaczonego okręgu wokół niego.
+- **Utrzymanie pozycji:** Aby dokończyć naprawę, oddział musi pozostać wewnątrz strefy przez łącznie **30 sekund**. Licznik postępu zatrzymuje się, jeśli wewnątrz okręgu nie ma żadnego członka oddziału.
+- **Wzrost napięcia:** W trakcie naprawy częstotliwość natarcia fal przeciwników wokół nadajnika drastycznie rośnie, sprawdzając zdolności obronne i zgranie oddziału.
+- **Nagroda:** Po pomyślnym ukończeniu naprawy, nadajnik emituje potężny impuls odpychający wrogów, a obok spada legendarna skrzynia zaopatrzenia zawierająca rzadkie bronie lub unikalne modyfikacje.
 
 ## Ekran i Interfejs (UI/UX)
 - **HUD**: Wyświetla bieżącą falę, liczbę pozostałych wrogów oraz stan składu.

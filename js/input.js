@@ -9,6 +9,10 @@ export function initInput() {
     if (!joystickZone) return;
 
     window.addEventListener('keydown', (e) => {
+        state.keys[e.code] = true;
+        if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight'].includes(e.code)) {
+            state.inputMode = 'keyboard';
+        }
         if (state.gameState !== 'PLAY') return;
         
         // Tradycyjny Nalot (z gry)
@@ -52,11 +56,16 @@ export function initInput() {
         }
     });
 
+    window.addEventListener('keyup', (e) => {
+        state.keys[e.code] = false;
+    });
+
     function handlePointer(e) {
         if (state.gameState !== 'PLAY') return;
         
         if (e.type === 'touchstart' || e.type === 'mousedown') {
             playSound('sfx_shoot_default', 0.01);
+            state.inputMode = 'pointer';
         }
         
         // Zapobieganie gestom przeglądarki (pull-to-refresh, wstecz/dalej) na urządzeniach mobilnych
@@ -79,6 +88,15 @@ export function initInput() {
         // Convert screen coords to world coords using current window dimensions
         let rawX = state.camera.x + (clientX - window.innerWidth / 2);
         let rawY = state.camera.y + (clientY - window.innerHeight / 2);
+        
+        // Zawsze aktualizujemy celownik myszy w świecie
+        state.aimPoint.x = rawX;
+        state.aimPoint.y = rawY;
+
+        if (state.aimOnlyMode) {
+            // W trybie celowania myszką, kliknięcia/ruchy myszy nie powinny wyznaczać celu ruchu oddziału
+            return;
+        }
         
         // Ograniczenie punktu docelowego do okręgu pola strzału
         let leaderRef = state.squad[0] || { x: state.camera.x, y: state.camera.y };

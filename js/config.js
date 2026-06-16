@@ -288,6 +288,10 @@ export const state = {
     airstrikeTimer: 0,
     airstrikeBombTimer: 0,
     airstrikeBombs: [],
+    keys: {},
+    inputMode: 'pointer',
+    aimPoint: { x: 6000, y: 6000 },
+    aimOnlyMode: false,
     
     // Flagi aktywnych globalnych pasywów drużyny
     passiveShrapnelArmorActive: false, // Szrapnelowe pancerze (brak knockbacku, -100% AoE dmg)
