@@ -27,20 +27,31 @@ export function startWave() {
     screens.classList.remove('upgrade-mode'); 
     document.getElementById('upgradeScreen').classList.add('hidden');
     
-    // 7. WABIK DECOY (Spawnuje 3 wabiki na starcie fali)
-    if (state.passiveDecoyActive) {
-        let leader = state.squad[0] || { x: state.camera.x, y: state.camera.y };
-        for (let i = 0; i < 3; i++) {
-            let ang = (i / 3) * Math.PI * 2 + Math.random() * 0.5;
+    // 7. WABIK DECOY (Spawnuje wabiki na starcie fali zgodnie z poziomem doktryny)
+    if (state.passiveDecoyLevel && state.passiveDecoyLevel > 0) {
+        for (let i = 0; i < state.passiveDecoyLevel; i++) {
+            let leader = state.squad[0] || { x: state.camera.x, y: state.camera.y };
+            let ang = (i / state.passiveDecoyLevel) * Math.PI * 2 + Math.random() * 0.5;
             let dist = 60 + Math.random() * 40;
             state.decoys.push(new Decoy(leader.x + Math.cos(ang) * dist, leader.y + Math.sin(ang) * dist));
         }
+    } else if (state.passiveDecoyActive) {
+        let leader = state.squad[0] || { x: state.camera.x, y: state.camera.y };
+        let ang = Math.random() * Math.PI * 2;
+        let dist = 60 + Math.random() * 40;
+        state.decoys.push(new Decoy(leader.x + Math.cos(ang) * dist, leader.y + Math.sin(ang) * dist));
     }
 
     // Zarośla dżungli (Mistrz Maskowania)
     if (!state.bushes || state.bushes.length === 0) {
         state.bushes = [];
-        for (let i = 0; i < 14; i++) {
+        let leader = state.squad[0] || { x: state.camera.x, y: state.camera.y };
+        // 4 krzewy blisko gracza do natychmiastowego przetestowania grafiki PNG
+        state.bushes.push(new Bush(leader.x - 100, leader.y - 60));
+        state.bushes.push(new Bush(leader.x + 120, leader.y + 50));
+        state.bushes.push(new Bush(leader.x - 40, leader.y + 130));
+        state.bushes.push(new Bush(leader.x + 80, leader.y - 110));
+        for (let i = 0; i < 16; i++) {
             let cx = 1500 + Math.random() * 9000;
             let cy = 1500 + Math.random() * 9000;
             state.bushes.push(new Bush(cx, cy));
@@ -103,36 +114,50 @@ export function startWave() {
 }
 
 const UPGRADES = [
-    { name: "PAS AMUNICJI", desc: "+ BŁYSKAWICZNE<br>ŁADOWANIE", apply: () => { state.passiveAmmoBeltActive = true; } },
-    { name: "MOCNE NABOJE", desc: "+ WIĘKSZE<br>OBRAŻENIA", apply: () => stats.damage++ },
-    { name: "ADRENALINA", desc: "+ SZYBSZY<br>BIEG", apply: () => stats.speed *= 1.2 },
-    { name: "KAWA POLOWA", desc: "+ SZYBKOSTRZELNOŚĆ", apply: () => stats.fireRate *= 0.85 },
-    { name: "SKUPIENIE", desc: "+ PRECYZJA<br>W BEZRUCHU", apply: () => { state.passiveSniperFocusActive = true; } },
+    { name: "PAS AMUNICJI", desc: "SZYBSZE<br>ŁADOWANIE", apply: () => { 
+        state.passiveAmmoBeltLevel = (state.passiveAmmoBeltLevel || 0) + 1;
+        state.passiveAmmoBeltActive = true; 
+    }},
+    { name: "MOCNE NABOJE", desc: "WIĘKSZE<br>OBRAŻENIA", apply: () => stats.damage *= 1.2 },
+    { name: "ADRENALINA", desc: "SZYBSZY<br>RUCH", apply: () => stats.speed *= 1.2 },
     { name: "KAMIZELKA", desc: "+ KAMIZELKA<br>KEVLAROWA", apply: () => {
         state.kevlarArmorLevel = Math.min(3, (state.kevlarArmorLevel || 0) + 1);
         state.squad.forEach(s => { s.maxArmor = state.kevlarArmorLevel; s.armor = state.kevlarArmorLevel; });
     }},
-    { name: "ZIMNA KREW", desc: "+ OGIEŃ<br>W BÓLU", apply: () => { state.coldBloodLevel = Math.min(stats.maxSquad || 4, (state.coldBloodLevel || 0) + 1); } },
-    { name: "MISTRZ MASKOWANIA", desc: "+ MISTRZ<br>MASKOWANIA", apply: () => { state.camoMasterLevel = Math.min(3, (state.camoMasterLevel || 0) + 1); } }
+    { name: "MISTRZ MASKOWANIA", desc: "UKRYCIE<br>W KRZAKACH", apply: () => { state.camoMasterLevel = Math.min(3, (state.camoMasterLevel || 0) + 1); } }
 ];
 
 // --- 9 AUTORYTATYWNYCH DOKTRYN NIESTANDARDOWYCH (User Requested) ---
 export const NON_STANDARD_DOCTRINES = [
-    { name: "ZWARTA GRUPA", desc: "+ ZWARTE<br>SZYKI", apply: () => { state.passiveFlockingBoostActive = true; } },
-    { name: "BAGNETY", desc: "+ OSTRZA<br>W ZWARCIU", apply: () => { state.passiveBayonetsActive = true; } },
-    { name: "BOOBY TRAP", desc: "+ MINY<br>W ZWŁOKACH", apply: () => { state.passiveBoobyTrapActive = true; } },
-    { name: "STRZAŁ W NOGI", desc: "+ CZOŁGAJĄCY SIĘ<br>WRÓG", apply: () => { state.passiveKneecapShotActive = true; } },
-    { name: "MINER POLOWY", desc: "+ STAWIA MINY<br>NA TRAWIE", apply: () => { state.passiveFieldMinerActive = true; } },
-    { name: "PERVITIN", desc: "+ MOC<br>ZA ZDROWIE", apply: () => { 
+    { name: "ZWARTA GRUPA", desc: "+ CELNOŚĆ<br>I OBRAŻENIA", apply: () => { 
+        state.passiveFlockingBoostLevel = (state.passiveFlockingBoostLevel || 0) + 1;
+        state.passiveFlockingBoostActive = true;
+        stats.damage *= 1.2;
+    }},
+    { name: "BAGNET", desc: "DODATKOWE OBRAŻENIA<br>W ZWARCIU", apply: () => { 
+        state.passiveBayonetsLevel = (state.passiveBayonetsLevel || 0) + 1;
+        state.passiveBayonetsActive = true; 
+    }},
+    { name: "MINA PUŁAPKA", desc: "30% NA MINĘ<br>W ZWŁOKACH WROGA", apply: () => { state.passiveBoobyTrapActive = true; } },
+    { name: "STRZAŁ W NOGI", desc: "50% NA SPOWOLNIENIE<br>WROGA", apply: () => { state.passiveKneecapShotActive = true; } },
+    { name: "MINY PIECHOTNE", desc: "ROZSTAWIANIE MINY<br>CO 10 SEKUND", apply: () => { state.passiveFieldMinerActive = true; } },
+    { name: "PERVITIN", desc: "-1 HP ZA 2X SZYBSZY<br>OGIEŃ I BIEG", apply: () => { 
+        state.passivePervitinLevel = (state.passivePervitinLevel || 0) + 1;
         state.passivePervitinActive = true;
         stats.fireRate *= 0.5;
         stats.speed *= 1.4;
         state.squad.forEach(s => s.maxHp = Math.max(1, (s.maxHp || 3) - 1));
         state.squad.forEach(s => s.hp = Math.min(s.hp, s.maxHp));
     }},
-    { name: "WABIK DECOY", desc: "+ 1 WABIK<br>CO FALĘ", apply: () => { state.passiveDecoyActive = true; } },
-    { name: "ZAPALAJĄCE", desc: "+ PŁONĄCE<br>KULE", apply: () => { state.passiveIncendiaryActive = true; } },
-    { name: "PIES BOJOWY", desc: "+ AUTONOMICZNY<br>PIES", apply: () => { state.companions.push(new Dog(state.camera.x, state.camera.y)); } }
+    { name: "WABIK", desc: "SZTUCZNY CEL<br>CO FALĘ (+1/LVL)", apply: () => { 
+        state.passiveDecoyLevel = (state.passiveDecoyLevel || 0) + 1;
+        state.passiveDecoyActive = true; 
+    }},
+    { name: "POCISKI ZAPALAJĄCE", desc: "ZAPALAJĄCA AMUNICJA<br>DLA +1 ŻOŁNIERZA", apply: () => { 
+        state.passiveIncendiaryLevel = (state.passiveIncendiaryLevel || 0) + 1;
+        state.passiveIncendiaryActive = true; 
+    }},
+    { name: "PIES BOJOWY", desc: "DODATKOWY TOWARZYSZ<br>WALKI", apply: () => { state.companions.push(new Dog(state.camera.x, state.camera.y)); } }
 ];
 
 let tagCounter = 0;
@@ -292,9 +317,10 @@ function buildDogTagCard(title, desc, onClick, isBlackTag = false) {
             ${tornFractureRim}
         </svg>
 
-        <!-- Warstwa z napisami umieszczona dokładnie na blachach (Tylko funkcja doktryny) -->
+        <!-- Warstwa z napisami umieszczona dokładnie na blachach -->
         <div class="dogtag-content">
-            <div class="upgrade-card-title solo-function">${desc}</div>
+            ${title ? `<div class="upgrade-card-title">${title}</div>` : ''}
+            ${title ? `<div class="upgrade-card-desc">${desc}</div>` : `<div class="upgrade-card-title" style="margin-bottom:0;">${desc}</div>`}
         </div>
     `;
     
@@ -363,7 +389,7 @@ export function showUpgrades() {
 
         choices.forEach(choice => {
             const card = buildDogTagCard(
-                choice.name,
+                null,
                 choice.desc,
                 () => {
                     choice.apply();
@@ -535,7 +561,7 @@ export function adminGiveWeapon(weaponKey) {
 }
 
 export function adminApplyUpgrade(statKey) {
-    if (statKey === 'damage') stats.damage++;
+    if (statKey === 'damage') stats.damage *= 1.2;
     else if (statKey === 'speed') stats.speed *= 1.2;
     else if (statKey === 'heal') {
         state.squad.forEach(s => s.hp = s.maxHp);

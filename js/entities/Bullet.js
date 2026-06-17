@@ -108,7 +108,12 @@ export class Bullet {
                 createParticles(t.x, t.y + 4, '#8b0000', 6, 25);
             }
             // 8. POCISKI ZAPALAJĄCE (Podpalenie na 3 sekundy)
-            if (state.passiveIncendiaryActive) {
+            if (state.passiveIncendiaryLevel && state.passiveIncendiaryLevel > 0) {
+                let sIdx = state.squad.indexOf(this.shooter);
+                if (sIdx !== -1 && sIdx < state.passiveIncendiaryLevel) {
+                    t.onFireTimer = 3.0;
+                }
+            } else if (state.passiveIncendiaryActive) {
                 t.onFireTimer = 3.0;
             }
         }

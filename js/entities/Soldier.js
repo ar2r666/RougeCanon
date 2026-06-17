@@ -34,12 +34,10 @@ export class Soldier {
         this.y = y;
         this.isEnemy = false;
         this.speed = stats.speed;
-        this.maxHp = state.passivePervitinActive ? 2 : 3;
+        this.maxHp = Math.max(1, 3 - (state.passivePervitinLevel || (state.passivePervitinActive ? 1 : 0)));
         this.hp = this.maxHp;
         this.maxArmor = state.kevlarArmorLevel || 0; // 2. KAMIZELKA KEVLAROWA
         this.armor = this.maxArmor;
-        this.standStillTimer = 0;   // 1. SKUPIENIE
-        this.isLaserFocused = false;
         this.isHiddenInBush = false; // 4. MISTRZ MASKOWANIA
         this.bushStealthTimer = 0;
         this.radius = 8;
@@ -166,8 +164,23 @@ export class Soldier {
         this.weaponSprite = getWeaponSprite(this.effectiveWIdx);
     }
 
+    getEffectiveFireRate() {
+        if (!this.weapon) return stats.fireRate / 1000;
+        let fireRate = (stats.fireRate * this.weapon.fireRateMult) / 1000;
+        if (state.passiveAmmoBeltLevel && state.passiveAmmoBeltLevel > 0) {
+            fireRate *= Math.pow(0.8, state.passiveAmmoBeltLevel); 
+        } else if (state.passiveAmmoBeltActive) {
+            fireRate *= 0.8; 
+        }
+        return fireRate;
+    }
+
     update(dt) {
         if (this.hp <= 0) return;
+        if (this.isHiddenInBush) {
+            this.isMoving = false;
+            return; // Bezwzględne zamrożenie fizyki i przemieszczania w trakcie Kamuflażu!
+        }
 
         // --- CECHA MEDYKA (Zrzut apteczki co 20 sekund) ---
         if (this.soldierClass === 'MEDIC') {
@@ -232,33 +245,8 @@ export class Soldier {
             }
         }
 
-        // 1. SKUPIENIE (+ PRECYZJA W BEZRUCHU)
-        if (Math.hypot(this.x - oldX, this.y - oldY) < 0.1) {
-            this.standStillTimer += dt;
-            if (this.standStillTimer > 0.6 && state.passiveSniperFocusActive) {
-                this.isLaserFocused = true;
-            }
-        } else {
-            this.standStillTimer = 0;
-            this.isLaserFocused = false;
-        }
 
-        // 4. MISTRZ MASKOWANIA (Ukrywanie w krzakach)
-        if (state.camoMasterLevel && state.camoMasterLevel > 0 && state.bushes) {
-            let inBush = state.bushes.some(b => Math.hypot(b.x - this.x, b.y - this.y) < b.radius);
-            if (inBush) {
-                this.isHiddenInBush = true;
-                this.bushStealthTimer = state.camoMasterLevel === 3 ? 999 : (state.camoMasterLevel === 2 ? 6.0 : 3.0);
-            } else {
-                if (this.bushStealthTimer > 0) {
-                    this.bushStealthTimer -= dt;
-                } else {
-                    this.isHiddenInBush = false;
-                }
-            }
-        } else {
-            this.isHiddenInBush = false;
-        }
+        // 4. MISTRZ MASKOWANIA (Koordynowany centralnie dla całego składu w main.js)
 
         // Flocking oddziału gracza
         let forceX = 0;
@@ -318,7 +306,7 @@ export class Soldier {
             if (this.bayonetCooldown <= 0) {
                 for (let e of state.enemies) {
                     if (e.hp > 0 && Math.hypot(e.x - this.x, e.y - this.y) < this.radius + e.radius + 5) {
-                        e.takeDamage(2, { kills: 0 }); 
+                        e.takeDamage(2 * (state.passiveBayonetsLevel || 1), { kills: 0 }); 
                         createParticles(e.x, e.y, '#ff0000', 6, 35);
                         playSound('sfx_shoot_stab', 0.55);
                         if (typeof e.applyKnockback === 'function') {
@@ -424,15 +412,7 @@ export class Soldier {
             }
             
             let angle = this.aimAngle;
-            let fireRate = (stats.fireRate * this.weapon.fireRateMult) / 1000;
-            if (state.passiveAmmoBeltActive) {
-                fireRate *= 0.8; 
-            }
-            // 3. ZIMNA KREW (Większa szybkostrzelność przy 1 HP)
-            if (this.hp === 1 && state.coldBloodLevel && state.squad.indexOf(this) < state.coldBloodLevel) {
-                fireRate *= 0.5; // +100% Fire Rate!
-                createParticles(this.x, this.y - 8, '#ff5500', 1, 15);
-            }
+            let fireRate = this.getEffectiveFireRate();
             let dmg = stats.damage * this.weapon.damageMult;
             
             if (this.weapon.type === 'beam') {
@@ -640,6 +620,10 @@ export class Soldier {
     }
 
     draw(ctx) {
+        if (this.isHiddenInBush) {
+            return; // Bohater znika w teksturze krzewu – oczy rysowane są bezpośrednio na koronie w Bush.js!
+        }
+
         ctx.save();
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.fillRect(this.x - 5, this.y + 10, 10, 2);
@@ -652,7 +636,7 @@ export class Soldier {
         let isEffectivelyFacingLeft = Math.abs(this.aimAngle) > Math.PI / 2;
         
         if (this.lastShot > 0 && this.weapon) {
-            let fireRate = (stats.fireRate * this.weapon.fireRateMult) / 1000;
+            let fireRate = this.getEffectiveFireRate();
             let timeSinceShot = fireRate - this.lastShot;
             if (timeSinceShot < 0.08) {
                 let intensity = 1.2 * (1 - timeSinceShot / 0.08);
@@ -850,7 +834,7 @@ export class Soldier {
             }
             ctx.restore();
         } else if (this.lastShot > 0 && this.weapon && this.weapon.type !== 'beam' && this.weapon.type !== 'flame' && gunFireImg && gunFireImg.complete && gunFireImg.width > 0) {
-            let fireRate = (stats.fireRate * this.weapon.fireRateMult) / 1000;
+            let fireRate = this.getEffectiveFireRate();
             let timeSinceShot = fireRate - this.lastShot;
             if (timeSinceShot < 0.1) {
                 let isFacingLeft = Math.abs(this.aimAngle) > Math.PI / 2;
@@ -905,26 +889,9 @@ export class Soldier {
                 ctx.fillRect(Math.floor(startArmX + i * (blockW + gap)), Math.floor(armY), blockW, blockH);
             }
         }
-        
-        // 1. SKUPIENIE (+ PRECYZJA W BEZRUCHU - Złoty wskaźnik nad głową)
-        if (this.isLaserFocused) {
-            ctx.save();
-            ctx.strokeStyle = 'rgba(255, 255, 0, 0.85)';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y - 10 - this.bobY, 13, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.fillStyle = '#ffff00';
-            ctx.fillRect(this.x - 1, this.y - 26 - this.bobY, 2, 2);
-            ctx.restore();
-        }
 
-        // Mistrz Maskowania - duchowa przezroczystość
-        if (this.isHiddenInBush) {
-            ctx.fillStyle = '#52b788';
-            ctx.fillRect(this.x - 2, this.y - 30 - this.bobY, 4, 2);
-        }
-        
+
+
         // Pasek przeładowania strzelby widoczny przez cały cykl od razu po strzale
         if (this.weapon.type === 'spread' && this.lastShot > 0) {
             let barW = 16;
@@ -935,10 +902,7 @@ export class Soldier {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
             ctx.fillRect(bx, by, barW, barH);
             
-            let fireInterval = (stats.fireRate * this.weapon.fireRateMult) / 1000; 
-            if (state.passiveAmmoBeltActive) {
-                fireInterval *= 0.8;
-            }
+            let fireInterval = this.getEffectiveFireRate();
             let prog = Math.max(0, Math.min(1, 1.0 - (this.lastShot / fireInterval)));
             ctx.fillStyle = '#ffff00';
             ctx.fillRect(bx, by, Math.floor(barW * prog), barH);

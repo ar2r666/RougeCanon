@@ -188,13 +188,59 @@ function update(dt) {
             if (leader && state.fieldMines) {
                 state.fieldMines.push(new FieldMine(leader.x, leader.y, leader));
             }
-            state.fieldMinerTimer = 6.0; // Co 6 sekund zostawia minę na trawie
+            state.fieldMinerTimer = 10.0; // Co 10 sekund zostawia minę na trawie
+        }
+    }
+
+    // 4. MISTRZ MASKOWANIA (Aktywacja spacji nad krzakiem, pasek progresu, 2s ukrycia)
+    if (state.gameState === 'PLAY' && state.camoMasterLevel && state.camoMasterLevel > 0 && state.bushes && state.squad.length > 0) {
+        if (state.squadBushCooldown > 0) state.squadBushCooldown -= dt;
+        
+        let leader = state.squad[0];
+        let nearBush = state.bushes.find(b => Math.hypot(b.x - leader.x, b.y - leader.y) < b.radius + 14);
+        
+        if (state.squadHiddenTimer > 0) {
+            state.squadHiddenTimer -= dt;
+            if (state.activeHidingBush) {
+                let hb = state.activeHidingBush;
+                state.squad.forEach((s, idx) => { 
+                    s.isHiddenInBush = true; 
+                    s.isMoving = false;
+                    s.x = hb.x + (idx % 2 === 0 ? -3 : 3) * idx;
+                    s.y = hb.y + (idx > 1 ? 3 : -2);
+                });
+                if (state.targetPoint) { state.targetPoint.x = hb.x; state.targetPoint.y = hb.y; }
+            }
+            
+            if (state.squadHiddenTimer <= 0) {
+                state.squadHiddenTimer = 0;
+                state.activeHidingBush = null;
+                state.squad.forEach(s => s.isHiddenInBush = false);
+                state.squadBushCooldown = Math.max(4, 9.0 - state.camoMasterLevel * 1.5); // lvl 1: 7.5s, lvl 2: 6s, lvl 3: 4.5s
+            }
+        } else if (nearBush && (state.squadBushCooldown <= 0 || !state.squadBushCooldown)) {
+            // Aktywacja spacji obok krzewu
+            if (state.keys && state.keys['Space']) {
+                state.squadHiddenTimer = 2.0;
+                state.activeHidingBush = nearBush;
+                state.squad.forEach((s, idx) => { 
+                    s.isHiddenInBush = true; 
+                    s.isMoving = false;
+                    s.x = nearBush.x + (idx % 2 === 0 ? -3 : 3) * idx;
+                    s.y = nearBush.y + (idx > 1 ? 3 : -2);
+                });
+            } else {
+                state.squad.forEach(s => s.isHiddenInBush = false);
+            }
+        } else {
+            state.squad.forEach(s => s.isHiddenInBush = false);
         }
     }
 
     // Update Entities
     for (let i = 0; i < state.squad.length; i++) state.squad[i].update(dt);
     for (let i = 0; i < state.companions.length; i++) state.companions[i].update(dt);
+    state.companions = state.companions.filter(c => !c.isDead && (c.hp === undefined || c.hp > 0));
     for (let i = 0; i < state.enemies.length; i++) state.enemies[i].update(dt);
     for (let i = 0; i < state.bullets.length; i++) state.bullets[i].update(dt);
     for (let i = 0; i < state.particles.length; i++) state.particles[i].update(dt);
@@ -452,7 +498,11 @@ function draw() {
     addVisible(state.medkits);
     addVisible(state.airstrikeBombs);
 
-    visibleRenderables.sort((a, b) => a.y - b.y);
+    visibleRenderables.sort((a, b) => {
+        let ay = a.y + (a.isHiddenInBush ? 20 : 0);
+        let by = b.y + (b.isHiddenInBush ? 20 : 0);
+        return ay - by;
+    });
     
     for (let i = 0; i < state.explosions.length; i++) state.explosions[i].draw(ctx);
     for (let i = 0; i < state.particles.length; i++) state.particles[i].draw(ctx);

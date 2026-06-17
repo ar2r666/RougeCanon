@@ -296,21 +296,20 @@ export const state = {
     aimPoint: { x: 6000, y: 6000 },
     aimOnlyMode: false,
     
-    // Flagi aktywnych globalnych pasywów Niestandardowych Doktryn (User Requested)
-    passiveFlockingBoostActive: false, // 1. ZWARTA GRUPA (2x siła flockingu)
-    passiveBayonetsActive: false,      // 2. BAGNETY (Obrażenia wrogom w zwarciu)
-    passiveBoobyTrapActive: false,     // 3. BOOBY TRAP (30% na minę w ciele poległego wroga)
-    passiveKneecapShotActive: false,   // 4. STRZAŁ W NOGI (50% na czołgającego się wroga)
-    passiveFieldMinerActive: false,    // 5. MINER POLOWY (Stawia minę co 6 sekund)
-    passivePervitinActive: false,      // 6. PERVITIN (-1 HP, ale ekstremalne bonusy statystyk)
-    passiveDecoyActive: false,         // 7. WABIK DECOY (Spawnuje 3 wabiki co falę)
-    passiveIncendiaryActive: false,    // 8. POCISKI ZAPALAJĄCE (Kule podpalają wrogów)
+    // Flagi aktywnych globalnych pasywów Niestandardowych Doktryn
+    passiveFlockingBoostActive: false, passiveFlockingBoostLevel: 0, // 1. ZWARTA GRUPA
+    passiveBayonetsActive: false, passiveBayonetsLevel: 0,           // 2. BAGNETY
+    passiveBoobyTrapActive: false,                                     // 3. MINA PUŁAPKA
+    passiveKneecapShotActive: false,                                   // 4. STRZAŁ W NOGI
+    passiveFieldMinerActive: false,                                    // 5. MINY PIECHOTNE
+    passivePervitinActive: false, passivePervitinLevel: 0,             // 6. PERVITIN
+    passiveDecoyActive: false, passiveDecoyLevel: 0,                   // 7. WABIK
+    passiveIncendiaryActive: false, passiveIncendiaryLevel: 0,         // 8. POCISKI ZAPALAJĄCE
     
-    // Flagi 4 Nowych Doktryn Klasycznych
-    passiveSniperFocusActive: false, // 1. SKUPIENIE (+ PRECYZJA W BEZRUCHU)
+    // Flagi Doktryn Klasycznych
+    passiveAmmoBeltLevel: 0,         // 1. PAS AMUNICJI (Szybsze przeładowanie o 20%)
     kevlarArmorLevel: 0,             // 2. KAMIZELKA KEVLAROWA (Pasek z armorem pod HP max 3)
-    coldBloodLevel: 0,               // 3. ZIMNA KREW (Większa szybkostrzelność przy 1 HP)
-    camoMasterLevel: 0,              // 4. MISTRZ MASKOWANIA (Ukrywanie w krzakach)
+    camoMasterLevel: 0,              // 3. MISTRZ MASKOWANIA (Ukrywanie w krzakach)
     
     isPaused: false // Flaga wstrzymania aktualizacji logiki
 };

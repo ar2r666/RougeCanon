@@ -94,6 +94,9 @@ export class Enemy {
         if (state.decoys && state.decoys.length > 0) {
             potentialTargets = [...potentialTargets, ...state.decoys.filter(d => !d.isDestroyed)];
         }
+        if (state.companions && state.companions.length > 0) {
+            potentialTargets = [...potentialTargets, ...state.companions.filter(c => !c.isDead && (c.hp === undefined || c.hp > 0))];
+        }
         
         for (let s of potentialTargets) {
             let d = Math.hypot(s.x - this.x, s.y - this.y);
@@ -176,6 +179,14 @@ export class Enemy {
                 closest.takeDamage(dmgAmount, this);
                 this.lastShot = this.type === 'boss' ? 1.5 : 1.0;
             }
+        } else {
+            // Wrogowie gubią cel i rozchodzą się na boki, gdy oddział ukryje się w krzakach!
+            if (this.disperseAngle === undefined) this.disperseAngle = Math.random() * Math.PI * 2;
+            let moveSpeed = this.speed * 0.45;
+            let mx = Math.cos(this.disperseAngle) * moveSpeed * dt;
+            this.x += mx;
+            this.y += Math.sin(this.disperseAngle) * moveSpeed * dt;
+            if (Math.abs(mx) > 0.1) this.facingLeft = mx < 0;
         }
 
         this.kbX = this.kbX || 0;
@@ -228,14 +239,7 @@ export class Enemy {
         ctx.save();
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         let rOffset = this.type === 'boss' ? 4 : 0;
-        if (this.isCrippled) {
-            ctx.save();
-            ctx.translate(this.x, this.y + 6);
-            ctx.rotate((this.crawlAngle || 0) + Math.PI / 2);
-            // Podłużny, obracający się cień idealnie dopasowany do leżącej sylwetki czołgającego się wroga
-            ctx.fillRect(-10 - rOffset, -14 - rOffset, 20 + rOffset*2, 28 + rOffset*2);
-            ctx.restore();
-        } else {
+        if (!this.isCrippled) {
             ctx.fillRect(this.x - 5 - rOffset, this.y + 10, 10 + rOffset*2, 2);
             ctx.fillRect(this.x - 7 - rOffset, this.y + 12, 14 + rOffset*2, 3);
             ctx.fillRect(this.x - 5 - rOffset, this.y + 15, 10 + rOffset*2, 2);
@@ -425,7 +429,7 @@ export class Enemy {
         if (this.hp <= 0) {
             let deathType = shooter && shooter.weapon ? shooter.weapon.type : 'normal';
             if (isHeadshot) deathType = 'headshot';
-            if (this.onFireTimer > 0 || state.passiveIncendiaryActive) deathType = 'flame'; // 8. ZAPALAJĄCE (zwłoki płoną)
+            if (this.onFireTimer > 0) deathType = 'flame'; // 8. POCISKI ZAPALAJĄCE
             
             this.die(deathType);
             if (shooter && shooter.kills !== undefined) shooter.kills++;
@@ -584,8 +588,8 @@ export class Enemy {
                     ctx.rotate(this.angle);
                     
                     let drawScale = this.type === 'boss' ? 48 : 32;
-                    let scaleY = this.approach === 'boss' ? Math.max(0.3, 1.0 - (this.crumpleY / 14)) : 1.0;
-                    if (this.approach === 'boss') {
+                    let scaleY = this.type === 'boss' ? Math.max(0.3, 1.0 - (this.crumpleY / 14)) : 1.0;
+                    if (this.type === 'boss') {
                         ctx.scale(1.2, scaleY);
                     }
                     

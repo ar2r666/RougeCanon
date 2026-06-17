@@ -33,6 +33,22 @@ export class Dog {
         this.bobY = 0;
         this.bloodyBootsTime = 0;
         this.pawprintTimer = 0;
+        
+        this.maxHp = 5;
+        this.hp = 5;
+        this.radius = 8;
+        this.isDead = false;
+    }
+
+    takeDamage(amount) {
+        if (this.hp <= 0 || this.isDead) return;
+        this.hp -= amount;
+        createParticles(this.x, this.y, '#ff0000', 5, 25);
+        if (this.hp <= 0) {
+            this.hp = 0;
+            this.isDead = true;
+            playSound('sfx_dog_bark#1', 0.25);
+        }
     }
 
     update(dt) {
@@ -247,5 +263,17 @@ export class Dog {
             -dw / 2, -dh / 2, dw, dh
         );
         ctx.restore();
+
+        // Pasek życia Psa Bojowego
+        if (this.hp < this.maxHp && this.hp > 0) {
+            const barW = 16;
+            const barH = 3;
+            const barX = this.x - barW / 2;
+            const barY = this.y - 18 - this.bobY;
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+            ctx.fillStyle = '#2ecc71';
+            ctx.fillRect(barX, barY, barW * (this.hp / this.maxHp), barH);
+        }
     }
 }
