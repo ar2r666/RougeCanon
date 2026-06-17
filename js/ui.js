@@ -42,19 +42,34 @@ export function startWave() {
         state.decoys.push(new Decoy(leader.x + Math.cos(ang) * dist, leader.y + Math.sin(ang) * dist));
     }
 
-    // Zarośla dżungli (Mistrz Maskowania)
+    // Zarośla dżungli (Mistrz Maskowania - System Klastrów i Zagajników)
     if (!state.bushes || state.bushes.length === 0) {
         state.bushes = [];
         let leader = state.squad[0] || { x: state.camera.x, y: state.camera.y };
-        // 4 krzewy blisko gracza do natychmiastowego przetestowania grafiki PNG
+        // 4 krzewy blisko startowej pozycji gracza do natychmiastowej osłony
         state.bushes.push(new Bush(leader.x - 100, leader.y - 60));
         state.bushes.push(new Bush(leader.x + 120, leader.y + 50));
         state.bushes.push(new Bush(leader.x - 40, leader.y + 130));
         state.bushes.push(new Bush(leader.x + 80, leader.y - 110));
-        for (let i = 0; i < 16; i++) {
-            let cx = 1500 + Math.random() * 9000;
-            let cy = 1500 + Math.random() * 9000;
+        
+        // 55 pojedynczych krzewów rozproszonych na całej mapie
+        for (let i = 0; i < 55; i++) {
+            let bx = 400 + Math.random() * 11200;
+            let by = 400 + Math.random() * 11200;
+            state.bushes.push(new Bush(bx, by));
+        }
+        
+        // 25 małych "zagajników" (klastrów po 2-4 krzewy blisko siebie dla osłony całego składu)
+        for (let c = 0; c < 25; c++) {
+            let cx = 500 + Math.random() * 11000;
+            let cy = 500 + Math.random() * 11000;
+            let clusterSize = 2 + Math.floor(Math.random() * 3); // 2, 3 lub 4 krzewy
             state.bushes.push(new Bush(cx, cy));
+            for (let k = 1; k < clusterSize; k++) {
+                let ang = Math.random() * Math.PI * 2;
+                let dist = 28 + Math.random() * 22;
+                state.bushes.push(new Bush(cx + Math.cos(ang) * dist, cy + Math.sin(ang) * dist));
+            }
         }
     }
     

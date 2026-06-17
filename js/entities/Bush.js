@@ -63,7 +63,7 @@ export class Bush {
                 ctx.fillRect(2, -9, 6, 6);
                 
                 // Ruchome czarne źrenice 2x4 piksele wodzące za celownikiem!
-                let aimX = Math.round(Math.cos(aim) * 1.8);
+                let aimX = Math.round(Math.cos(aim) * 1.8 * this.flipX);
                 let aimY = Math.round(Math.sin(aim) * 1.0);
                 ctx.fillStyle = '#000000';
                 ctx.fillRect(-6 + aimX, -8 + aimY, 2, 4);
