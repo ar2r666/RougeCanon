@@ -45,15 +45,9 @@ export function startWave() {
     // Zarośla dżungli (Mistrz Maskowania - System Klastrów i Zagajników)
     if (!state.bushes || state.bushes.length === 0) {
         state.bushes = [];
-        let leader = state.squad[0] || { x: state.camera.x, y: state.camera.y };
-        // 4 krzewy blisko startowej pozycji gracza do natychmiastowej osłony
-        state.bushes.push(new Bush(leader.x - 100, leader.y - 60));
-        state.bushes.push(new Bush(leader.x + 120, leader.y + 50));
-        state.bushes.push(new Bush(leader.x - 40, leader.y + 130));
-        state.bushes.push(new Bush(leader.x + 80, leader.y - 110));
         
-        // 55 pojedynczych krzewów rozproszonych na całej mapie
-        for (let i = 0; i < 55; i++) {
+        // 60 pojedynczych krzewów rozproszonych na całej mapie
+        for (let i = 0; i < 60; i++) {
             let bx = 400 + Math.random() * 11200;
             let by = 400 + Math.random() * 11200;
             state.bushes.push(new Bush(bx, by));
