@@ -13,7 +13,35 @@ export class Bush {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.type = Math.floor(Math.random() * 3) + 1; // Losowanie 1, 2 lub 3
+        
+        // Zasada: nie stawiaj obok siebie takich samych krzewów (w promieniu 180px)
+        let chosenType = Math.floor(Math.random() * 3) + 1;
+        if (state && state.bushes && state.bushes.length > 0) {
+            let nearby = state.bushes.filter(b => b !== this && Math.hypot(b.x - x, b.y - y) < 180);
+            if (nearby.length > 0) {
+                let available = [1, 2, 3].filter(t => !nearby.some(b => b.type === t));
+                if (available.length > 0) {
+                    chosenType = available[Math.floor(Math.random() * available.length)];
+                } else {
+                    let minDists = { 1: 9999, 2: 9999, 3: 9999 };
+                    nearby.forEach(b => {
+                        let d = Math.hypot(b.x - x, b.y - y);
+                        if (d < minDists[b.type]) minDists[b.type] = d;
+                    });
+                    let bestType = 1;
+                    let maxD = -1;
+                    [1, 2, 3].forEach(t => {
+                        if (minDists[t] > maxD) {
+                            maxD = minDists[t];
+                            bestType = t;
+                        }
+                    });
+                    chosenType = bestType;
+                }
+            }
+        }
+        this.type = chosenType;
+        
         this.size = 32;
         this.radius = 14;
         this.flipX = Math.random() < 0.5 ? 1 : -1;

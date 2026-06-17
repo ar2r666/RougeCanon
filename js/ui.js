@@ -46,15 +46,15 @@ export function startWave() {
     if (!state.bushes || state.bushes.length === 0) {
         state.bushes = [];
         
-        // 60 pojedynczych krzewów rozproszonych na całej mapie
-        for (let i = 0; i < 60; i++) {
+        // 320 pojedynczych krzewów rozproszonych na całej mapie (12000x12000px)
+        for (let i = 0; i < 320; i++) {
             let bx = 400 + Math.random() * 11200;
             let by = 400 + Math.random() * 11200;
             state.bushes.push(new Bush(bx, by));
         }
         
-        // 25 małych "zagajników" (klastrów po 2-4 krzewy blisko siebie dla osłony całego składu)
-        for (let c = 0; c < 25; c++) {
+        // 110 małych "zagajników" (klastrów po 2-4 krzewy blisko siebie dla osłony całego składu)
+        for (let c = 0; c < 110; c++) {
             let cx = 500 + Math.random() * 11000;
             let cy = 500 + Math.random() * 11000;
             let clusterSize = 2 + Math.floor(Math.random() * 3); // 2, 3 lub 4 krzewy
