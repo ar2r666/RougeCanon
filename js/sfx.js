@@ -114,6 +114,15 @@ export function toggleMute() {
     return isMuted;
 }
 
+export function setMute(muteState) {
+    isMuted = muteState;
+    return isMuted;
+}
+
+export function getMute() {
+    return isMuted;
+}
+
 export function preloadSounds() {
     const soundsToPreload = [
         'sfx_shoot_default',

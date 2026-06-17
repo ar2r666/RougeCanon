@@ -54,6 +54,10 @@
             + WCZYTAJ SKÓRKĘ (PNG)
             <input type="file" id="admin-upload-skin" accept="image/png" style="display: none;" onchange="adminUploadSkin(this)">
         </label>
+        <div style="display: flex; gap: 5px; margin-bottom: 8px;">
+            <button class="admin-btn" id="adminSoundOnBtn" style="margin-bottom: 0; background: #2b6611; color: #fff; border-color: #8bde38; font-weight: bold; font-size: 8px; padding: 10px 2px;" onclick="adminSetSound(true)">DŹWIĘK WŁ.</button>
+            <button class="admin-btn" id="adminSoundOffBtn" style="margin-bottom: 0; background: #1a1a1a; color: #777; border-color: #444; font-size: 8px; padding: 10px 2px;" onclick="adminSetSound(false)">DŹWIĘK WYŁ.</button>
+        </div>
         <button class="admin-btn pause-btn" onclick="togglePause()">PAUZA / WZNIÓW</button>
         <button class="admin-btn" id="adminToggleControlModeBtn" onclick="adminToggleControlMode()">TRYB: RUCH MYSZKĄ</button>
         <button class="admin-btn" onclick="adminSpawnRecruit()">+1 REKRUT</button>

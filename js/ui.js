@@ -7,7 +7,7 @@ import { Enemy } from './entities/Enemy.js';
 import { Decoy } from './entities/Decoy.js';
 import { Bush } from './entities/Bush.js';
 import { clearBloodCanvas } from './sprites.js';
-import { playSound } from './sfx.js';
+import { playSound, setMute } from './sfx.js';
 
 export function spawnSquad() {
     state.squad = [];
@@ -532,6 +532,36 @@ export function togglePause() {
     }
 }
 
+export function adminSetSound(enabled) {
+    setMute(!enabled);
+    const onBtn = document.getElementById('adminSoundOnBtn');
+    const offBtn = document.getElementById('adminSoundOffBtn');
+    if (onBtn && offBtn) {
+        if (enabled) {
+            onBtn.style.background = '#2b6611';
+            onBtn.style.color = '#fff';
+            onBtn.style.borderColor = '#8bde38';
+            onBtn.style.fontWeight = 'bold';
+            
+            offBtn.style.background = '#1a1a1a';
+            offBtn.style.color = '#777';
+            offBtn.style.borderColor = '#444';
+            offBtn.style.fontWeight = 'normal';
+            playSound('sfx_click', 0.6);
+        } else {
+            onBtn.style.background = '#1a1a1a';
+            onBtn.style.color = '#777';
+            onBtn.style.borderColor = '#444';
+            onBtn.style.fontWeight = 'normal';
+            
+            offBtn.style.background = '#8e1c1c';
+            offBtn.style.color = '#fff';
+            offBtn.style.borderColor = '#f75c5c';
+            offBtn.style.fontWeight = 'bold';
+        }
+    }
+}
+
 export function adminSpawnRecruit() {
     stats.maxSquad++;
     state.squad.push(new Soldier(state.camera.x, state.camera.y));
@@ -661,6 +691,7 @@ export function adminRespawnSoldier(className) {
 // Rejestracja w obiekcie window
 window.toggleAdminPanel = toggleAdminPanel;
 window.togglePause = togglePause;
+window.adminSetSound = adminSetSound;
 window.adminSpawnRecruit = adminSpawnRecruit;
 window.adminSpawnDog = adminSpawnDog;
 window.adminGiveWeapon = adminGiveWeapon;
