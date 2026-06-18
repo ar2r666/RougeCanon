@@ -8,6 +8,7 @@ import { Decoy } from './entities/Decoy.js';
 import { Bush } from './entities/Bush.js';
 import { clearBloodCanvas } from './sprites.js';
 import { playSound, setMute } from './sfx.js';
+import { CLASS_SKILL_TREES } from './promotions.js';
 
 export function spawnSquad() {
     state.squad = [];
