@@ -176,6 +176,9 @@ export class Soldier {
         } else if (state.passiveAmmoBeltActive) {
             fireRate *= 0.8; 
         }
+        if (state.squadBuffTimer && state.squadBuffTimer > 0) {
+            fireRate *= 0.5; // +50% szybsze strzelanie (dwukrotnie skrócony odstęp między seriami/strzałami)
+        }
         return fireRate;
     }
 
@@ -195,7 +198,7 @@ export class Soldier {
                 playSound('sfx_commander_war_scream', 0.11);
                 triggerBattleCryEffect(this);
                 createParticles(this.x, this.y, '#f39c12', 20, 50);
-                console.warn(`[OKRZYK BOJOWY] Dowódca wydał okrzyk dający +35% do prędkości ruchu i strzelania na 6s!`);
+                console.warn(`[OKRZYK BOJOWY] Dowódca wydał okrzyk dający +45% do prędkości ruchu i +50% do szybkostrzelności na 6s!`);
             }
         }
 
@@ -248,7 +251,8 @@ export class Soldier {
         let dist = Math.hypot(tx - this.x, ty - this.y);
         
         if (dist > 1) {
-            let currentSpeed = Math.min(stats.speed * this.animSpeedMult, dist * 6);
+            let baseSpeed = stats.speed * (state.squadBuffTimer && state.squadBuffTimer > 0 ? 1.45 : 1.0);
+            let currentSpeed = Math.min(baseSpeed * this.animSpeedMult, dist * 6);
             let angle = Math.atan2(ty - this.y, tx - this.x);
             let finalAngle = angle + Math.sin(this.personalSwagger * 1.3) * 0.15;
             
