@@ -879,7 +879,12 @@ export class Soldier {
         }
 
         // Etykieta nazwy
-        ctx.fillStyle = 'white';
+        if (state.squadBuffTimer && state.squadBuffTimer > 0) {
+            let pulse = Math.sin(Date.now() / 70) > 0;
+            ctx.fillStyle = pulse ? '#ff6a00' : '#ffffff';
+        } else {
+            ctx.fillStyle = 'white';
+        }
         ctx.font = '9px "Press Start 2P"'; 
         ctx.textAlign = 'center';
         ctx.fillText(this.name, this.x, this.y - 24 - this.bobY);
@@ -1017,7 +1022,9 @@ export class Soldier {
             this.unlockedSkills[skill.id] = true;
             console.warn(`[AWANS UMIEJĘTNOŚCI] ${this.name} odblokował: ${skill.name} (${skill.desc})`);
             
-            if (skill.id === 'comm_a1') {
+            if (skill.id === 'comm_b1') {
+                this.battleCryTimer = 0.01;
+            } else if (skill.id === 'comm_a1') {
                 this.hasAirstrike = true;
                 this.accessoryIdx = 2;
             } else if (skill.id === 'comm_b2') {

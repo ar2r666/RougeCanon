@@ -59,6 +59,8 @@ export function playSound(soundKey, volume = 0.25) {
                 .then(arrayBuffer => ctx.decodeAudioData(arrayBuffer))
                 .then(decodedBuffer => {
                     audioBuffers[soundKey] = decodedBuffer;
+                    // Jeśli to pierwsze wywołanie, natychmiast odtwarzamy bufor po zdekodowaniu!
+                    playSound(soundKey, volume);
                 })
                 .catch(err => {
                     // Ciche pominięcie braku pliku
@@ -74,9 +76,11 @@ export function playSound(soundKey, volume = 0.25) {
                 const gainNode = ctx.createGain();
                 gainNode.gain.value = effectiveVolume;
                 
-                // Zróżnicowanie tonacji (Pitch Shifting)
-                if (volume > 0.02) {
+                // Zróżnicowanie tonacji (Pitch Shifting) - pomijane dla okrzyków dowódcy, by zachować stały głos
+                if (volume > 0.02 && soundKey !== 'sfx_commander_war_scream') {
                     source.playbackRate.value = 0.85 + Math.random() * 0.35;
+                } else {
+                    source.playbackRate.value = 1.0;
                 }
                 
                 source.connect(gainNode);
@@ -139,7 +143,8 @@ export function preloadSounds() {
         'sfx_explosion_default',
         'sfx_shoot_stab',
         'sfx_shoot_mine1',
-        'sfx_shoot_mine2'
+        'sfx_shoot_mine2',
+        'sfx_commander_war_scream'
     ];
     
     // Uruchamiamy ładowanie po krótkiej chwili, aby nie blokować początkowego renderowania strony
