@@ -81,13 +81,17 @@ export class Soldier {
             } else if (!activeClasses.includes('MEDIC')) {
                 chosenClass = 'MEDIC';
             } else if (!activeClasses.includes('ENGINEER')) {
-                chosenClass = 'ENGINEER';
-            } else if (!activeClasses.includes('SNIPER')) {
-                chosenClass = 'SNIPER';
-            } else if (!activeClasses.includes('HEAVY_GUNNER')) {
-                chosenClass = 'HEAVY_GUNNER';
-            } else {
-                // W razie posiadania już wszystkich, następny staje się kolejnym Heavy Gunnerem
+        this.isPromoted = isPromoted;
+        
+        let chosenClass = 'COMMANDER';
+        if (state.squad && state.squad.length > 0) {
+            let classCounts = { COMMANDER: 0, MEDIC: 0, ENGINEER: 0, SNIPER: 0, HEAVY_GUNNER: 0 };
+            state.squad.forEach(s => { if (classCounts[s.soldierClass] !== undefined) classCounts[s.soldierClass]++; });
+            
+            if (classCounts.MEDIC === 0) chosenClass = 'MEDIC';
+            else if (classCounts.ENGINEER === 0) chosenClass = 'ENGINEER';
+            else if (classCounts.SNIPER === 0) chosenClass = 'SNIPER';
+            else {
                 chosenClass = 'HEAVY_GUNNER';
             }
         }
@@ -98,7 +102,6 @@ export class Soldier {
         this.unlockedSkills = {};
         
         if (chosenClass === 'COMMANDER') {
-            // DOWÓDCA (Squad Commander) - podlega modyfikacjom z kreatora ADMIN
             let targetCfg = customSquadDesign.hero;
             if (targetCfg && targetCfg.isCustomized) {
                 this.helmetIdx = targetCfg.helmetIdx;
@@ -107,11 +110,11 @@ export class Soldier {
                 this.weaponIdx = targetCfg.weaponIdx;
                 this.accessoryIdx = targetCfg.accessoryIdx;
                 
-                if (this.weaponIdx === 0) this.weapon = WEAPONS.DEFAULT; // M16 (Burst)
-                else if (this.weaponIdx === 1) this.weapon = WEAPONS.SHOTGUN; // Strzelba
-                else if (this.weaponIdx === 2) this.weapon = WEAPONS.RIFLE_GARAND; // M1 Garand (Semi-Auto)
-                else if (this.weaponIdx === 3) this.weapon = WEAPONS.HEAVY_SAW; // M249 SAW (Karabin Maszynowy)
-                else if (this.weaponIdx === 4) this.weapon = WEAPONS.RIFLE_SMG; // PM Uzi / Pistolet (Rapid)
+                if (this.weaponIdx === 0) this.weapon = WEAPONS.DEFAULT;
+                else if (this.weaponIdx === 1) this.weapon = WEAPONS.SHOTGUN;
+                else if (this.weaponIdx === 2) this.weapon = WEAPONS.RIFLE_GARAND;
+                else if (this.weaponIdx === 3) this.weapon = WEAPONS.HEAVY_SAW;
+                else if (this.weaponIdx === 4) this.weapon = WEAPONS.RIFLE_SMG;
                 else this.weapon = WEAPONS.DEFAULT;
                 
                 let activeSkins = customSquadDesign.heroSkins ? customSquadDesign.heroSkins.filter(Boolean) : [];
@@ -122,43 +125,64 @@ export class Soldier {
                 }
             } else {
                 this.helmetIdx = 0;
-                this.faceIdx = 6; // Weteran (Broda)
-                this.uniformIdx = 0; // Zielony Kamuflaż
+                this.faceIdx = 6;
+                this.uniformIdx = 0;
                 this.weapon = WEAPONS.DEFAULT;
+                this.accessoryIdx = 0;
             }
         } else {
             if (chosenClass === 'MEDIC') {
-                // MEDYK (Medic) - PM Uzi, Czapka, Mundur Medyka, Plecak Radio
                 this.helmetIdx = 4;
                 this.faceIdx = 0;
                 this.uniformIdx = 4;
-                this.accessoryIdx = 5;
                 this.weapon = WEAPONS.RIFLE_SMG;
+                this.accessoryIdx = 2;
             } else if (chosenClass === 'ENGINEER') {
-                // INŻYNIER (Engineer) - Strzelba, Hełm ONZ, Stalowy Pancerz, Tarcza
                 this.helmetIdx = 2;
-                this.faceIdx = 8;
-                this.uniformIdx = 6;
-                this.accessoryIdx = 6;
-                this.weapon = WEAPONS.SHOTGUN;
-            } else if (chosenClass === 'SNIPER') {
-                // SNAJPER (Sniper) - M1 Garand, Bandana, Czerń
-                this.helmetIdx = 3;
                 this.faceIdx = 4;
-                this.uniformIdx = 3;
+                this.uniformIdx = 5;
+                this.weapon = WEAPONS.SHOTGUN;
+                this.accessoryIdx = 1;
+            } else if (chosenClass === 'SNIPER') {
+                this.helmetIdx = 1;
+                this.faceIdx = 2;
+                this.uniformIdx = 2;
+                this.weapon = WEAPONS.SNIPER_RIFLE;
                 this.accessoryIdx = 0;
-                this.weapon = WEAPONS.RIFLE_GARAND;
-            } else if (chosenClass === 'HEAVY_GUNNER') {
-                // HEAVY GUNNER (Ciężki Strzelec) - M249 SAW, Irokez, Pustynna, Pas z amunicją
-                this.helmetIdx = 7;
-                this.faceIdx = 8;
+            } else {
+                this.helmetIdx = 3;
+                this.faceIdx = 1;
                 this.uniformIdx = 1;
-                this.accessoryIdx = 9;
                 this.weapon = WEAPONS.HEAVY_SAW;
+                this.accessoryIdx = 3;
             }
         }
-        
-        this.updateSprites();
+
+        this.name = getUniqueName();
+        this.hp = isPromoted ? 4 : 3;
+        this.maxHp = this.hp;
+        this.radius = 12;
+        this.speed = 100;
+        this.baseDamage = isPromoted ? 2 : 1;
+
+        this.targetEnemy = null;
+        this.shootTimer = Math.random() * 0.5;
+        this.burstCount = 0;
+
+        this.animFrame = Math.floor(Math.random() * 4);
+        this.animTimer = 0;
+        this.animSpeedMult = 0.9 + Math.random() * 0.2;
+
+        this.personalSwagger = Math.random() * 100;
+        this.swaggerSpeed = 1.5 + Math.random();
+        this.offsetX = (Math.random() - 0.5) * 35;
+        this.offsetY = (Math.random() - 0.5) * 35;
+        this.facingLeft = false;
+
+        this.effectiveWIdx = (this.weapon && this.weapon !== WEAPONS.DEFAULT) ? this.weapon.visualIdx : (this.weaponIdx !== undefined ? this.weaponIdx : (customSquadDesign && customSquadDesign.customWeaponIdx !== undefined ? customSquadDesign.customWeaponIdx : 0));
+        this.sprites = getSoldierSprites(this.helmetIdx, this.faceIdx, this.uniformIdx, this.effectiveWIdx, this.accessoryIdx);
+        this.bodySprites = getSoldierBodySprites(this.helmetIdx, this.faceIdx, this.uniformIdx, this.accessoryIdx);
+        this.weaponSprite = getWeaponSprite(this.effectiveWIdx);
     }
 
     updateSprites() {
@@ -183,23 +207,22 @@ export class Soldier {
         if (this.hp <= 0) return;
         if (this.isHiddenInBush) {
             this.isMoving = false;
-            return; // Bezwzględne zamrożenie fizyki i przemieszczania w trakcie Kamuflażu!
+            return;
         }
 
-        // --- CECHA DOWÓDCY: MORALE LVL 1 (Okrzyk Bojowy co 30s) ---
         if (this.soldierClass === 'COMMANDER' && this.unlockedSkills && this.unlockedSkills['comm_b1']) {
-            if (this.battleCryTimer === undefined) this.battleCryTimer = 5.0; // pierwszy okrzyk po 5s
+            if (this.battleCryTimer === undefined) this.battleCryTimer = 5.0;
             this.battleCryTimer -= dt;
             if (this.battleCryTimer <= 0) {
                 this.battleCryTimer = 30.0;
                 state.squadBuffTimer = 6.0;
-                playSound('sfx_commander_war_scream', 0.85);
+                playSound('sfx_commander_war_scream', 0.26);
+                createAuraRing(this.x, this.y, '#f39c12');
                 createParticles(this.x, this.y, '#f39c12', 20, 50);
                 console.warn(`[OKRZYK BOJOWY] Dowódca wydał okrzyk dający +35% do prędkości ruchu i strzelania na 6s!`);
             }
         }
 
-        // --- CECHA MEDYKA (Zrzut apteczki co 20 sekund) ---
         if (this.soldierClass === 'MEDIC') {
             if (this.medkitTimer === undefined) this.medkitTimer = 20.0;
             this.medkitTimer -= dt;

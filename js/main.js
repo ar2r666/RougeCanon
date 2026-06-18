@@ -247,6 +247,7 @@ function update(dt) {
     for (let i = 0; i < state.bullets.length; i++) state.bullets[i].update(dt);
     for (let i = 0; i < state.particles.length; i++) state.particles[i].update(dt);
     for (let i = 0; i < state.explosions.length; i++) state.explosions[i].update(dt);
+    if (state.auras) { for (let i = 0; i < state.auras.length; i++) state.auras[i].update(dt); }
     if (state.bushes) {
         for (let i = 0; i < state.bushes.length; i++) state.bushes[i].update(dt);
     }
@@ -414,6 +415,7 @@ function update(dt) {
     state.bullets = state.bullets.filter(b => b.life > 0);
     state.particles = state.particles.filter(p => p.life > 0);
     state.explosions = state.explosions.filter(ex => ex.life > 0);
+    if (state.auras) state.auras = state.auras.filter(a => a.life > 0);
     if (state.crates) state.crates = state.crates.filter(cr => cr.life > 0);
     if (state.prisonerCages) state.prisonerCages = state.prisonerCages.filter(pc => !pc.isDestroyed || pc.life > 0);
     if (state.enemyDepots) state.enemyDepots = state.enemyDepots.filter(ed => !ed.isDestroyed || ed.life > 0);
@@ -508,6 +510,7 @@ function draw() {
     
     for (let i = 0; i < state.explosions.length; i++) state.explosions[i].draw(ctx);
     for (let i = 0; i < state.particles.length; i++) state.particles[i].draw(ctx);
+    if (state.auras) { for (let i = 0; i < state.auras.length; i++) state.auras[i].draw(ctx); }
     for (let i = 0; i < state.bullets.length; i++) state.bullets[i].draw(ctx);
     for (let i = 0; i < visibleRenderables.length; i++) visibleRenderables[i].draw(ctx);
     

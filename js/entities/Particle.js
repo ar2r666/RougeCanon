@@ -90,3 +90,44 @@ export class CritIndicator {
         ctx.restore();
     }
 }
+
+export class AuraRing {
+    constructor(x, y, color = '#f39c12', maxRadius = 240, duration = 0.85) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.maxRadius = maxRadius;
+        this.duration = duration;
+        this.life = duration;
+        this.radius = 15;
+    }
+    
+    update(dt) {
+        this.life -= dt;
+        let progress = 1 - (this.life / this.duration);
+        let ease = 1 - Math.pow(1 - progress, 3);
+        this.radius = 15 + ease * (this.maxRadius - 15);
+    }
+    
+    draw(ctx) {
+        if (this.life <= 0) return;
+        ctx.save();
+        let alpha = Math.max(0, (this.life / this.duration) * 0.85);
+        ctx.strokeStyle = this.color;
+        ctx.globalAlpha = alpha;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = alpha * 0.22;
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+export function createAuraRing(x, y, color) {
+    if (!state.auras) state.auras = [];
+    state.auras.push(new AuraRing(x, y, color));
+}
