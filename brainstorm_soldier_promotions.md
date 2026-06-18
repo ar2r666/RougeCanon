@@ -1,205 +1,216 @@
-# 🎖️ BURZA MÓZGÓW: SYSTEM AWANSU I DRZEWKA UMIEJĘTNOŚCI ŻOŁNIERZY
+# 🎖️ BURZA MÓZGÓW: SYSTEM AWANSU I DUALNE DRZEWKA UMIEJĘTNOŚCI ŻOŁNIERZY
 
-Celem tego dokumentu projektowego jest stworzenie **głębokiej, uzależniającej pętli dopaminowej** (na wzór najlepszych gier roguelite / arcade). Gracz z każdym poziomem żołnierza musi czuć ekscytację z wyboru nowej mechaniki, która drastycznie zmienia synergie oddziału.
-
----
-
-## 🏛️ ARCHITEKTURA KLAS W GRZE
-
-1. **DOWÓDCA (`COMMANDER`)** – *Taktyka, morale, koordynacja ognia, wezwania wsparcia, przywództwo*
-2. **MEDYK (`MEDIC`)** – *Leczenie, stimy bojowe, wskrzeszanie, pancerze chemiczne, bio-hazard*
-3. **INŻYNIER (`ENGINEER`)** – *Drony, wieżyczki, pola siłowe, naprawa, wybuchy technologiczne, pułapki*
-4. **SNAJPER (`SNIPER`)** – *Precyzja, kamuflaż optyczny, penetracja pancerza, rykoszety, zwiad*
-5. **CIĘŻKI STRZELEC (`HEAVY_GUNNER`)** – *Siła ognia, tarcze balistyczne, niszczenie osłon, tryb berserk*
+Każda klasa żołnierza posiada **2 osobne drzewka rozwoju (A i B)**.  
+Każde drzewko ma **3 poziomy awansu (Lvl 1 ➔ Lvl 2 ➔ Lvl 3)**.  
+Poziomy 1 i 2 to solidne mechaniki klasyczne, a **Poziom 3 to zawsze potężny Game Changer (Ultimatum)** wybierany z puli szalonych umiejętności *Outside the Box*.
 
 ---
 
-## I. 🦅 DOWÓDCA (COMMANDER) — 20 Unikatowych Umiejętności
+## 🏛️ ARCHITEKTURA ROZWOJU PLUTONU
 
-| Nr | Nazwa Umiejętności | Opis Mechaniki Bojowej | Efekt Dopaminowy / Synergia |
-|:---|:---|:---|:---|
-| **1** | **Rozkaz: Ogień Zaporowy** | Przez 4 sekundy cały skład strzela o 50% szybciej, ale nie może się poruszać. | Niesamowite uczucie "ściany ołowiu" zatrzymującej szarżującą hordę zombi. |
-| **2** | **Napalm Strike** | Wezwanie bombardowania napalmowego wzdłuż linii celowania myszy, zostawia płonącą ziemię na 8s. | Spopielenie całej fali wrogów jednym precyzyjnym wezwaniem radia. |
-| **3** | **Charyzmatyczny Lider** | Jeśli Dowódca żyje, pozostali żołnierze regenerują 1 HP co 3 sekundy poza walką. | Gracz zaczyna dbać o życie Lidera jak o największy skarb. |
-| **4** | **Przegrupowanie Awaryjne** | Teleportuje cały rozproszony skład natychmiast obok Dowódcy i nadaje im 2s nietykalności. | Ratunek z sytuacji bez wyjścia, gdy rekrut zapodział się we wrogiej bazie. |
-| **5** | **Kevlarowy Parasol** | Dowódca rozkłada przed składem energetyczną tarczę taktyczną pochłaniającą 200 pkt obrażeń. | Pozwala bezkarnie szturmować gniazda ciężkich karabinów wroga. |
-| **6** | **Oznacz i Zlikwiduj** | Co 10s oznacza najsilniejszego wroga czerwonym laserem; cały skład zadaje mu 2x obrażeń. | Błyskawiczna eliminacja Bossów przy zogniskowanym ogniu zespołu. |
-| **7** | **Adrenalina Batalionowa** | Po zabiciu Bossa cały skład zyskuje +40% do prędkości ruchu i przeładowania na 15s. | Tryb god-mode pozwalający oczyścić resztę mapy w mgnieniu oka. |
-| **8** | **Radio: Zrzut Zaopatrzenia**| Szansa 15% przy wejściu do nowej fali na zrzut złotej skrzyni z rzadką bronią. | Daje dreszczyk emocji na starcie każdego nowego poziomu fali. |
-| **9** | **Żelazna Dyscyplina** | Skład całkowicie ignoruje efekty spowolnienia, odrzutu oraz paniki od wrogich eksplozji. | Oddział idzie jak taran niezależnie od wybuchających beczek. |
-| **10**| **Ostatni Bastion** | Gdy Dowódca spadnie do 1 HP, wydaje okrzyk odpychający wrogów na 300px i daje +100% pancerza na 5s.| Dramatyczny zwrot akcji w filmowym stylu "Not today!". |
-| **11**| **Formacja Klinowa** | Żołnierze stojący dokładnie za plecami Dowódcy otrzymują -30% obrażeń balistycznych. | Nagroda za świadome, formacyjne pozycjonowanie oddziału myszką. |
-| **12**| **Ogień Krzyżowy** | Pocisk Dowódcy, który przecina tor pocisku innego żołnierza składu, wywołuje mini-wybuch plazmy. | Przypadkowe, potężne fajerwerki podczas gęstych wymian ognia. |
-| **13**| **Oficer Wywiadu** | Pokazuje trajektorie pocisków wrogich snajperów na 1s przed ich wystrzeleniem. | Gracz czuje się jak taktyczny geniusz wykonujący idealne uniki. |
-| **14**| **Łup Wojenny** | Pokonani wrogowie mają 25% szansy na upuszczenie złota do ulepszeń nieśmiertelników. | Przyspiesza pętlę stałego rozwoju metagry. |
-| **15**| **Holograficzna Mowa** | Dowódca stawia hologram motywacyjny; wrogowie go atakują, a skład obok ma +25% szans na cios krytyczny.| Synergia odwracania uwagi i egzekucji z flanki. |
-| **16**| **Bagnety na Broń!** | Ataki wręcz (nóż/kolba) zadają 400% obrażeń i odzyskują 2 HP za rozczłonkowanie wroga. | Zamienia Dowódcę w rzeźnika w bliskim kontakcie w dżungli. |
-| **17**| **Koordynacja Satelitarna**| Zwiększa pole widzenia (oddalenie kamery) o 20% oraz zasięg strzału wszystkich broni o 150px.| Kontrola nad całą mapą przed wejściem w strefę zagrożenia. |
-| **18**| **Braterstwo Krwi** | Obrażenia śmiertelne zadane dowolnemu rekrutowi są rozdzielane po równo na wszystkich żyjących. | Zapobiega przypadkowej "na śmierć" utracie pojedynczych jednostek. |
-| **19**| **Taktyczny Odwrót** | Podczas chodzenia do tyłu (plecami do celu) skład zyskuje +35% szans na uniknięcie pocisku. | Idealne do kitingu (strzelania podczas wycofywania się przed hordą). |
-| **20**| **Doktryna Totalna** | Co 60 sekund odnawia natychmiast wszystkie aktywne cooldowny umiejętności całego zespołu. | Pozwala odpalić dwie super-umiejętności pod rząd na Bossa. |
+1. **DOWÓDCA (`COMMANDER`)** ➔ Drzewko A: **RADIO** | Drzewko B: **MORALE**
+2. **MEDYK (`MEDIC`)** ➔ Drzewko A: **LECZENIE** | Drzewko B: **DOPALACZE**
+3. **INŻYNIER (`ENGINEER`)** ➔ Drzewko A: **WIEŻYCZKI** | Drzewko B: **GADŻETY** *(Technika Polowa)*
+4. **SNAJPER (`SNIPER`)** ➔ Drzewko A: **BROŃ** | Drzewko B: **ZMYSŁY**
+5. **CIĘŻKI STRZELEC (`HEAVY_GUNNER`)** ➔ *Przeniesiony do Backlogu*
+
+> [!TIP]
+> **Propozycja nazwy jednowyrazowej dla "Techniki Polowej" Inżyniera:**  
+> Wybrałem słowo **GADŻETY** (lub alternatywnie: **MAJSTER** / **SABOTAŻ** / **CYBER**). *Gadżety* idealnie pasują do gier retro arcade, gdzie inżynier rzuca miny-pająki, buty z dashem i drony łukowe.
 
 ---
 
-## II. 💉 MEDYK (MEDIC) — 20 Unikatowych Umiejętności
+## I. 🦅 DOWÓDCA (COMMANDER)
 
-| Nr | Nazwa Umiejętności | Opis Mechaniki Bojowej | Efekt Dopaminowy / Synergia |
-|:---|:---|:---|:---|
-| **1** | **Nanoboty Regeneracyjne** | Leczenie pasywne Medyka przeskakuje na najbardziej rannego członka składu zielonym promieniem. | Wizualna satysfakcja automatycznej opieki nad oddziałem. |
-| **2** | **Bojowy Defibrylator** | Jeśli sojusznik zginie w promieniu 150px, zostaje natychmiast ożywiony z 50% HP (cooldown: 90s). | Uczucie oszukania śmierci w ostatniej milisekundzie. |
-| **3** | **Bojowe Stimy (Mieszanka Z)**| Wystrzeliwuje w sojusznika strzykawkę: +80% szybkostrzelności na 6s, po czym zabiera 5 HP. | Ryzykowne dopychanie dps-u na granicy życia i śmierci. |
-| **4** | **Chmura Anestezjologiczna**| Medyk upuszcza granat gazowy usypiający wrogów na 4 sekundy w promieniu 180px. | Bezkarny ostrzał uśpionej hordy w wąskim przejścielu. |
-| **5** | **Toksyczny Odrzut** | Kałuże krwi pozostawione przez rannych żołnierzy stają się kwasem raniącym wrogów. | Zamiana własnych ran w śmiercionośną pułapkę terenową. |
-| **6** | **Polowy Bank Krwi** | Każde podniesione apteczko-pudełko odnawia dodatkowo +50% ładunku paska nieśmiertelnika. | Synergia zbieractwa z odpalaniem doktryn dog-tagów. |
-| **7** | **Pancerz Hemostatyczny**| Pierwszy pocisk w klatce w danej fali trafiający Medyka odbija się z powrotem we wroga. | Pasywna tarcza odbijająca śmiertelne strzały snajperów. |
-| **8** | **Transfuzja Kinetyczna**| 10% obrażeń zadanych przez broń Medyka leczy najbliższego sojusznika. | Medyk leczy zespól tym mocniej, im agresywniej strzela. |
-| **9** | **Kordon Sanitarny** | Roztacza aurę kwarantanny: wrogowie typu Zombie nie mogą podejść bliżej niż 60px. | Bezkładna ochrona przed atakami wręcz potworów. |
-| **10**| **Lekarstwo Cud** | Oczyszcza skład ze wszystkich negatywnych statusów (podpalenie, kwas, EMP) co 8s. | Rozwiązuje problem denerwujących debuffów po eksplozjach. |
-| **11**| **Pigułka Ostatniej Szansy**| Gdy sojusznik ma zginąć, zamraża go w kuli stazy na 3s (niezniszczalny) i leczy do 100%.| Błogosławieństwo absolutnego ocalenia herosa. |
-| **12**| **Dron Zwiadowczo-Medyczny**| Mały dron lata wokół Medyka i automatycznie zestrzeliwuje wrogie pociski lecące w rannych.| Poczucie posiadania osobistego Anioła Stróża nad głową. |
-| **13**| **Zastrzyk z Uranem** | Zamienia amunicję Medyka na pociski radioaktywne powodujące rozpad komórkowy wrogów. | Obrażenia rozłożone w czasie roztapiające pancerze czołgów. |
-| **14**| **Hipokratesowy Szał** | Im niższe średnie HP całego składu, tym szybszy ruch i regeneracja Medyka (do +100%). | Medyk zamienia się w boga ratownictwa, gdy wszystko się wali. |
-| **15**| **Ekstrakt z Krzewu Dżungli**| Medyk stojący w krzaku produkuje darmową apteczkę polową co 12 sekund. | Wykorzystanie nowo wdrożonego systemu 650 krzaków! |
-| **16**| **Amputacja Taktyczna** | Cios wręcz Medyka natychmiast odcina kończynę wroga, zmniejszając jego prędkość o 60%. | Okaleczanie elitarnych wrogów, by nie mogli gonić oddziału. |
-| **17**| **Znieczulenie Ogólne** | Żołnierze w składzie otrzymują obrażenia z opóźnieniem 3 sekund. | Pozwala wybić wrogów i uleczyć się *zanim* HP faktycznie spadnie! |
-| **18**| **Surowica Super-Żołnierza**| Podwaja maksymalne punkty zdrowia wybranego rekruta do końca trwania misji. | Tworzenie niezniszczalnego "tanka" z dowolnego rekruta. |
-| **19**| **Gaz Rozweselający** | Wrogowie trafieni granatem medycznym zaczynają tańczyć i strzelać na oślep. | Komiczna, chaotyczna dezorientacja na polu bitwy. |
-| **20**| **Autopsja Polowa** | Badanie zwłok elitarnych wrogów daje stały bonus +2% odporności składu na dany typ wroga.| Metaprogresja rosnąca w trakcie czyszczenia mapy świata. |
+### Drzewko A: 📻 RADIO *(Wsparcie strategiczne, koordynacja zrzutów, łączność)*
+
+#### 🔹 Pula 10 Umiejętności Klasycznych (Dla Lvl 1 - Lvl 2)
+1. **Zrzut Amunicji** – Wezwanie radia odnawia 100% magazynków całego składu i daje +20% szybkostrzelności na 5s.
+2. **Zwiad Radarowy** – Pokazuje na minimapie oraz krawędziach ekranu nadchodzące fale wrogów na 3 sekundy przed spawnem.
+3. **Wsparcie Moździerzowe** – Rzut granatem dymnym ściąga 3 precyzyjne pociski moździerzowe w miejsce dymu.
+4. **Radio-Koordynacja** – Pasywnie skraca czas przeładowania wszystkich broni w zespole o 15%.
+5. **Wezwanie Medyczne** – Szansa 20% co 45 sekund na zrzut spadochronowy apteczki polowej blisko gracza.
+6. **Częstotliwość Szyfrowana** – Wrogowie dystansowi potrzebują o 0.5s dłużej na wycelowanie w nasz oddział.
+7. **Sygnał SOS** – Gdy HP składu spadnie poniżej 25%, radio automatycznie ściąga darmowy nalot dymny osłaniający ucieczkę.
+8. **Nasłuch Patroli** – Wrogowie w promieniu widzenia kamery mają o 15% zmniejszoną prędkość szarży.
+9. **Szkolenie Przeciwpancerne** – Cały skład otrzymuje +10% szans na całkowite zignorowanie pancerza wroga.
+10. **Nadajnik Wabik** – Postawienie nadajnika radiowego grającego hymn wojskowy; potwory idą do niego zamiast do gracza.
+
+#### 🔸 Pula 5 Umiejętności "Outside the Box" (Mocny Game Changer na Lvl 3 Ultimate)
+1. **🔥 Napalm Carpet Bombing** – Radio wezwie strategiczny bombowiec spopielający całą poziomą linię ekranu płonącym napalmem (zadaje 1000 dmg i zostawia ścianę ognia na 12s).
+2. **🛰️ Orbitalny Laser Jonowy (ION Cannon)** – Radio ściąga z kosmosu potężny słup błękitnego światła o średnicy 200px, który podąża za kursorem myszy przez 6s, roztapiając Bossa.
+3. **📦 Zrzut Mecha Bojowego** – Wezwanie z nieba opancerzonego mecha kroczącego z dwoma minigunami, do którego gracz może wejść na 15 sekund god-mode.
+4. **🛸 Zhakowany Satelita EMP** – Wyłącza grawitację na całej mapie na 5s: wrogowie unoszą się bezradnie w powietrzu, otrzymując +200% obrażeń balistycznych.
+5. **🎙️ Audycja Propagandowa** – Radio nadaje mowę tak potężną, że 30% zwykłych wrogów na ekranie popełnia samobójstwo lub rzuca się na swoich dowódców.
 
 ---
 
-## III. 🔧 INŻYNIER (ENGINEER) — 20 Unikatowych Umiejętności
+### Drzewko B: 🚩 MORALE *(Aury przywódcze, dyscyplina, szał bojowy, tarcze)*
 
-| Nr | Nazwa Umiejętności | Opis Mechaniki Bojowej | Efekt Dopaminowy / Synergia |
-|:---|:---|:---|:---|
-| **1** | **Wieżyczka Sentry V2** | Rozkłada automatyczną wieżyczkę maszynową z auto-celowaniem (maks. 2 na mapie). | Budowanie małej obronnej fortecy w środku dżungli. |
-| **2** | **Dron Łukowy Tesla** | Latający dron rażący 3 wrogów naraz wyładowaniami elektrycznymi. | Widok błękitnych błyskawic przeskakujących po hordzie wrogów. |
-| **3** | **Bariera Hard-Light** | Stawia energetyczną ścianę na 6s zatrzymującą pociski wroga, przepuszczającą nasze strzały.| Jednostronna tarcza dająca bezkarną przewagę ogniową. |
-| **4** | **Magnetyczny Kolektor** | Automatycznie przyciąga wszystkie apteczki, amunicję i monety z promienia 400px. | Absolutny koniec z ręcznym bieganiem po każdy drop na mapie. |
-| **5** | **Overclocking Broni** | Szybkostrzelność składu rośnie o 35%, ale broń przegrzewa się i blokuje na 1s co 40 strzałów.| Balansowanie na krawędzi maksymalnego dps-u i przegrzania lufy. |
-| **6** | **Inteligentne Miny Spider**| Miny polowe zamieniają się w mechaniczne pająki goniące wrogów w promieniu 200px. | Własna armia małych kamikadze czyszcząca okopy wroga. |
-| **7** | **EMP Blast** | Wyładowanie niszczące pancerze wrogów cybernetycznych i wyłączające wrogie wieże na 10s.| Błyskawiczny paraliż wrogiej infrastruktury obronnej. |
-| **8** | **Fabryka Kieszonkowa** | Co 45 sekund Inżynier drukuje darmowy granat odłamkowy dla każdego w składzie. | Nieskończone zasoby materiałów wybuchowych. |
-| **9** | **Pancerz Reaktywny** | Po otrzymaniu ciosu wręcz pancerz Inżyniera wybucha falą plazmy odrzucającą napastnika.| Karze każdego wroga próbującego podejść na wyciągnięcie ręki. |
-| **10**| **Wabik Wybuchowy V2** | Ulepsza klasyczne wabiki z doktryn taktycznych: wabiki eksplodują po zniszczeniu. | Zastawianie mądrych pułapek na patrole przeciwnika. |
-| **11**| **Przenośny Teleporter** | Stawia tunel wejściowy i wyjściowy; gracz może wchodzić w jeden i wychodzić drugim. | Genialne narzędzie do ucieczki z okrążenia na mapie 12000px. |
-| **12**| **Nanitowa Lufa** | Pociski wystrzelone przez Inżyniera niszczą osłony worków z piaskiem jednym strzałem.| Dosłowne burzenie wrogich zasieków i schronów. |
-| **13**| **Recykling Złomu** | Zniszczenie wrogiego mecha lub bazy pozostawia pancerne płyty (+30 Armor do podniesienia).| Nagroda za eliminowanie najcięższego sprzętu wroga. |
-| **14**| **Działo Railgun** | Rozstawia ciężkie działo magnetyczne przebijające 10 wrogów w jednej linii. | Satysfakcja z "czyszczenia tunelu" jednym gigantycznym laserem. |
-| **15**| **Moduł Odrzutu (Dash)** | Buty odrzutowe pozwalające wykonać błyskawiczny odskok po dwukrotnym kliknięciu myszą.| Zwiększenie dynamiki sterowania w stylu gier arcade. |
-| **16**| **Sabotaż Amunicji** | Wrogowie mają 15% szansy na zacięcie lufy (samoczynny wybuch ich własnej broni). | Przeciwnicy niszczą sami siebie w połowie wymiany ognia. |
-| **17**| **Generator Czarny Kuj** | Rzuca ładunek tworzący czarną dziurę zasysającą wrogów do jednego punktu na 4s. | Idealna synergia pod wezwanie Nalotu lub Miniguna! |
-| **18**| **Zasłona Dymno-Nanitowa**| Granat dymny ukrywający skład, który jednocześnie leczy pancerz kinetyczny (+5 pkt/s).| Połączenie kamuflażu z szybkim serwisem pancerzy bojowych. |
-| **19**| **Zautomatyzowany Saper**| Pasywnie wykrywa i automatycznie rozbraja wrogie miny polowe z odległości 250px. | Całkowity spokój o schowane w trawie miny przeciwnika. |
-| **20**| **Awaryjny Mech Bojowy** | Po utracie pancerza Inżynier wchodzi do mecha bojowego z piłą łańcuchową na 10s. | Epicka transformacja w maszynę zagłady w sytuacji krytycznej. |
+#### 🔹 Pula 10 Umiejętności Klasycznych (Dla Lvl 1 - Lvl 2)
+1. **Okrzyk Bojowy** – Co 25s Dowódca wydaje okrzyk, dając +25% do prędkości ruchu i odporności na zachwianie na 6s.
+2. **Charyzma Lidera** – Za każdego żyjącego żołnierza w składzie cały zespól zyskuje +4% do maksymalnego HP.
+3. **Żelazna Dyscyplina** – Oddział jest w 100% odporny na efekt paniki, spowolnienia kwasem oraz podpalenie.
+4. **Bateryjna Adrenalina** – Zabicie wroga ma 5% szansy na natychmiastowe odnowienie 1 HP całemu plutonowi.
+5. **Formacja Klinowa** – Żołnierze stojący dokładnie za plecami Dowódcy otrzymują -30% obrażeń balistycznych.
+6. **Ostatni Bastion** – Gdy Dowódca otrzyma cios raniący go poniżej 20% HP, zyskuje tytanową tarczę +100 Armor na 4s.
+7. **Duch Walki** – Zwiększa promień magnetycznego przyciągania monet i apteczek przez oddział o stałe 80px.
+8. **Wzorowy Ostrzał** – Pierwszy pocisk wystrzelony po przeładowaniu zadaje gwarantowane 200% obrażeń krytycznych.
+9. **Kevlarowy Batalion** – Pasywny bonus +15 do pancerza kinetycznego dla każdego rekruta w plutonie.
+10. **Bagnety na Broń!** – Ataki wręcz w dżungli zadają 300% obrażeń i odpychają wrogów na odległość 50px.
+
+#### 🔸 Pula 5 Umiejętności "Outside the Box" (Mocny Game Changer na Lvl 3 Ultimate)
+1. **🦁 Spartański Bastion (Not Today!)** – Przez 8 sekund cały oddział staje się całkowicie niezniszczalny (0 dmg), odbijając wszystkie pociski wroga w kierunku strzelca z mocą 200%.
+2. **👑 Braterstwo Krwi** – Śmierć któregokolwiek członka oddziału wywołuje u pozostałych eksplozję szału (+300% szybkostrzelności i nieskończona amunicja na 12s).
+3. **📣 Egzekucja Morale** – Dowódca wskazuje wroga i wykrzykuje wyrok: jeśli zespól zabije go w ciągu 4s, wszyscy ożywają do 100% HP i zyskują +50 stałego pancerza.
+4. **🏳️ Pakt Samotnego Mściciela** – Gdy cały oddział zginie, Dowódca powstaje z kolan jako mściciel z 500 HP i nieskończoną bazooką na ostatnie 10 sekund walki.
+5. **🔥 Histeria Bojowa** – Zamienia paski zdrowia zespołu w paski szału: oddział nie traci HP od kul, lecz traci paski szału z czasem (ciągłe zabijanie odnawia paski szału w nieskończoność).
 
 ---
 
-## IV. 🎯 SNAJPER (SNIPER) — 20 Unikatowych Umiejętności
+## II. 💉 MEDYK (MEDIC)
 
-| Nr | Nazwa Umiejętności | Opis Mechaniki Bojowej | Efekt Dopaminowy / Synergia |
-|:---|:---|:---|:---|
-| **1** | **Rykoszety Śmierci** | Każdy celny strzał w głowę rykoszetuje do 2 kolejnych wrogów znajdujących się obok. | Jeden strzał w głowę zabija trzech przeciwników naraz. |
-| **2** | **Kameleon Dżungli** | Nieruchomy Snajper po 2s wchodzi w optyczny kamuflaż 100% (nawet poza krzakami). | Bycie całkowicie niewidzialnym duchem polującym z ukrycia. |
-| **3** | **Amunicja AP (Przeciwpancerna)**| Strzały Snajpera ignorują 100% pancerza wroga i zadają obrażenia nieodwracalne. | Snajper zamienia wrogich tanków w papierowe cele. |
-| **4** | **Egzekucja Horyzontalna**| Obrażenia Snajpera rosną liniowo wraz z dystansem do celu (do +250% na krawędzi ekranu).| Premia za perfekcyjne celowanie na maksymalny zasięg lufy. |
-| **5** | **Zmysł Łowcy** | Gdy obok pojawi się Boss lub Zabójca, ekran krawędziuje się na niebiesko, a czas zwolni o 40%.| Ostrzeżenie przed śmiertelnym niebezpieczeństwem z flanki. |
-| **6** | **Paraliż Celownika** | Wróg, w którego celujesz przez 1.5 sekundy bez strzału, zostaje sparaliżowany strachem na 2s.| Kontrola tłumu bez wystrzelenia ani jednego naboju. |
-| **7** | **Pociski Dum-Dum** | Trafienie w nogi przeciwnika natychmiast zatrzymuje jego szarżę i wywołuje krwotok. | Uniemożliwia potworom skrócenie dystansu do gracza. |
-| **8** | **Optyka Termowizyjna** | Snajper widzi wrogów ukrytych za ścianami bazy, w dymie oraz we wrogich kamuflażach. | Przenikanie wzrokiem przez każdą przeszkodę terenową. |
-| **9** | **Strzał Próżniowy** | Pocisk zostawia tunel próżniowy zasysający wrogie pociski i niszczący je w locie. | Strzał snajperski działający jak tarcza anty-balistyczna. |
-| **10**| **Pestka w Głowę (Insta-Kill)**| 8% szansy przy strzale w zwykłego wroga na natychmiastową dekapitację niezależnie od HP.| Kasowanie elitarnych jednostek jednym szczęśliwym pociągnięciem. |
-| **11**| **Tłumik Dźwięku (Duch)**| Strzały Snajpera nie ściągają uwagi wrogów ze spawnów (nie biegną w kierunku huku). | Cicha eliminacja obozu wroga bez wywoływania alarmu całej mapy.|
-| **12**| **Pocisk Śledzący (Smart)**| Pocisk wystrzelony obok celu potrafi skręcić w locie o 45 stopni, by dosięgnąć wroga. | Wybacza drobne błędy celowania myszką podczas szybkiej akcji. |
-| **13**| **Zastrzyk Skupienia** | Wciśnięcie PPM spowalnia czas całego świata o 60% na 3 sekundy (cooldown: 30s). | Filmowy bullet-time do perfekcyjnego wycelowania serii headshotów.|
-| **14**| **Strzał Przepięciowy** | Trafienie we wrogi generator wywołuje reakcję wysadzającą całą bazę zaopatrzeniową. | Wysadzanie w powietrze połowy ekranu jednym trafnym strzałem. |
-| **15**| **Kamuflowany Saper** | Snajper podkładający miny polowe robi to w 100% niewidzialnie dla patroli wroga. | Zastawianie śmiertelnych pułapek tuż przed nosami strażników. |
-| **16**| **Górna Półka** | Snajper może wchodzić na dachy bunkrów, zyskując +50% zasięgu i odporność na ciosy wręcz.| Zajmowanie niedostępnych dla zombie pozycji strzeleckich. |
-| **17**| **Podwójny Zapłon** | Co 5. wystrzelony pocisk rozdziela się w locie na 3 pociski lecące w wachlarzu. | Zamiana karabinu snajperskiego w precyzyjną strzelbę na dystans.|
-| **18**| **Staza Hibernacyjna** | Po otrzymaniu ciosu śmiertelnego przeżywa z 1 HP i zamraża napastnika w bryle lodu. | Druga szansa na przeżycie połączona z unieszkodliwieniem zabójcy.|
-| **19**| **Oko Sokoła** | Pasywnie zwiększa szansę na cios krytyczny całego oddziału o stałe 12%. | Globalne wsparcie dps-u dla całego plutonu. |
-| **20**| **Balistyka Orbitalna** | Strzał z karabinu snajperskiego przy naładowanych doktrynach przebija mapę na wylot. | Pocisk lecący przez 12000 pikseli niszczący wszystko na swej drodze.|
+### Drzewko A: 💚 LECZENIE *(Triaż, tarcze hemostatyczne, wskrzeszanie, pakiety)*
+
+#### 🔹 Pula 10 Umiejętności Klasycznych (Dla Lvl 1 - Lvl 2)
+1. **Promień Medyczny** – Medyk pasywnie leczy najbardziej rannego sojusznika o 1 HP co 4 sekundy.
+2. **Polowy Opatrunek** – Skraca czas trwania krwotoków i podpalenia u sojuszników o 60%.
+3. **Transfuzja Kinetyczna** – 8% obrażeń zadanych przez broń Medyka zamienia się w leczenie najbliższego rekruta.
+4. **Bank Krwi** – Każda podniesiona apteczka leczy dodatkowo +5 HP ponad limit pancerza.
+5. **Bojowy Triaż** – Żołnierze posiadający poniżej 30% HP są leczeni przez Medyka 2x szybciej.
+6. **Koagulacja Nanitowa** – Pierwsze obrażenie otrzymane w danej fali przez dowolnego członka składu wynosi 0.
+7. **Lekarska Torba** – Medyk stojący schowany w krzaku dżungli produkuje mały pakiet medyczny co 15 sekund.
+8. **Pancerz Hemostatyczny** – Sojusznicy stojący w promieniu 80px od Medyka mają +15% odporności balistycznej.
+9. **Czysta Kroplówka** – Całkowicie uodparnia oddział na toksyny, gazy paraliżujące i spowolnienie.
+10. **Medyczna Synergia** – Przeładowanie broni Medyka emituje falę lecząca 2 HP wszystkim żołnierzom obok.
+
+#### 🔸 Pula 5 Umiejętności "Outside the Box" (Mocny Game Changer na Lvl 3 Ultimate)
+1. **⚡ Defibrylator Zmartwychwstania** – Raz na falę poległy sojusznik zostaje natychmiast wskrzeszony w błękitnym słupie światła z 100% HP i 50 pkt pancerza.
+2. **🛡️ Staza Hibernacyjna** – Wciskając `E` Medyk zamraża cały skład w złotej kuli stazy na 4s: oddział jest nietykalny i leczy 25% HP na sekundę, podczas gdy wokół kuli wirują ostrza tnące wrogów.
+3. **👼 Archanioł Kwarantanny** – Medyk roztacza wielką zieloną aurę (promień 250px): wrogowie wewnątrz aury powoli tracą HP, a sojusznicy leczą 5 HP co sekundę.
+4. **🧬 Klonalny Asystent** – Medyk klonuje samego siebie jako widmowego ducha medycznego biegającego za składem i rzucającego darmowe apteczki co 6s.
+5. **💖 Zastrzyk Feniksa** – Medyk wstrzykuje wybranemu żołnierzowi nanoboty: po otrzymaniu ciosu śmiertelnego żołnierz wybuchnie falą leczącą cały zespól i wróci do życia.
 
 ---
 
-## V. 🛡️ CIĘŻKI STRZELEC (HEAVY GUNNER) — 20 Unikatowych Umiejętności
+### Drzewko B: 🧪 DOPALACZE *(Stimy bojowe, adrenalina, bio-hazard, toksyny)*
 
-| Nr | Nazwa Umiejętności | Opis Mechaniki Bojowej | Efekt Dopaminowy / Synergia |
-|:---|:---|:---|:---|
-| **1** | **Rozgrzana Lufa** | Im dłużej trzymasz strzał, tym szybszy ogień (do +150%), pociski stają się zapalające. | Zamiana lufy miniguna w plujący ogniem wulkan ołowiu. |
-| **2** | **Tarcza Jugger** | Ciężki Strzelec idzie z przodu z tytanową tarczą pochłaniającą 80% obrażeń od frontu. | Możliwość fizycznego taranowania wrogiego ostrzału z karabinów. |
-| **3** | **Zubożony Uran** | Pociski z Miniguna odpychają wrogów o 15px z każdym trafieniem (Ściana Ołowiu). | Potwory próbujące szarżować są dosłownie spychane do tyłu. |
-| **4** | **Szał Berserkera** | Gdy HP spadnie poniżej 30%, staje się odporny na zachwianie i zadaje 2x obrażeń. | Strzelec staje się najgroźniejszą bestią tuż przed śmiercią. |
-| **5** | **Taśma Nieskończoności**| Szansa 25% przy każdym strzale, że nie zużyje naboju z bębna amunicyjnego. | Radość z ciągłego strzelania bez frustrującego przeładowania. |
-| **6** | **Człowiek-Czołg** | Może taranować i niszczyć drewniane zasieki oraz małych wrogów samym swym ciałem. | Dosłowne rozjeżdżanie przeszkód na mapie w biegu. |
-| **7** | **Amunicja Flak** | Co 10. pocisk z Miniguna wybucha w powietrzu chmurą odłamków raniących dookoła. | Ciągłe mikro-eksplozje zamieniające dżunglę w piekło odłamków. |
-| **8** | **Chłodzenie Azotem** | Przeładowanie broni emituje falę mrozu zamrażającą wrogów dookoła na 2s. | Zamienia moment bezbronności (przeładowanie) w obronną pułapkę. |
-| **9** | **Tytanowy Kastet** | Atak wręcz odrzuca wroga na 200px i zadaje mu obrażenia równe 30% maks. HP wroga.| Odrzucenie Bossa na drugi koniec ekranu jednym potężnym ciosem. |
-| **10**| **Ołowiany Deszcz** | Po kucnięciu rozkłada trójnóg: rozrzut broni spada do 0, a penetracja rośnie o 100%.| Zamiana strzelca w stacjonarny laser zagłady o ogromnej celności. |
-| **11**| **Ryczący Potwór** | Huk wystrzałów z Miniguna pasywnie obniża celność wrogów na ekranie o 20%. | Efekt psychologiczny ogłuszający i depozycjonujący przeciwników. |
-| **12**| **Kamizelka EOD** | Ciężki Strzelec jest w 100% odporny na obrażenia od wybuchów (min, bomb, beczek). | Bieganie po polu minowym bez utraty ani jednego punktu zdrowia. |
-| **13**| **Adrenalina Rzeźnika** | Każdy rozczłonkowany wróg odnawia Ciężkiemu Strzelcowi 3 pkt pancerza kinetycznego.| Im gęstsza rzeź, tym twardszy pancerz bohatera. |
-| **14**| **Moduł Plazmowy** | Możliwość przełączenia Miniguna w tryb Miotacza Plazmy spalającego w bliskim kontakcie.| Opcja stopienia hordy, która zdołała podejść pod samą tarczę. |
-| **15**| **Żelazne Płuca** | Strzelec może biegać z ciężką bronią bez żadnych kar do prędkości ruchu oddziału. | Usunięcie największej wady klasy (spowolnienia zespołu). |
-| **16**| **Huk Soniczny** | Naciśnięcie spacji wyzwala falę uderzeniową z bębna niszczącą wrogie pociski w locie.| Awaryjne czyszczenie powietrza przed nawałnicą rakiet z bazooka. |
-| **17**| **Podwójny Bęben** | Magazynek mieści 200 strzałów zamiast 100, a czas przeładowania skraca się o 25%.| Podwojenie czasu ciągłego prowadzenia ognia zaporowego. |
-| **18**| **Gatling Laser** | Po zabiciu 50 wrogów broń strzela ciągłym czerwonym promieniem lasera przez 6s. | Nagroda za utrzymanie wysokiej serii zabójstw w dżungli. |
-| **19**| **Żywy Bunkier** | Gdy Strzelec stoi w miejscu, sojusznicy za jego plecami otrzymują 0 obrażeń balistycznych.| Tworzenie mobilnej barykady dla rannych sojuszników. |
-| **20**| **Prowokator EMP** | Przyciąga ogień wrogów na siebie; każde trafienie weń ładuje bombę EMP na jego plecach.| Obrażenia wroga ładują potężną eksplozję zwrotną. |
+#### 🔹 Pula 10 Umiejętności Klasycznych (Dla Lvl 1 - Lvl 2)
+1. **Adrenalina Bojowa** – Wystrzelenie w sojusznika strzykawki: daje mu +40% szybkostrzelności na 5s.
+2. **Kwasowa Krew (Bio-Hazard)** – Kałuże krwi rannych sojuszników zamieniają się w żrący kwas raniący zombie.
+3. **Pociski Toksyczne** – Broń Medyka nakłada kumulującą się truciznę zadającą 2 dmg/s przez 4s.
+4. **Gaz Dezorientujący** – Rzut granatem medycznym spowalnia wrogów o 40% i obniża ich celność.
+5. **Stimy Berserka** – Sojusznik posiadający poniżej 50% HP zadaje +30% obrażeń kinetycznych.
+6. **Amputacja Kolbą** – Cios wręcz Medyka natychmiast odcina kończynę wroga spowalniając go o 70%.
+7. **Znieczulenie Bojowe** – Obrażenia zadawane żołnierzom w składzie są nakładane z opóźnieniem 2 sekund.
+8. **Radioaktywny Magazynek** – Strzały Medyka obniżają pancerz wroga o 3 pkt z każdym trafieniem.
+9. **Koktajl Bio-Mołotow** – Rzuca fiolką z wirusem tworzącą kałuże dającą sojusznikom +20% ruchu, a wrogom -20%.
+10. **Surowica Szału** – Po podniesieniu apteczki broń całego składu strzela bez zużywania amunicji przez 3s.
+
+#### 🔸 Pula 5 Umiejętności "Outside the Box" (Mocny Game Changer na Lvl 3 Ultimate)
+1. **💉 Serum Wirusa Mutanta** – Medyk wstrzykuje rekrutowi zmodyfikowaną mieszankę Z: rekrut rośnie do rozmiarów giganta (3x większy), ma 1000 HP i taranuje pięściami czołgi przez 15s!
+2. **☣️ Pandemia Dżungli** – Zaraża wroga śmiertelnym wirusem: wróg po śmierci wybucha chmurą zarażającą 4 kolejnych wrogów w reakcji łańcuchowej czyszczącej ekran.
+3. **🧪 Overclocking Tkankowy** – Nadaje składu prędkość ruchu i strzelania +200%, ale żołnierze tracą 1 HP co sekundę (leczenie apteczkami przedłuża tryb w nieskończoność).
+4. **🟢 Bomba Kwasowa "Obcy"** – Upuszcza kanister rozpuszczający dosłownie wszystkie wrogie pociski, pancerze i barykady w promieniu 400px w zielonej mazi.
+5. **😈 Anestezjologia Odwrócona** – Medyk zamienia mechanikę ran: każde trafienie wroga w nasz oddział zamiast zabierać HP, *dodaje* obrażenia do następnej serii strzałów naszego składu!
 
 ---
 
-## VI. 🌀 10 UMIEJĘTNOŚCI "OUTSIDE THE BOX" (Szalone synergie łamiące mechaniki gier)
+## III. 🔧 INŻYNIER (ENGINEER)
 
-Te umiejętności przekraczają standardowe drzewka klasowe – nadają grze unikatową tożsamość *viralową*, o której gracze będą opowiadać na Discordzie.
+### Drzewko A: 🏰 WIEŻYCZKI *(Rozstawiane działka sentry, drony, barykady)*
 
-1. **👾 Duch w Maszynie (`GLITCH_HACK`)**  
-   * **Mechanika**: Raz na misję gracz może kliknąć myszą w dowolnego elitarnego przeciwnika lub Bossa i **przeprogramować jego kod**. Wróg staje się sojusznikiem walczącym u naszego boku do końca fali.
-   * **Dopamina**: Przejęcie wrogiego czołgu lub mecha i obrócenie jego dział przeciwko hordzie zombie.
+#### 🔹 Pula 10 Umiejętności Klasycznych (Dla Lvl 1 - Lvl 2)
+1. **Rozstawienie Sentry** – Inżynier rozkłada automatyczną wieżyczkę maszynową z auto-celowaniem (maks. 1 na mapie).
+2. **Dron Obrońca** – Latający nad głową dron zestrzeliwujący 1 wrogi pocisk co 3 sekundy.
+3. **Płyty Pancerne** – Rozłożone wieżyczki mają +50% pancerza i automatycznie się naprawiają poza walką.
+4. **Dwururka Sentry** – Wieżyczki strzelają dwoma pociskami naraz zamiast jednego.
+5. **Dron Skaner** – Dron oznacza wrogów w trawie, dając wieżyczkom zasięg widzenia +100px.
+6. **Szybki Montaż** – Skraca rozkładanie i przeładowywanie wieżyczek maszynowych o 40%.
+7. **Wieżyczka Shotgun** – Możliwość rozłożenia wieżyczki bliskiego zasięgu plującej odłamkami zaporowo.
+8. **Moduł Chłodzący** – Wieżyczki strzelają o 25% szybciej i nie zacinają się podczas gęstych fal.
+9. **Recykling Wieży** – Zniszczona wieżyczka wybucha odłamkami i oddaje 50% kosztów odnowienia.
+10. **Bateria Słoneczna** – Wieżyczki pasywnie generują 1 monetę co 8 sekund swojej nienaruszonej pracy.
 
-2. **🎰 Kasyno Życia i Śmierci (`COIN_FLIP`)**  
-   * **Mechanika**: Co 30 sekund gra rzuca w tle wirtualną monetą: 
-     * *Reszka* = Cały skład dostaje +100% HP i darmowe bombardowanie z powietrza. 
-     * *Orzeł* = Skład traci 50% HP, ale broń zadaje **300% obrażeń krytycznych** przez kolejne 15s.
-   * **Dopamina**: Ekstremalny hazard typu *High Risk - High Reward*.
-
-3. **⏪ Przycisk Cofania Czasu (`BACKSPACE_REWIND`)**  
-   * **Mechanika**: W momencie całkowitej śmierci oddziału gracz ma 2 sekundy na wciśnięcie klawisza `BACKSPACE`. Czas gry cofa się o 5 sekund na taśmie wideo (z zachowaniem zdobytej wiedzy o pułapkach i pozycjach wroga).
-   * **Dopamina**: Uczucie posiadania "supermocy montażysty filmowego".
-
-4. **🎨 Płótno Malarza Krwi (`BLOOD_ECONOMY`)**  
-   * **Mechanika**: Każdy piksel krwi namalowany na mapie generuje +0.01% do stałego mnożnika monet. Gdy krew pokryje >40% widocznego ekranu, odpala się **Krwawy Deszcz** leczący oddział do pełna.
-   * **Dopamina**: Zamiana mrocznej rzeźni w opłacalny mechanizm ekonomiczny gier roguelite.
-
-5. **🐕 Kontrola Pieska (`GOOD_BOY_OVERRIDE`)**  
-   * **Mechanika**: Gracz może wcisnąć `TAB` i przejąć bezpośrednie sterowanie nad bojowym Owczarkiem Niemieckim (Psem). Gracz biega psem z prędkością 350%, rozszarpując gardła wrogów od tyłu, podczas gdy reszta składu prowadzi ogień automatyczny sterowany przez AI.
-   * **Dopamina**: Zmiana perspektywy z taktycznej strzelanki w dynamiczną zręcznościówkę arcade.
-
-6. **🥔 Gorący Kartofel (`BOUNCY_GRENADE`)**  
-   * **Mechanika**: Wrogowie odrzucają rzucony przez gracza granat w kierunku innego wroga, który odrzuca go dalej – granat rośnie i zwiększa moc z każdym odbiciem, aż wysadzi w powietrze połowę fali.
-   * **Dopamina**: Patrzenie w napięciu, jak ping-pongowa bomba osiąga rozmiary atomowe.
-
-7. **🦾 Pakt z Cyber-Szatanem (`CYBER_DEMON_ARM`)**  
-   * **Mechanika**: Żołnierz oddaje ramię pod radykalną cyber-amputację. Traci bezpowrotnie możliwość leczenia apteczkami polowymi, ale jego ręka zamienia się w działko plazmowe strzelające promieniem przenikającym przez wszystkie obiekty i ściany na mapie.
-   * **Dopamina**: Trwałe poświęcenie obrony na rzecz absolutnej potęgi niszczycielskiej.
-
-8. **🦋 Efekt Motyla (`CROSSOVER_CHAOS`)**  
-   * **Mechanika**: Każdy zabity przeciwnik ma 0.5% szansy na zespawnowanie losowego, kultowego obiektu z innej retro-gry (np. zielonej rury z Mario wypluwającej złote monety, gwiazdki nietykalności lub czołgu z *Metal Slug*).
-   * **Dopamina**: Element czystej, nostalgicznej niespodzianki w każdej rundzie.
-
-9. **💳 Kredyt u Handlarza Bronią (`BLACK_MARKET_DEBT`)**  
-   * **Mechanika**: Gracz może kupować ulepszenia na ujemnym saldzie (zadłużenie). Jeśli nie spłaci długu w ciągu dwóch poziomów fal, na mapie zaczynają polować na niego elitarni Cyber-Komornicy z katanami.
-   * **Dopamina**: Balansowanie na krawędzi bankructwa dla zdobycia legendarnej broni na fali 2.
-
-10. **🌌 Czwarte Wymiarowe Działo (`PORTAL_MONITOR`)**  
-    * **Mechanika**: Pocisk wystrzelony w krawędź ekranu monitora nie znika, lecz **wylatuje po przeciwnej stronie monitora** (np. strzał w lewą krawędź wylatuje z prawej krawędzi trafiając wrogów w plecy).
-    * **Dopamina**: Wykorzystanie krawędzi okna przeglądarki jako elementu geometrii taktycznej.
+#### 🔸 Pula 5 Umiejętności "Outside the Box" (Mocny Game Changer na Lvl 3 Ultimate)
+1. **🤖 Mecha-Kroczący Goliath** – Zamienia zwykłą wieżyczkę Sentry w potężnego mecha obronnego chodzącego obok składu z piłą łańcuchową i wyrzutnią rakiet.
+2. **⚡ Dron Łukowy Tesla V3** – Rozkłada latający generator emitujący błękitne wyładowania łukowe łączące do 15 wrogów naraz w śmiertelnej siatce pod napięciem.
+3. **🏰 Twierdza "Bunker-Down"** – Wciśnięcie `B` zamienia Inżyniera w stalowy schron bojowy z 4 lufami maszynowymi dookoła; cały skład wskazuje do środka i strzela we wszystkich kierunkach na 12s.
+4. **🛸 Flota Rojowa (Swarm Drones)** – Wypuszcza rój 12 mikrodronów kamikadze obracających się w pierścieniu wokół oddziału i taranujących każdego wroga nadbiegającego z dżungli.
+5. **💥 Atomowy Autodestrukt Wieży** – Gracz może kliknąć w swoją wieżyczkę i zdetonować w niej taktyczny ładunek jądrowy zmiatający całą hordę z minimapy.
 
 ---
 
-## 💡 PODSUMOWANIE PROJEKTOWE: JAK TO WDZIĄĆ DO GRY?
+### Drzewko B: 🔧 GADŻETY *(Technika Polowa: miny, barierki, buty odrzutowe, pułapki)*
 
-Aby wciągnąć gracza na setki godzin:
-1. **Zasada 3 Kart**: Przy awansie żołnierza na wyższy poziom graczowi wyświetlają się **3 losowe karty umiejętności z powyższych tabel**. 
-2. **Synergie klasowe**: Gracz zaczyna główkować: *"Jeśli wezmę Medykowi Pancerz Hemostatyczny odbijający pociski, a Ciężkiemu Strzelcowi Prowokatora EMP... stworzę niezniszczalny bastion!"*.
-3. **Rzadkość (Rarity)**: Umiejętności "Outside the Box" pojawiają się w kartach awansu jako **Złote Karty Legendarne** (szansa ok. 5%), wywołując u gracza euforię przy odblokowaniu.
+#### 🔹 Pula 10 Umiejętności Klasycznych (Dla Lvl 1 - Lvl 2)
+1. **Magnetyczny Kolektor** – Przyciąga apteczki, amunicję i monety z promienia 350px.
+2. **Inteligentne Miny Spider** – Miny rzucone w dżungli zamieniają się w pająki goniące zombie.
+3. **Bariera Hard-Light** – Stawia energetyczną ścianę zatrzymującą wrogie pociski na 5s.
+4. **Buty Dash (Odrzut)** – Dwukrotne kliknięcie myszą wyzwala odskok odrzutowy unikania pocisków.
+5. **EMP Sabotaż** – Granat Inżyniera wyłącza tarcze wrogów cybernetycznych i paraliżuje wieże wroga.
+6. **Nanitowa Lufa** – Strzały Inżyniera niszczą betonowe zasieki i worki z piaskiem jednym strzałem.
+7. **Drukarz Kieszonkowy** – Drukuje darmowy granat odłamkowy w plecaku co 40 sekund.
+8. **Zautomatyzowany Saper** – Pasywnie widzi i rozbraja miny polowe wroga z 200px.
+9. **Kieszeń Przestrzenna** – Zwiększa limit noszonych min i granatów całego zespołu o +2 sztuki.
+10. **Moduł Rykoszetu Lasera** – Pocisk Inżyniera po odbiciu od ściany dżungli zamienia się w wiązkę plazmy.
+
+#### 🔸 Pula 5 Umiejętności "Outside the Box" (Mocny Game Changer na Lvl 3 Ultimate)
+1. **🕳️ Przenośny Tunel Portalowy** – Inżynier rzuca rurę portalową A (pod nogi) i rurę B (1000px dalej myszką): oddział może wchodzić w jedną i błyskawicznie uciekać drugą!
+2. **🌌 Generator Czarny Kuj (Black Hole)** – Wystrzeliwuje ładunek grawitacyjny tworzący czarną dziurę zasysającą wszystkich wrogów z połowy ekranu w jeden punkt pod ostrzał snajperów.
+3. **🦾 Egzoszkielet Piły Łańcuchowej** – Gdy Inżynier straci pancerz, z plecaka wyrasta mu mechaniczny egzoszkielet z dwiema piłami tnącymi czołgi na pół przez 10s nietykalności.
+4. **📻 Przeprogramowanie Wroga** – Szansa 20% przy trafieniu we wrogiego drona lub mecha, że jego lufa odwróci się i wysadzi wrogiego dowódcę.
+5. **🧲 Magnetyczny Odrzutacz Balistyczny** – Aktywuje magnes polowy: przez 6s *wszystkie* pociski wystrzelone przez wrogów zatrzymują się w powietrzu, a po wciśnięciu spacji wylatują z powrotem we wrogów!
+
+---
+
+## IV. 🎯 SNAJPER (SNIPER)
+
+### Drzewko A: 🔫 BROŃ *(Balistyka, penetracja pancerza, rykoszety, kaliber .50)*
+
+#### 🔹 Pula 10 Umiejętności Klasycznych (Dla Lvl 1 - Lvl 2)
+1. **Rykoszety Geometrii** – Strzał w głowę rykoszetuje do 1 kolejnego wroga stojącego obok.
+2. **Amunicja AP (Przeciwpancerna)** – Strzały całkowicie ignorują pancerz wroga.
+3. **Egzekucja Horyzontalna** – Obrażenia rosną wraz z dystansem do celu (do +150% na końcu linii).
+4. **Pocisk Dum-Dum** – Trafienie w nogi natychmiast zatrzymuje bieg wroga i wywołuje krwawienie.
+5. **Pestka w Głowę** – 5% szansy przy strzale na natychmiastowy Insta-Kill zwykłego potwora.
+6. **Strzał Przepięciowy** – Trafienie w beczkę lub baze wroga wywołuje 2x większy wybuch.
+7. **Podwójny Zapłon** – Co 4. pocisk rozdziela się w locie na 2 pociski lecące obok siebie.
+8. **Balistyka Ciężka** – Strzał snajperski odrzuca wroga o 30px do tyłu.
+9. **Szybki Zamek** – Przeładowanie karabinu wyborowego trwa o 35% krócej po celnym headshocie.
+10. **Lufa Kaliber .50** – Pocisk przebija do 3 wrogów rosnących w jednej linii prostej.
+
+#### 🔸 Pula 5 Umiejętności "Outside the Box" (Mocny Game Changer na Lvl 3 Ultimate)
+1. **💥 Geometria Zagłady (Hyper-Ricochet)** – Czuły rykoszet: pocisk trafiający w głowę wroga rykoszetuje do kolejnego, i kolejnego... aż zabije 7 wrogów na ekranie w jednym ułamku sekundy!
+2. **🚀 Smart-Bullet (Pocisk Sterowany)** – Wystrzelony pocisk wyborowy zamienia się w rakietę z kamerą: czas spowalnia o 80%, a gracz steruje myszką pociskiem latającym między okopami wroga przez 4s.
+3. **☄️ Balistyka Orbitalna (Penetrator)** – Przy naładowanym pasku doktryn strzał Snajpera zamienia się w promień o długości 12000 pikseli przebijający całą mapę świata na wylot od krawędzi do krawędzi!
+4. **🎇 Rozszczepienie Kwantowe** – Pocisk snajperski tuż przed trafieniem w Bossa rozszczepia się na 15 promieni laserowych tworzących klatkę z ognia wokół celu.
+5. **🎯 Szrapnel Głowicy Reaktywnej** – Trafienie krytyczne w głowę wroga wywołuje wewnątrz jego ciała implozję wyrzucającą 20 ostrzy we wszystkie strony.
+
+---
+
+### Drzewko B: 👁️ ZMYSŁY *(Kamuflaż optyczny, termowizja, spowolnienie czasu, duch)*
+
+#### 🔹 Pula 10 Umiejętności Klasycznych (Dla Lvl 1 - Lvl 2)
+1. **Kameleon Dżungli** – Nieruchomy Snajper po 1.5s wchodzi w 100% niewidzialność (nawet poza krzakami).
+2. **Zmysł Łowcy** – Obok zabójcy ekran miga na niebiesko, a czas zwalnia o 30%.
+3. **Optyka Termowizyjna** – Widzi wrogów ukrytych za ścianami baz oraz we wrogim dymie.
+4. **Tłumik Dźwięku (Duch)** – Strzały nie ściągają uwagi wrogów ze spawnów.
+5. **Paraliż Celownika** – Wróg, w którego celujesz myszką przez 1s, zostaje sparaliżowany strachem.
+6. **Kamuflowany Saper** – Podkładanie min polowych jest w 100% niewidzialne dla wroga.
+7. **Oko Sokoła** – Pasywnie daje +8% szans na cios krytyczny całemu plutonowi.
+8. **Zastrzyk Skupienia** – Wciśnięcie PPM zwalnia czas o 50% na 2s (cooldown: 25s).
+9. **Górna Półka** – Snajper może wchodzić na dachy zniszczonych bunkrów poza zasięg zombie.
+10. **Zimna Krew** – Po otrzymaniu ciosu śmiertelnego przeżywa z 1 HP i zamraża wroga w lodzie.
+
+#### 🔸 Pula 5 Umiejętności "Outside the Box" (Mocny Game Changer na Lvl 3 Ultimate)
+1. **⏱️ Filmowy Bullet-Time 360°** – Wciśnięcie `SPACJI` zatrzymuje czas całego świata na 6s w stazie; gracz może w spokoju wycelować i kliknąć w 10 wrogów na ekranie, po czym zwolnienie puszcza i wszyscy giną jednocześnie w stylu *Cyberpunk Edgerunners / Red Dead Redemption*!
+2. **👻 Widmowa Projekcja** – Snajper wysyła swojego widmowego klona na przód mapy: wrogowie strzelają w klona, a każdy wróg, który go zaatakuje, zostaje trwale oznaczony pod cios krytyczny 400%.
+3. **🌌 Oko Proroka (Lot Ptaka)** – Oddalenie kamery (zoom-out) rośnie do takiego poziomu, że gracz widzi strefę 4000x4000px na raz z góry z pełną kontrolą celowania luf.
+4. **🌀 Hipnoza Celownika Optycznego** – Puszcza zajączka optycznego w oczy hordy: 20 wrogów w stożku celowania zaczyna bezwładnie iść za wskaźnikiem myszy gracza w pułapki minowe.
+5. **💀 Mroczny Żniwiarz** – Każde zabójstwo z niewidzialności odnawia natychmiast czas trwania niewidzialności o kolejne 3 sekundy (pozwala przejść całą mapę bez ujawniania się ani razu).
+
+---
+
+## V. 🛡️ CIĘŻKI STRZELEC (HEAVY GUNNER)
+*(Klasa przeniesiona do Backlogu na późniejsze fazy rozwoju)*
