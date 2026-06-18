@@ -119,9 +119,9 @@ export class BattleCryEffect {
             let alpha = Math.max(0, 1 - Math.pow(p, 2));
             ctx.globalAlpha = alpha;
 
-            // 1. Dwa wykrzykniki !! nad głową
+            // 1. Dwa wykrzykniki !! nad głową ('Y' z palety gry)
             let floatY = Math.floor((this.y - 24 - p * 16) / 2) * 2;
-            ctx.fillStyle = '#ffff00';
+            ctx.fillStyle = '#f7d84a';
             // Lewy !
             ctx.fillRect(this.x - 8, floatY, 4, 10);
             ctx.fillRect(this.x - 8, floatY + 12, 4, 4);
@@ -129,9 +129,9 @@ export class BattleCryEffect {
             ctx.fillRect(this.x + 4, floatY, 4, 10);
             ctx.fillRect(this.x + 4, floatY + 12, 4, 4);
 
-            // 2. Fale akustyczne ))) (((
+            // 2. Fale akustyczne ))) ((( ('f' z palety gry)
             let waveR = 16 + p * 60;
-            ctx.fillStyle = '#f39c12';
+            ctx.fillStyle = '#ffaa00';
             [-1, 1].forEach(dir => {
                 for (let arc = 0; arc < 3; arc++) {
                     let r = waveR - arc * 14;
@@ -159,11 +159,11 @@ export class BattleCryEffect {
                         let sy = Math.floor((soldier.y - 22 - p2 * 26) / 2) * 2;
                         let sx = Math.floor(soldier.x / 2) * 2;
 
-                        ctx.fillStyle = '#7cfc00'; // soczysta zieleń morale
+                        ctx.fillStyle = '#ff6a00'; // 'O' kanoniczny pomarańczowy gry
                         ctx.fillRect(sx - 2, sy - 6, 4, 12);
                         ctx.fillRect(sx - 6, sy - 2, 12, 4);
 
-                        ctx.fillStyle = '#2b6611'; // kontur/cień
+                        ctx.fillStyle = '#63130a'; // 'd' ciemna czerwień pod cień
                         ctx.fillRect(sx - 2, sy + 6, 4, 2);
                     }
                 });
