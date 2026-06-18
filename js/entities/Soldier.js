@@ -1,6 +1,6 @@
 import { stats, state, WEAPONS, NAMES, customSquadDesign } from '../config.js';
 import { getSoldierSprites, getSoldierBodySprites, getWeaponSprite, bloodCtx } from '../sprites.js';
-import { createParticles } from './Particle.js';
+import { createParticles, createAuraRing } from './Particle.js';
 import { Bullet } from './Bullet.js';
 import { PlasmaBeam } from './PlasmaBeam.js';
 import { playSound } from '../sfx.js';
