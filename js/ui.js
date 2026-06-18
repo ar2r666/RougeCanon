@@ -587,64 +587,97 @@ export function showSoldierPromotionScreen(soldier) {
     let titleEl = document.getElementById('upgradeTitle');
     let subEl = document.getElementById('upgradeSubtitle');
     if (titleEl) { titleEl.innerText = `AWANS: ${soldier.name.toUpperCase()}`; titleEl.classList.remove('hidden'); }
-    if (subEl) { subEl.innerText = `KLASA: ${soldier.soldierClass} (WYBIERZ DRZEWKO ROZWOJU)`; subEl.classList.remove('hidden'); }
+    if (subEl) { subEl.innerText = `KLASA: ${soldier.soldierClass} (PODGLĄD DRZEWEK ROZWOJU)`; subEl.classList.remove('hidden'); }
     
     let optionsDiv = document.getElementById('upgradeOptions');
     optionsDiv.innerHTML = '';
+    optionsDiv.style.gap = '45px';
+    optionsDiv.style.flexWrap = 'wrap';
     
     const trees = CLASS_SKILL_TREES[soldier.soldierClass];
     
-    // Drzewko A
-    if (soldier.treeALvl < 3) {
-        let nextSkillA = trees.treeA.skills[soldier.treeALvl];
-        let isBlack = (soldier.treeALvl === 2);
-        const cardA = buildDogTagCard(
-            `DRZEWKO A: ${trees.treeA.name}`,
-            `★ LVL ${soldier.treeALvl + 1}: ${nextSkillA.name.toUpperCase()}<br><span style="font-size:7px; font-weight:normal; display:block; margin-top:6px; line-height:1.4;">${nextSkillA.desc}</span>`,
-            () => {
-                soldier.applySkillPromotion('A');
-                closePromotionScreen();
-            },
-            isBlack
-        );
-        optionsDiv.appendChild(cardA);
-    } else {
-        const cardA = buildDogTagCard(
-            `DRZEWKO A: ${trees.treeA.name}`,
-            `★ MAKSYMALNY POZIOM<br><span style="font-size:7px; font-weight:normal; display:block; margin-top:6px; color:#777;">Opanowane do perfekcji!</span>`,
-            () => {},
-            false
-        );
-        cardA.style.opacity = '0.45';
-        cardA.style.cursor = 'default';
-        optionsDiv.appendChild(cardA);
-    }
+    const renderTreeGroup = (treeObj, treeKey, currentTreeLvl) => {
+        let groupContainer = document.createElement('div');
+        groupContainer.style.display = 'flex';
+        groupContainer.style.flexDirection = 'column';
+        groupContainer.style.alignItems = 'center';
+        groupContainer.style.pointerEvents = 'auto';
+        
+        let header = document.createElement('div');
+        header.style.fontFamily = "'Press Start 2P', monospace";
+        header.style.fontSize = '10px';
+        header.style.color = currentTreeLvl >= 3 ? '#7cfc00' : '#ffaa00';
+        header.style.textShadow = '2px 2px 0 #000';
+        header.style.marginBottom = '18px';
+        header.style.background = 'rgba(15,20,24,0.92)';
+        header.style.padding = '8px 14px';
+        header.style.border = '2px solid #555';
+        header.style.borderRadius = '4px';
+        header.innerText = `DRZEWKO ${treeKey}: ${treeObj.name} [${currentTreeLvl}/3]`;
+        groupContainer.appendChild(header);
+        
+        let tagsRow = document.createElement('div');
+        tagsRow.style.display = 'flex';
+        tagsRow.style.flexDirection = 'row';
+        tagsRow.style.gap = '12px';
+        tagsRow.style.alignItems = 'flex-start';
+        
+        treeObj.skills.forEach((skill, idx) => {
+            let isBlack = (idx === 2);
+            let isUnlocked = currentTreeLvl > idx;
+            let isNextAvailable = currentTreeLvl === idx;
+            let isLockedFuture = currentTreeLvl < idx;
+            
+            let statusText = '';
+            let titlePrefix = `LVL ${idx + 1}`;
+            
+            if (isUnlocked) {
+                statusText = `<span style="color:#7cfc00; font-size:7px; display:block; margin-top:8px;">[✓ OPANOWANA]</span>`;
+            } else if (isNextAvailable) {
+                statusText = `<span style="color:#ffff00; font-size:7px; display:block; margin-top:8px; text-shadow:0 0 4px #ff9900;">[► WYBIERZ]</span>`;
+            } else if (isLockedFuture) {
+                statusText = `<span style="color:#888; font-size:7px; display:block; margin-top:8px;">[🔒 WYMAGA LVL ${idx}]</span>`;
+            }
+            
+            const card = buildDogTagCard(
+                titlePrefix,
+                `${skill.name.toUpperCase()}<br><span style="font-size:6.5px; font-weight:normal; display:block; margin-top:5px; line-height:1.4; color:${isBlack ? '#ddd' : '#222'};">${skill.desc}</span>${statusText}`,
+                () => {
+                    if (isNextAvailable) {
+                        soldier.applySkillPromotion(treeKey);
+                        closePromotionScreen();
+                    } else if (isLockedFuture) {
+                        playSound('sfx_click', 0.2);
+                    }
+                },
+                isBlack
+            );
+            
+            card.style.width = '135px';
+            
+            if (isUnlocked) {
+                card.style.opacity = '0.55';
+                card.style.cursor = 'default';
+                card.style.filter = 'saturate(60%)';
+            } else if (isNextAvailable) {
+                card.style.opacity = '1.0';
+                card.style.cursor = 'pointer';
+                card.style.filter = 'drop-shadow(0 0 12px rgba(124, 252, 0, 0.75))';
+            } else if (isLockedFuture) {
+                card.style.opacity = '0.42';
+                card.style.cursor = 'not-allowed';
+                card.style.filter = 'grayscale(85%)';
+            }
+            
+            tagsRow.appendChild(card);
+        });
+        
+        groupContainer.appendChild(tagsRow);
+        return groupContainer;
+    };
     
-    // Drzewko B
-    if (soldier.treeBLvl < 3) {
-        let nextSkillB = trees.treeB.skills[soldier.treeBLvl];
-        let isBlack = (soldier.treeBLvl === 2);
-        const cardB = buildDogTagCard(
-            `DRZEWKO B: ${trees.treeB.name}`,
-            `★ LVL ${soldier.treeBLvl + 1}: ${nextSkillB.name.toUpperCase()}<br><span style="font-size:7px; font-weight:normal; display:block; margin-top:6px; line-height:1.4;">${nextSkillB.desc}</span>`,
-            () => {
-                soldier.applySkillPromotion('B');
-                closePromotionScreen();
-            },
-            isBlack
-        );
-        optionsDiv.appendChild(cardB);
-    } else {
-        const cardB = buildDogTagCard(
-            `DRZEWKO B: ${trees.treeB.name}`,
-            `★ MAKSYMALNY POZIOM<br><span style="font-size:7px; font-weight:normal; display:block; margin-top:6px; color:#777;">Opanowane do perfekcji!</span>`,
-            () => {},
-            false
-        );
-        cardB.style.opacity = '0.45';
-        cardB.style.cursor = 'default';
-        optionsDiv.appendChild(cardB);
-    }
+    optionsDiv.appendChild(renderTreeGroup(trees.treeA, 'A', soldier.treeALvl));
+    optionsDiv.appendChild(renderTreeGroup(trees.treeB, 'B', soldier.treeBLvl));
 }
 
 function closePromotionScreen() {
