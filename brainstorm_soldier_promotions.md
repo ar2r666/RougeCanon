@@ -203,22 +203,22 @@ Poziomy 1 i 2 to solidne mechaniki klasyczne, a **Poziom 3 to zawsze potężny G
 9. **Górna Półka** – Snajper może wchodzić na dachy zniszczonych bunkrów poza zasięg zombie.
 10. **Zimna Krew** – Po otrzymaniu ciosu śmiertelnego przeżywa z 1 HP i zamraża wroga w lodzie.
 
-#### 🔸 Pula 15 Umiejętności "Outside the Box" (Zainspirowane kinem i grami na Lvl 3 Ultimate)
-1. **⏱️ Filmowy Bullet-Time 360°** – Wciśnięcie `SPACJI` zatrzymuje czas całego świata na 6s w stazie; gracz może w spokoju wycelować i kliknąć w 10 wrogów na ekranie, po czym zwolnienie puszcza i wszyscy giną jednocześnie w stylu *Cyberpunk Edgerunners / Red Dead Redemption*!
-2. **👻 Widmowa Projekcja** – Snajper wysyła swojego widmowego klona na przód mapy: wrogowie strzelają w klona, a każdy wróg, który go zaatakuje, zostaje trwale oznaczony pod cios krytyczny 400%.
-3. **🌌 Oko Proroka (Lot Ptaka)** – Oddalenie kamery (zoom-out) rośnie do takiego poziomu, że gracz widzi strefę 4000x4000px na raz z góry z pełną kontrolą celowania luf.
-4. **🌀 Hipnoza Celownika Optycznego** – Puszcza zajączka optycznego w oczy hordy: 20 wrogów w stożku celowania zaczyna bezwładnie iść za wskaźnikiem myszy gracza w pułapki minowe.
-5. **💀 Mroczny Żniwiarz** – Każde zabójstwo z niewidzialności odnawia natychmiast czas trwania niewidzialności o kolejne 3 sekundy (pozwala przejść całą mapę bez ujawniania się ani razu).
-6. **🛸 Tryb Predator (Termiczny Tri-Laser)** – *Inspirowane filmem Predator*: Snajper włącza kultowy trójpunktowy czerwony celownik laserowy. Każdy wróg oznaczony trzema kropkami po 2 sekundach zostaje rozerwany automatycznym strzałem plazmowym z działka naramiennego z odległości 800px.
-7. **📦 Kartonowe Pudełko Taktyczne** – *Inspirowane serią Metal Gear Solid*: Wciśnięcie `C` zamienia Snajpera w skradające się kartonowe pudło z narysowanym wykrzyknikiem `!`. Wrogowie całkowicie ignorują pudło, a wyjście z niego tuż za plecami wroga zadaje cios krytyczny x1000%.
-8. **⏪ Inwersja Balistyczna (Tenet)** – *Inspirowane filmem Tenet*: Snajper wystrzeliwuje "odwrócony pocisk". Nabój wylatuje z lufy do tyłu w czasie – **pojawia się wewnątrz ciała martwego Bossa i wylatuje z niego z powrotem do lufy gracza**, raniąc wrogów i ożywiając zabitych sojuszników na swym torze lotu!
-9. **↪️ Zakrzywianie Kul (Wanted)** – *Inspirowane filmem Wanted (Ścigani)*: Wciskając PPM i machając myszą po łuku, gracz nadaje pociskowi trajektorię bumeranga/spirali. Pocisk potrafi obronnie okrążyć cały oddział w pierścieniu, ścinając głowy otaczającej hordzie.
-10. **🕶️ Kamuflaż Termo-Optyczny** – *Inspirowane Ghost in the Shell*: Snajper staje się przepuszczalną hologramową taflą szkła. Wrogie pociski przelatują przez niego na wylot (100% dodge) i trafiają wrogów stojących za jego plecami.
-11. **🦅 Skok Skrytobójcy (Eagle Strike)** – *Inspirowane Assassin's Creed*: Snajper oznacza 5 celów na mapie z dżungli, po czym wykonuje nadnaturalny skok wprost w środek hordy, likwidując wszystkie 5 celów w ułamku sekundy ukrytym ostrzem i dając oddziałowi osłonę dymną.
-12. **⚡ Mrugnięcie Pustki (Blink)** – *Inspirowane grą Dishonored*: Zamiast biegać myszką, Snajper teleportuje się natychmiast w miejsce wskazane celownikiem optycznym (do 400px), zostawiając w starym miejscu wybuchającą chmurę czarnego dymu paraliżującego zombie.
-13. **🟢 Gogle Sonarowo-Echolokacyjne** – *Inspirowane Splinter Cell*: Snajper włącza zielone gogle noktowizyjne z trzema soczewkami. Cała gra przełącza się w czerń, a każdy ruch wroga wyzwala białe fale echolokacyjne. Wyszukanie wroga echem daje gwarantowane przebicie przez ściany x500%.
-14. **✏️ Ołówek Baba Yagi (John Wick)** – *Inspirowane John Wick*: Gdy w karabinie snajperskim skończy się amunicja, prędkość ataków wręcz rośnie o 400%, a każdy cios kolbą/nożem zabija zwykłego wroga natychmiast i odnawia 100% magazynków w plutonie.
-15. **⚡ Powidoki Sandevistana** – *Inspirowane Cyberpunk 2077 / Edgerunners*: Aktywacja nerwowego dopalacza zwalnia czas o 95%, a postać zostawia za sobą neonowe smugi widmowe. Gracz może w 1 sekundę obiec całą bazę wroga, podłożyć 10 ładunków C4 i wrócić na start przed upływem czasu gry.
+#### 🔸 Pula 15 Umiejętności "Outside the Box" (Zainspirowane kinem i grami — rygorystycznie dostosowane do sterowania całym plutonem myszką)
+1. **⏱️ Filmowy Bullet-Time 360°** – Wciśnięcie `SPACJI` zatrzymuje czas całego świata na 6s w stazie; gracz może w spokoju wycelować myszką i zaznaczyć 10 wrogów, po czym zwolnienie puszcza i Snajper likwiduje ich serię błyskawicznych strzałów (*Red Dead Redemption / Cyberpunk*)!
+2. **👻 Widmowa Projekcja** – Snajper wysyła przed oddział swojego widmowego klona pędzącego w stronę celownika myszy: wrogowie strzelają w klona, a każdy wróg, który go zaatakuje, otrzymuje debuff x400% do obrażeń krytycznych od luf naszego zespołu.
+3. **🌌 Oko Proroka (Lot Ptaka)** – Oddalenie kamery (zoom-out) rośnie do takiego poziomu, że gracz widzi strefę 4000x4000px na raz z góry z pełną kontrolą celowania całego plutonu.
+4. **🌀 Hipnoza Celownika Optycznego** – Puszcza zajączka optycznego w stożek celowania myszy: 20 wrogów zaczyna bezradnie podążać za wskaźnikiem myszy gracza wprost na miny polowe Inżyniera.
+5. **💀 Siatka Mrocznego Żniwiarza** – Snajper rozkłada pasywny kamuflaż optyczny **na cały oddział stojący obok niego**. Każde zabójstwo z ukrycia odnawia niewidzialność całego zespołu o kolejne 3s.
+6. **🛸 Tryb Predator (Termiczny Tri-Laser)** – *(Predator)*: Snajper włącza trzy czerwone kropki celownika. Gdy gracz trzyma kursor myszy na wrogu przez 2s, działko naramienne Snajpera automatycznie spopiela cel z odległości 800px bez przerywania ruchu plutonu.
+7. **📦 Mega-Pudło Taktyczne (MGS)** – *(Metal Gear Solid)*: Wciśnięcie `C` zrzuca **wielki karton kamuflujący na cały oddział**. Pluton porusza się razem pod jednym pudłem z wykrzyknikiem `!`. Wrogowie je ignorują, a pierwszy strzał z wnętrza pudła zadaje obrażenia x1000%.
+8. **⏪ Inwersja Balistyczna** – *(Tenet)*: Strzał odwróconym pociskiem. Nabój pojawia się wewnątrz ciała martwego wroga na krawędzi ekranu i **wylatuje z niego z powrotem do lufy Snajpera**, raniąc wrogów i ożywiając zabitych rekrutów stojących na torze lotu!
+9. **↪️ Zakrzywianie Kul** – *(Wanted)*: Wciskając PPM i machając myszą po łuku nadajesz pociskowi trajektorię bumeranga okrążającego formację plutonu i ścinającego głowy hordzie.
+10. **🕶️ Pole Termo-Optyczne** – *(Ghost in the Shell)*: Snajper aktywuje generator rozszczepiający światło **dla całego składu**. Wrogie pociski przelatują przez żołnierzy na wylot (100% dodge), raniąc wrogów z tyłu.
+11. **🦅 Linowa Pułapka Asasyna** – *(Assassin's Creed)*: Zamiast fizycznie skakać w hordę (co rozerwałoby skład), Snajper wystrzeliwuje harpuny linowe z dżungli, które przyciągają 5 elitarnych wrogów wprost w pułapki przed naszym oddziałem.
+12. **⚡ Skok Mrugnięcia Plutonu (Blink)** – *(Dishonored)*: Snajper rzuca granat fazowy natychmiast **teleportujący całą zwartą formację zespołu** w miejsce celownika myszy (do 400px), zostawiając w starym miejscu chmurę czarnego dymu paraliżującego zombie.
+13. **🟢 Gogle Sonarowo-Echolokacyjne** – *(Splinter Cell)*: Ekran przełącza się w czerń, a każdy ruch wroga generuje białe fale sonaru. Wyszukanie wroga echem daje całemu zespołowi gwarantowane przebicie przez ściany x500%.
+14. **✏️ Ołówek Baba Yagi** – *(John Wick)*: Gdy w karabinie Snajpera skończy się amunicja, jego szał wręcz rośnie o 400%, likwidując wrogów podchodzących pod sam zespól i odnawiając amunicję plutonu.
+15. **⚡ Symulacja Sandevistana** – *(Cyberpunk 2077)*: Dopalacz nerwowy podłączony do radia nadaje **całemu oddziałowi** prędkość ruchu +500% i neonowe powidoki na 2 sekundy. Pozwala całemu plutonowi uciec z centrum atomowego wybuchu bazy wroga!
 
 ---
 
