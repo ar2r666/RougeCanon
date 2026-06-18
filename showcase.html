@@ -353,13 +353,14 @@
     <!-- ZAKŁADKA 6: OKRZYK BOJOWY (5 KONCEPCJI) -->
     <div id="tab-warcry" class="tab-content">
         <div class="grid-container">
-            <div class="card">
-                <div class="card-title">1. Akustyczne Łuki (Retro Megafon)</div>
-                <div class="card-desc">Klasyczne komiksowe fale akustyczne ))) ((( rozchodzące się od ust z pulsującym wykrzyknikiem ! nad oficera.</div>
+            <div class="card" style="border-color:#ffff00;">
+                <div class="card-title" style="color:#ffff00;">★ Ostateczny Wariant 1+5 (Aktywny w grze)</div>
+                <div class="card-desc">Nad dowódcą wyskakują 2 wykrzykniki !! i fale ))) (((, po czym nad żołnierzami rosną zielone plusiki +!</div>
                 <div class="canvas-wrap">
                     <canvas id="can-cry-1" width="220" height="220"></canvas>
                 </div>
                 <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerCryProto(1)">WYKRZYKNIJ KOMENDĘ</button>
+                <div class="status-badge">KANON ROZGRYWKI</div>
             </div>
 
             <div class="card">
@@ -1217,19 +1218,41 @@
                     ctx.globalAlpha = alpha;
                     ctx.fillStyle = '#f39c12';
 
-                    if (id === 1) { // 1. Łuki Akustyczne )))
-                        let r = 16 + p * 60;
-                        [-1, 1].forEach(dir => {
-                            for(let i=0; i<5; i++) {
-                                let ang = (dir === 1 ? 0 : Math.PI) + (i - 2) * 0.22;
-                                let qx = Math.floor((110 + Math.cos(ang)*r)/4)*4;
-                                let qy = Math.floor((110 + Math.sin(ang)*r)/4)*4;
-                                ctx.fillRect(qx, qy, 4, 12);
-                            }
-                        });
-                        ctx.fillStyle = '#ffff00';
-                        ctx.fillRect(108, Math.floor((80 - p*20)/4)*4, 4, 12);
-                        ctx.fillRect(108, Math.floor((96 - p*20)/4)*4, 4, 4);
+                    if (id === 1) { // ★ Ostateczny Wariant 1+5: !! + fale ))) + plusiki +
+                        if (p < 0.65) {
+                            let p1 = p / 0.65;
+                            ctx.globalAlpha = Math.max(0, 1 - Math.pow(p1, 2));
+                            let fy = Math.floor((86 - p1 * 16) / 2) * 2;
+                            ctx.fillStyle = '#ffff00';
+                            ctx.fillRect(102, fy, 4, 10); ctx.fillRect(102, fy+12, 4, 4);
+                            ctx.fillRect(114, fy, 4, 10); ctx.fillRect(114, fy+12, 4, 4);
+
+                            let wr = 16 + p1 * 55;
+                            ctx.fillStyle = '#f39c12';
+                            [-1, 1].forEach(dir => {
+                                for(let arc=0; arc<3; arc++) {
+                                    let ar = wr - arc * 14;
+                                    if (ar > 8) {
+                                        for(let st=-2; st<=2; st++) {
+                                            let ang = (dir===1?0:Math.PI) + st * 0.22;
+                                            let wx = Math.floor((110 + Math.cos(ang)*ar)/4)*4;
+                                            let wy = Math.floor((110 + Math.sin(ang)*ar*0.75)/4)*4;
+                                            ctx.fillRect(wx, wy, 4, 8);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        if (p >= 0.25) {
+                            let p2 = (p - 0.25) / 0.75;
+                            ctx.globalAlpha = Math.max(0, 1 - Math.pow(p2, 1.8));
+                            [110, 70, 150].forEach((hx, idx) => {
+                                let sy = Math.floor((88 + (idx===0?0:15) - p2 * 26) / 2) * 2;
+                                ctx.fillStyle = '#7cfc00';
+                                ctx.fillRect(hx-2, sy-6, 4, 12); ctx.fillRect(hx-6, sy-2, 12, 4);
+                                ctx.fillStyle = '#2b6611'; ctx.fillRect(hx-2, sy+6, 4, 2);
+                            });
+                        }
                     } else if (id === 2) { // 2. Promienie Sunburst
                         for(let ray=0; ray<12; ray++) {
                             let ang = ray * (Math.PI / 6) + p * 0.5;

@@ -1,6 +1,6 @@
 import { stats, state, WEAPONS, NAMES, customSquadDesign } from '../config.js';
 import { getSoldierSprites, getSoldierBodySprites, getWeaponSprite, bloodCtx } from '../sprites.js';
-import { createParticles, createAuraRing } from './Particle.js';
+import { createParticles, triggerBattleCryEffect } from './Particle.js';
 import { Bullet } from './Bullet.js';
 import { PlasmaBeam } from './PlasmaBeam.js';
 import { playSound } from '../sfx.js';
@@ -193,7 +193,7 @@ export class Soldier {
                 this.battleCryTimer = 30.0;
                 state.squadBuffTimer = 6.0;
                 playSound('sfx_commander_war_scream', 0.11);
-                createAuraRing(this.x, this.y, '#f39c12');
+                triggerBattleCryEffect(this);
                 createParticles(this.x, this.y, '#f39c12', 20, 50);
                 console.warn(`[OKRZYK BOJOWY] Dowódca wydał okrzyk dający +35% do prędkości ruchu i strzelania na 6s!`);
             }

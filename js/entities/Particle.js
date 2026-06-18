@@ -91,54 +91,90 @@ export class CritIndicator {
     }
 }
 
-export class AuraRing {
-    constructor(x, y, color = '#f39c12', maxRadius = 220, duration = 0.8) {
-        this.x = x;
-        this.y = y;
-        this.color = color;
-        this.maxRadius = maxRadius;
-        this.duration = duration;
-        this.life = duration;
-        this.radius = 12;
+export class BattleCryEffect {
+    constructor(commander) {
+        this.commander = commander;
+        this.life = 1.15;
+        this.maxLife = 1.15;
+        this.x = commander.x;
+        this.y = commander.y;
     }
-    
+
     update(dt) {
         this.life -= dt;
-        let progress = 1 - (this.life / this.duration);
-        let ease = 1 - Math.pow(1 - progress, 2);
-        this.radius = 12 + ease * (this.maxRadius - 12);
+        if (this.commander && this.commander.hp > 0) {
+            this.x = this.commander.x;
+            this.y = this.commander.y;
+        }
     }
-    
+
     draw(ctx) {
         if (this.life <= 0) return;
         ctx.save();
-        let progress = 1 - (this.life / this.duration);
-        let alpha = Math.max(0, 1 - progress);
-        
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = this.color;
-        
-        // Generowanie klasycznego retro Pixel Art Ring (siatka skokowa 4x4px)
-        let r = this.radius;
-        let steps = Math.floor(Math.PI * 2 * r / 10);
-        steps = Math.max(20, Math.min(56, steps));
-        
-        for (let i = 0; i < steps; i++) {
-            let angle = (i / steps) * Math.PI * 2;
-            let px = this.x + Math.cos(angle) * r;
-            let py = this.y + Math.sin(angle) * r * 0.85; // perspektywa 2D top-down
-            
-            px = Math.floor(px / 4) * 4;
-            py = Math.floor(py / 4) * 4;
-            
-            ctx.fillRect(px, py, 4, 4);
+        let elapsed = this.maxLife - this.life;
+
+        // FAZA 1: DWA WYKRZYKNIKI "! !" ORAZ FALE ))) ((( NAD DOWÓDCĄ (0.0s - 0.65s)
+        if (elapsed < 0.7) {
+            let p = elapsed / 0.7;
+            let alpha = Math.max(0, 1 - Math.pow(p, 2));
+            ctx.globalAlpha = alpha;
+
+            // 1. Dwa wykrzykniki !! nad głową
+            let floatY = Math.floor((this.y - 24 - p * 16) / 2) * 2;
+            ctx.fillStyle = '#ffff00';
+            // Lewy !
+            ctx.fillRect(this.x - 8, floatY, 4, 10);
+            ctx.fillRect(this.x - 8, floatY + 12, 4, 4);
+            // Prawy !
+            ctx.fillRect(this.x + 4, floatY, 4, 10);
+            ctx.fillRect(this.x + 4, floatY + 12, 4, 4);
+
+            // 2. Fale akustyczne ))) (((
+            let waveR = 16 + p * 60;
+            ctx.fillStyle = '#f39c12';
+            [-1, 1].forEach(dir => {
+                for (let arc = 0; arc < 3; arc++) {
+                    let r = waveR - arc * 14;
+                    if (r > 8) {
+                        for (let step = -2; step <= 2; step++) {
+                            let ang = (dir === 1 ? 0 : Math.PI) + step * 0.22;
+                            let wx = Math.floor((this.x + Math.cos(ang) * r) / 4) * 4;
+                            let wy = Math.floor((this.y + Math.sin(ang) * r * 0.75) / 4) * 4;
+                            ctx.fillRect(wx, wy, 4, 8);
+                        }
+                    }
+                }
+            });
         }
-        
+
+        // FAZA 2: PLUSIKI + NAD WSZYSTKIMI ŻOŁNIERZAMI W ODDZIALE (0.25s - 1.15s)
+        if (elapsed >= 0.25) {
+            let p2 = (elapsed - 0.25) / 0.9;
+            let alpha2 = Math.max(0, 1 - Math.pow(p2, 1.8));
+            ctx.globalAlpha = alpha2;
+
+            if (state.squad) {
+                state.squad.forEach(soldier => {
+                    if (soldier.hp > 0) {
+                        let sy = Math.floor((soldier.y - 22 - p2 * 26) / 2) * 2;
+                        let sx = Math.floor(soldier.x / 2) * 2;
+
+                        ctx.fillStyle = '#7cfc00'; // soczysta zieleń morale
+                        ctx.fillRect(sx - 2, sy - 6, 4, 12);
+                        ctx.fillRect(sx - 6, sy - 2, 12, 4);
+
+                        ctx.fillStyle = '#2b6611'; // kontur/cień
+                        ctx.fillRect(sx - 2, sy + 6, 4, 2);
+                    }
+                });
+            }
+        }
+
         ctx.restore();
     }
 }
 
-export function createAuraRing(x, y, color) {
+export function triggerBattleCryEffect(commander) {
     if (!state.auras) state.auras = [];
-    state.auras.push(new AuraRing(x, y, color));
+    state.auras.push(new BattleCryEffect(commander));
 }
