@@ -987,7 +987,6 @@ export class Soldier {
             }
         }
     }
-}
 
     applySkillPromotion(treeType) {
         if (!CLASS_SKILL_TREES[this.soldierClass]) return;
