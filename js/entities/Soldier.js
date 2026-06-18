@@ -9,6 +9,7 @@ import { Crate } from './Crate.js';
 import { Medkit } from './Medkit.js';
 import { Turret } from './Turret.js';
 import { FieldMine } from './FieldMine.js';
+import { CLASS_SKILL_TREES } from '../promotions.js';
 
 const gunFireImg = new Image();
 gunFireImg.src = 'img/gun_fire.png';
@@ -92,6 +93,9 @@ export class Soldier {
         }
         
         this.soldierClass = chosenClass;
+        this.treeALvl = 0;
+        this.treeBLvl = 0;
+        this.unlockedSkills = {};
         
         if (chosenClass === 'COMMANDER') {
             // DOWÓDCA (Squad Commander) - podlega modyfikacjom z kreatora ADMIN
@@ -981,6 +985,39 @@ export class Soldier {
                 state.crates.push(new Crate(this.x, this.y));
                 console.warn("Martyrdom zrzucił Skrzynkę Zaopatrzenia w miejscu zgonu!");
             }
+        }
+    }
+}
+
+    applySkillPromotion(treeType) {
+        if (!CLASS_SKILL_TREES[this.soldierClass]) return;
+        const treeObj = treeType === 'A' ? CLASS_SKILL_TREES[this.soldierClass].treeA : CLASS_SKILL_TREES[this.soldierClass].treeB;
+        if (!treeObj) return;
+        
+        let currentLvl = treeType === 'A' ? this.treeALvl : this.treeBLvl;
+        if (currentLvl >= 3) return; // limit 3 poziomów
+        
+        currentLvl++;
+        if (treeType === 'A') this.treeALvl = currentLvl;
+        else this.treeBLvl = currentLvl;
+        
+        let skill = treeObj.skills[currentLvl - 1];
+        if (skill) {
+            this.unlockedSkills[skill.id] = true;
+            console.warn(`[AWANS UMIEJĘTNOŚCI] ${this.name} odblokował: ${skill.name} (${skill.desc})`);
+            
+            if (skill.id === 'comm_a1') {
+                this.hasAirstrike = true;
+                this.accessoryIdx = 2;
+            } else if (skill.id === 'comm_b2') {
+                this.maxHp = (this.maxHp || 3) * 2;
+                this.hp = this.maxHp;
+            } else if (skill.id === 'snip_a2') {
+                this.giantKillerBonus = 0.5;
+            } else if (skill.id === 'snip_b2') {
+                this.hunterInstinct = true;
+            }
+            this.updateSprites();
         }
     }
 }

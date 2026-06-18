@@ -571,6 +571,98 @@ export function adminSetSound(enabled) {
     }
 }
 
+export function showSoldierPromotionScreen(soldier) {
+    if (!soldier || !CLASS_SKILL_TREES[soldier.soldierClass]) return;
+    
+    state.gameState = 'UPGRADE';
+    const screens = document.getElementById('screens');
+    screens.classList.remove('hidden');
+    screens.classList.add('upgrade-mode');
+    document.getElementById('upgradeScreen').classList.remove('hidden');
+    
+    const adminPanel = document.getElementById('adminPanel');
+    if (adminPanel) adminPanel.classList.remove('open');
+    
+    let titleEl = document.getElementById('upgradeTitle');
+    let subEl = document.getElementById('upgradeSubtitle');
+    if (titleEl) { titleEl.innerText = `AWANS: ${soldier.name.toUpperCase()}`; titleEl.classList.remove('hidden'); }
+    if (subEl) { subEl.innerText = `KLASA: ${soldier.soldierClass} (WYBIERZ DRZEWKO ROZWOJU)`; subEl.classList.remove('hidden'); }
+    
+    let optionsDiv = document.getElementById('upgradeOptions');
+    optionsDiv.innerHTML = '';
+    
+    const trees = CLASS_SKILL_TREES[soldier.soldierClass];
+    
+    // Drzewko A
+    if (soldier.treeALvl < 3) {
+        let nextSkillA = trees.treeA.skills[soldier.treeALvl];
+        let isBlack = (soldier.treeALvl === 2);
+        const cardA = buildDogTagCard(
+            `DRZEWKO A: ${trees.treeA.name}`,
+            `★ LVL ${soldier.treeALvl + 1}: ${nextSkillA.name.toUpperCase()}<br><span style="font-size:7px; font-weight:normal; display:block; margin-top:6px; line-height:1.4;">${nextSkillA.desc}</span>`,
+            () => {
+                soldier.applySkillPromotion('A');
+                closePromotionScreen();
+            },
+            isBlack
+        );
+        optionsDiv.appendChild(cardA);
+    } else {
+        const cardA = buildDogTagCard(
+            `DRZEWKO A: ${trees.treeA.name}`,
+            `★ MAKSYMALNY POZIOM<br><span style="font-size:7px; font-weight:normal; display:block; margin-top:6px; color:#777;">Opanowane do perfekcji!</span>`,
+            () => {},
+            false
+        );
+        cardA.style.opacity = '0.45';
+        cardA.style.cursor = 'default';
+        optionsDiv.appendChild(cardA);
+    }
+    
+    // Drzewko B
+    if (soldier.treeBLvl < 3) {
+        let nextSkillB = trees.treeB.skills[soldier.treeBLvl];
+        let isBlack = (soldier.treeBLvl === 2);
+        const cardB = buildDogTagCard(
+            `DRZEWKO B: ${trees.treeB.name}`,
+            `★ LVL ${soldier.treeBLvl + 1}: ${nextSkillB.name.toUpperCase()}<br><span style="font-size:7px; font-weight:normal; display:block; margin-top:6px; line-height:1.4;">${nextSkillB.desc}</span>`,
+            () => {
+                soldier.applySkillPromotion('B');
+                closePromotionScreen();
+            },
+            isBlack
+        );
+        optionsDiv.appendChild(cardB);
+    } else {
+        const cardB = buildDogTagCard(
+            `DRZEWKO B: ${trees.treeB.name}`,
+            `★ MAKSYMALNY POZIOM<br><span style="font-size:7px; font-weight:normal; display:block; margin-top:6px; color:#777;">Opanowane do perfekcji!</span>`,
+            () => {},
+            false
+        );
+        cardB.style.opacity = '0.45';
+        cardB.style.cursor = 'default';
+        optionsDiv.appendChild(cardB);
+    }
+}
+
+function closePromotionScreen() {
+    document.getElementById('screens').classList.add('hidden');
+    document.getElementById('upgradeScreen').classList.add('hidden');
+    state.gameState = 'PLAY';
+    playSound('sfx_airdrop_start', 0.4);
+}
+
+export function adminLvlUpRecruit() {
+    if (!state.squad || state.squad.length === 0) return;
+    // Szukamy pierwszego żyjącego żołnierza z dostępnym awansem
+    let cand = state.squad.find(s => CLASS_SKILL_TREES[s.soldierClass] && (s.treeALvl < 3 || s.treeBLvl < 3));
+    if (!cand) cand = state.squad[0];
+    if (cand && CLASS_SKILL_TREES[cand.soldierClass]) {
+        showSoldierPromotionScreen(cand);
+    }
+}
+
 export function adminSpawnRecruit() {
     stats.maxSquad++;
     state.squad.push(new Soldier(state.camera.x, state.camera.y));
@@ -701,6 +793,7 @@ export function adminRespawnSoldier(className) {
 window.toggleAdminPanel = toggleAdminPanel;
 window.togglePause = togglePause;
 window.adminSetSound = adminSetSound;
+window.adminLvlUpRecruit = adminLvlUpRecruit;
 window.adminSpawnRecruit = adminSpawnRecruit;
 window.adminSpawnDog = adminSpawnDog;
 window.adminGiveWeapon = adminGiveWeapon;
