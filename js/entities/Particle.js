@@ -92,37 +92,48 @@ export class CritIndicator {
 }
 
 export class AuraRing {
-    constructor(x, y, color = '#f39c12', maxRadius = 240, duration = 0.85) {
+    constructor(x, y, color = '#f39c12', maxRadius = 220, duration = 0.8) {
         this.x = x;
         this.y = y;
         this.color = color;
         this.maxRadius = maxRadius;
         this.duration = duration;
         this.life = duration;
-        this.radius = 15;
+        this.radius = 12;
     }
     
     update(dt) {
         this.life -= dt;
         let progress = 1 - (this.life / this.duration);
-        let ease = 1 - Math.pow(1 - progress, 3);
-        this.radius = 15 + ease * (this.maxRadius - 15);
+        let ease = 1 - Math.pow(1 - progress, 2);
+        this.radius = 12 + ease * (this.maxRadius - 12);
     }
     
     draw(ctx) {
         if (this.life <= 0) return;
         ctx.save();
-        let alpha = Math.max(0, (this.life / this.duration) * 0.85);
-        ctx.strokeStyle = this.color;
-        ctx.globalAlpha = alpha;
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.stroke();
+        let progress = 1 - (this.life / this.duration);
+        let alpha = Math.max(0, 1 - progress);
         
+        ctx.globalAlpha = alpha;
         ctx.fillStyle = this.color;
-        ctx.globalAlpha = alpha * 0.22;
-        ctx.fill();
+        
+        // Generowanie klasycznego retro Pixel Art Ring (siatka skokowa 4x4px)
+        let r = this.radius;
+        let steps = Math.floor(Math.PI * 2 * r / 10);
+        steps = Math.max(20, Math.min(56, steps));
+        
+        for (let i = 0; i < steps; i++) {
+            let angle = (i / steps) * Math.PI * 2;
+            let px = this.x + Math.cos(angle) * r;
+            let py = this.y + Math.sin(angle) * r * 0.85; // perspektywa 2D top-down
+            
+            px = Math.floor(px / 4) * 4;
+            py = Math.floor(py / 4) * 4;
+            
+            ctx.fillRect(px, py, 4, 4);
+        }
+        
         ctx.restore();
     }
 }

@@ -192,7 +192,7 @@ export class Soldier {
             if (this.battleCryTimer <= 0) {
                 this.battleCryTimer = 30.0;
                 state.squadBuffTimer = 6.0;
-                playSound('sfx_commander_war_scream', 0.26);
+                playSound('sfx_commander_war_scream', 0.11);
                 createAuraRing(this.x, this.y, '#f39c12');
                 createParticles(this.x, this.y, '#f39c12', 20, 50);
                 console.warn(`[OKRZYK BOJOWY] Dowódca wydał okrzyk dający +35% do prędkości ruchu i strzelania na 6s!`);
