@@ -193,7 +193,7 @@ export class Soldier {
             if (this.battleCryTimer === undefined) this.battleCryTimer = 5.0;
             this.battleCryTimer -= dt;
             if (this.battleCryTimer <= 0) {
-                this.battleCryTimer = 30.0;
+                this.battleCryTimer = 45.0;
                 state.squadBuffTimer = 6.0;
                 playSound('sfx_commander_war_scream', 0.11);
                 triggerBattleCryEffect(this);
