@@ -108,6 +108,8 @@ function update(dt) {
         return;
     }
 
+    if (state.squadBuffTimer > 0) state.squadBuffTimer -= dt;
+
     if (state.airstrikeTimer > 0) {
         state.airstrikeTimer -= dt;
         state.airstrikeBombTimer = (state.airstrikeBombTimer || 0) - dt;

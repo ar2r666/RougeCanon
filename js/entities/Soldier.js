@@ -186,6 +186,19 @@ export class Soldier {
             return; // Bezwzględne zamrożenie fizyki i przemieszczania w trakcie Kamuflażu!
         }
 
+        // --- CECHA DOWÓDCY: MORALE LVL 1 (Okrzyk Bojowy co 30s) ---
+        if (this.soldierClass === 'COMMANDER' && this.unlockedSkills && this.unlockedSkills['comm_b1']) {
+            if (this.battleCryTimer === undefined) this.battleCryTimer = 5.0; // pierwszy okrzyk po 5s
+            this.battleCryTimer -= dt;
+            if (this.battleCryTimer <= 0) {
+                this.battleCryTimer = 30.0;
+                state.squadBuffTimer = 6.0;
+                playSound('sfx_commander_war_scream', 0.85);
+                createParticles(this.x, this.y, '#f39c12', 20, 50);
+                console.warn(`[OKRZYK BOJOWY] Dowódca wydał okrzyk dający +35% do prędkości ruchu i strzelania na 6s!`);
+            }
+        }
+
         // --- CECHA MEDYKA (Zrzut apteczki co 20 sekund) ---
         if (this.soldierClass === 'MEDIC') {
             if (this.medkitTimer === undefined) this.medkitTimer = 20.0;
