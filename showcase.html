@@ -144,6 +144,7 @@
         <button class="tab-btn" onclick="switchTab('tab-entities')">JEDNOSTKI</button>
         <button class="tab-btn" onclick="switchTab('tab-supplies')">ZAOPATRZENIE</button>
         <button class="tab-btn" onclick="switchTab('tab-physics')">FIZYKA ŚMIERCI</button>
+        <button class="tab-btn" onclick="switchTab('tab-warcry')">★ OKRZYKI BOJOWE (5 KONCEPCJI)</button>
     </div>
 
     <!-- ZAKŁADKA 1: EKSPLOZJE -->
@@ -349,6 +350,56 @@
         </div>
     </div>
 
+    <!-- ZAKŁADKA 6: OKRZYK BOJOWY (5 KONCEPCJI) -->
+    <div id="tab-warcry" class="tab-content">
+        <div class="grid-container">
+            <div class="card">
+                <div class="card-title">1. Akustyczne Łuki (Retro Megafon)</div>
+                <div class="card-desc">Klasyczne komiksowe fale akustyczne ))) ((( rozchodzące się od ust z pulsującym wykrzyknikiem ! nad oficera.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-cry-1" width="220" height="220"></canvas>
+                </div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerCryProto(1)">WYKRZYKNIJ KOMENDĘ</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">2. Złote Promienie Morale (Sunburst Glory)</div>
+                <div class="card-desc">Promieniście wychodzące pasy wschodzącego słońca oświetlające podłoże wokół oddziału.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-cry-2" width="220" height="220"></canvas>
+                </div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerCryProto(2)">WYKRZYKNIJ KOMENDĘ</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">3. Tupnięcie Taktyczne (Ground Stampede)</div>
+                <div class="card-desc">Podwójny pierścień taktyczny [+] z wstrząsem ziemi i uniesieniem chmury złotych iskier z gruntu.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-cry-3" width="220" height="220"></canvas>
+                </div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerCryProto(3)">WYKRZYKNIJ KOMENDĘ</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">4. Radar Dowodzenia (Holographic Sweep)</div>
+                <div class="card-desc">Obracający się o 360° promień radaru skanujący sojuszników i pozostawiający zielono-złoty powidok morale.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-cry-4" width="220" height="220"></canvas>
+                </div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerCryProto(4)">WYKRZYKNIJ KOMENDĘ</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">5. Szewrony Awansu (Floating Insignia)</div>
+                <div class="card-desc">Klasyczne Arcade RPG: nad głowami żołnierzy wyskakują złote szewrony ▲▲ podskakujące w perspektywie 3D.</div>
+                <div class="canvas-wrap">
+                    <canvas id="can-cry-5" width="220" height="220"></canvas>
+                </div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerCryProto(5)">WYKRZYKNIJ KOMENDĘ</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -448,7 +499,21 @@
         }
         window.triggerDeathPhysics = triggerDeathPhysics;
 
-        // Auto-wyzwalacz na start, aby cokolwiek się działo od razu
+        let crySims = {
+            1: { active: false, timer: 0 },
+            2: { active: false, timer: 0 },
+            3: { active: false, timer: 0 },
+            4: { active: false, timer: 0 },
+            5: { active: false, timer: 0 }
+        };
+        function triggerCryProto(id) {
+            if (crySims[id]) {
+                crySims[id].active = true;
+                crySims[id].timer = 1.0;
+            }
+        }
+        window.triggerCryProto = triggerCryProto;
+
         setTimeout(() => {
             triggerDeathPhysics('slide');
             triggerDeathPhysics('spin');
@@ -481,6 +546,12 @@
         const canCageGibbet = document.getElementById('can-cage-gibbet').getContext('2d', {alpha: false});
         const canCageAlien = document.getElementById('can-cage-alien').getContext('2d', {alpha: false});
 
+        const canCry1 = document.getElementById('can-cry-1').getContext('2d', {alpha: false});
+        const canCry2 = document.getElementById('can-cry-2').getContext('2d', {alpha: false});
+        const canCry3 = document.getElementById('can-cry-3').getContext('2d', {alpha: false});
+        const canCry4 = document.getElementById('can-cry-4').getContext('2d', {alpha: false});
+        const canCry5 = document.getElementById('can-cry-5').getContext('2d', {alpha: false});
+
         function renderAll() {
             let elapsed = (Date.now() - startTime) / 1000;
             let activeTime = elapsed % maxLife;
@@ -488,7 +559,8 @@
             // Tła dżunglowe
             [canExp, canBazooka, canPlasma, canFlame, canSoldier, canMutant, canDog, canCrate, canRadio,
              canCageBamboo, canCageBone, canCageLaser, canCageRust, canCageSlime, canCageIce, canCageGibbet, canCageAlien,
-             canPhysSlide, canPhysSpin, canPhysBounce, canPhysHeavy].forEach(ctx => {
+             canPhysSlide, canPhysSpin, canPhysBounce, canPhysHeavy,
+             canCry1, canCry2, canCry3, canCry4, canCry5].forEach(ctx => {
                 ctx.fillStyle = ctx.createPattern(tCanvas, 'repeat');
                 ctx.fillRect(0, 0, 220, 220);
             });
@@ -1092,6 +1164,110 @@
                 let oy = (Math.random() - 0.5) * sim.shake;
                 drawEnemyBody(canPhysHeavy, sim.x + ox, sim.y + oy, -Math.PI / 5.5, true);
             }
+
+            function drawProtoHero(ctx, cx, cy, isLeader = false, glowColor = null) {
+                ctx.save();
+                ctx.translate(cx, cy);
+                if (glowColor) {
+                    ctx.fillStyle = glowColor;
+                    ctx.globalAlpha = 0.45;
+                    ctx.fillRect(-11, -19, 22, 40);
+                    ctx.globalAlpha = 1.0;
+                }
+                ctx.fillStyle = isLeader ? '#2c3e50' : '#113311';
+                ctx.fillRect(-8, -16, 16, 12);
+                if (isLeader) {
+                    ctx.fillStyle = '#f39c12';
+                    ctx.fillRect(-2, -14, 4, 4);
+                }
+                ctx.fillStyle = '#ffccaa';
+                ctx.fillRect(-6, -6, 12, 6);
+                ctx.fillStyle = isLeader ? '#1a252f' : '#225522';
+                ctx.fillRect(-8, 0, 16, 14);
+                ctx.fillStyle = '#111111';
+                ctx.fillRect(-8, 14, 6, 6);
+                ctx.fillRect(2, 14, 6, 6);
+                ctx.restore();
+            }
+
+            // --- SYMULACJE 5 KONCEPCJI OKRZYKU BOJOWEGO ---
+            [1, 2, 3, 4, 5].forEach(id => {
+                let sim = crySims[id];
+                let ctx = [null, canCry1, canCry2, canCry3, canCry4, canCry5][id];
+                if (!ctx || !sim) return;
+
+                if (sim.active) {
+                    sim.timer -= dt;
+                    if (sim.timer <= 0) {
+                        sim.active = false;
+                        setTimeout(() => triggerCryProto(id), 2200);
+                    }
+                }
+
+                let p = sim.active ? (1 - sim.timer) : 0;
+                let alpha = sim.active ? Math.max(0, 1 - p) : 0;
+
+                let glow = (sim.active && (id === 2 || id === 4)) ? '#8bde38' : null;
+                drawProtoHero(ctx, 110, 110, true, glow);
+                drawProtoHero(ctx, 70, 125, false, glow);
+                drawProtoHero(ctx, 150, 125, false, glow);
+
+                if (sim.active) {
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = '#f39c12';
+
+                    if (id === 1) { // 1. Łuki Akustyczne )))
+                        let r = 16 + p * 60;
+                        [-1, 1].forEach(dir => {
+                            for(let i=0; i<5; i++) {
+                                let ang = (dir === 1 ? 0 : Math.PI) + (i - 2) * 0.22;
+                                let qx = Math.floor((110 + Math.cos(ang)*r)/4)*4;
+                                let qy = Math.floor((110 + Math.sin(ang)*r)/4)*4;
+                                ctx.fillRect(qx, qy, 4, 12);
+                            }
+                        });
+                        ctx.fillStyle = '#ffff00';
+                        ctx.fillRect(108, Math.floor((80 - p*20)/4)*4, 4, 12);
+                        ctx.fillRect(108, Math.floor((96 - p*20)/4)*4, 4, 4);
+                    } else if (id === 2) { // 2. Promienie Sunburst
+                        for(let ray=0; ray<12; ray++) {
+                            let ang = ray * (Math.PI / 6) + p * 0.5;
+                            let dist = 14 + p * 75;
+                            let rx = Math.floor((110 + Math.cos(ang)*dist)/4)*4;
+                            let ry = Math.floor((110 + Math.sin(ang)*dist*0.8)/4)*4;
+                            ctx.fillRect(rx, ry, 6, 6);
+                        }
+                    } else if (id === 3) { // 3. Tupnięcie Ground Stampede
+                        let r = 14 + p * 70;
+                        let steps = 28;
+                        for(let s=0; s<steps; s++) {
+                            let ang = (s/steps)*Math.PI*2;
+                            let sx = Math.floor((110 + Math.cos(ang)*r)/4)*4;
+                            let sy = Math.floor((120 + Math.sin(ang)*r*0.75)/4)*4;
+                            ctx.fillRect(sx, sy, 4, 4);
+                        }
+                    } else if (id === 4) { // 4. Radar Dowodzenia
+                        let sweepAng = p * Math.PI * 4;
+                        let r = 65;
+                        for(let i=0; i<15; i++) {
+                            let a = sweepAng - i * 0.08;
+                            let rx = Math.floor((110 + Math.cos(a)*r)/4)*4;
+                            let ry = Math.floor((110 + Math.sin(a)*r*0.8)/4)*4;
+                            ctx.fillStyle = i === 0 ? '#ffffff' : '#8bde38';
+                            ctx.fillRect(rx, ry, 4, 4);
+                        }
+                    } else if (id === 5) { // 5. Szewrony Awansu ▲▲
+                        [110, 70, 150].forEach((hx, idx) => {
+                            let hy = Math.floor((88 + (idx===0?0:15) - p*40)/4)*4;
+                            ctx.fillStyle = '#ffaa00';
+                            ctx.fillRect(hx-6, hy, 12, 4);
+                            ctx.fillRect(hx-2, hy-4, 4, 4);
+                        });
+                    }
+                    ctx.restore();
+                }
+            });
 
             requestAnimationFrame(renderAll);
         }
