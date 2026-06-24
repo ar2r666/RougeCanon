@@ -145,6 +145,7 @@
         <button class="tab-btn" onclick="switchTab('tab-supplies')">ZAOPATRZENIE</button>
         <button class="tab-btn" onclick="switchTab('tab-physics')">FIZYKA ŚMIERCI</button>
         <button class="tab-btn" onclick="switchTab('tab-warcry')">★ OKRZYKI BOJOWE (5 KONCEPCJI)</button>
+        <button class="tab-btn" onclick="switchTab('tab-banners')">★ BANNERY ODDZIAŁU (6 WARIANTÓW)</button>
     </div>
 
     <!-- ZAKŁADKA 1: EKSPLOZJE -->
@@ -401,6 +402,49 @@
         </div>
     </div>
 
+    <!-- ZAKŁADKA 7: BANNERY ODDZIAŁU (6 WARIANTÓW) -->
+    <div id="tab-banners" class="tab-content">
+        <div class="grid-container">
+            <div class="card">
+                <div class="card-title">1. Proporzec Zwiadowczy (Mini)</div>
+                <div class="card-desc">Bardzo krótka trójkątna chorągiewka zwiadowcza umiejscowiona jak plecak na plecach dowódcy.</div>
+                <div class="canvas-wrap"><canvas id="can-banner-1" width="220" height="220"></canvas></div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerBannerProto(1)">AKTYWUJ BANNER</button>
+            </div>
+            <div class="card">
+                <div class="card-title">2. Proporzec Drużynowy (Short)</div>
+                <div class="card-desc">Kompaktowy prostokątny baner khaki na krótkiej poprzeczce z lekko poszarpanym dołem.</div>
+                <div class="canvas-wrap"><canvas id="can-banner-2" width="220" height="220"></canvas></div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerBannerProto(2)">AKTYWUJ BANNER</button>
+            </div>
+            <div class="card" style="border-color:#ffff00;">
+                <div class="card-title" style="color:#ffff00;">★ 3. Sztandar Warhammer (Kanon w grze)</div>
+                <div class="card-desc">Średni proporcjonalnie sztandar bojowy retro z falami barierowymi rozchodzącymi się bez wypełnienia.</div>
+                <div class="canvas-wrap"><canvas id="can-banner-3" width="220" height="220"></canvas></div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerBannerProto(3)">AKTYWUJ BANNER</button>
+                <div class="status-badge">KANON ROZGRYWKI</div>
+            </div>
+            <div class="card">
+                <div class="card-title">4. Wydłużona Chorągiew Rycerska (Guidon)</div>
+                <div class="card-desc">Wąska, pnąca się wysoko w górę i zwisająca w dół chorągiew z wycięciem typu jaskółczy ogon.</div>
+                <div class="canvas-wrap"><canvas id="can-banner-4" width="220" height="220"></canvas></div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerBannerProto(4)">AKTYWUJ BANNER</button>
+            </div>
+            <div class="card">
+                <div class="card-title">5. Wysoki Sztandar Legionu (Tall Imperial)</div>
+                <div class="card-desc">Wysokie płótno bojowe ze złotymi okuciami po bokach i spiczastym grotem nad głową dowódcy.</div>
+                <div class="canvas-wrap"><canvas id="can-banner-5" width="220" height="220"></canvas></div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerBannerProto(5)">AKTYWUJ BANNER</button>
+            </div>
+            <div class="card">
+                <div class="card-title">6. Wielki Sztandar Bojowy (Grand Twin)</div>
+                <div class="card-desc">Szeroki sztandar z głównym płótnem centralnym i dwoma bocznymi opadającymi proporcami.</div>
+                <div class="canvas-wrap"><canvas id="can-banner-6" width="220" height="220"></canvas></div>
+                <button class="btn" style="padding:8px 16px; font-size:9px; width:auto; margin:0;" onclick="triggerBannerProto(6)">AKTYWUJ BANNER</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -515,6 +559,22 @@
         }
         window.triggerCryProto = triggerCryProto;
 
+        const bannerSims = {
+            1: { active: false, timer: 0 },
+            2: { active: false, timer: 0 },
+            3: { active: false, timer: 0 },
+            4: { active: false, timer: 0 },
+            5: { active: false, timer: 0 },
+            6: { active: false, timer: 0 }
+        };
+        function triggerBannerProto(id) {
+            if (bannerSims[id]) {
+                bannerSims[id].active = true;
+                bannerSims[id].timer = 3.0;
+            }
+        }
+        window.triggerBannerProto = triggerBannerProto;
+
         setTimeout(() => {
             triggerDeathPhysics('slide');
             triggerDeathPhysics('spin');
@@ -552,6 +612,12 @@
         const canCry3 = document.getElementById('can-cry-3').getContext('2d', {alpha: false});
         const canCry4 = document.getElementById('can-cry-4').getContext('2d', {alpha: false});
         const canCry5 = document.getElementById('can-cry-5').getContext('2d', {alpha: false});
+        const canBanner1 = document.getElementById('can-banner-1').getContext('2d', {alpha: false});
+        const canBanner2 = document.getElementById('can-banner-2').getContext('2d', {alpha: false});
+        const canBanner3 = document.getElementById('can-banner-3').getContext('2d', {alpha: false});
+        const canBanner4 = document.getElementById('can-banner-4').getContext('2d', {alpha: false});
+        const canBanner5 = document.getElementById('can-banner-5').getContext('2d', {alpha: false});
+        const canBanner6 = document.getElementById('can-banner-6').getContext('2d', {alpha: false});
 
         function renderAll() {
             let elapsed = (Date.now() - startTime) / 1000;
@@ -561,7 +627,8 @@
             [canExp, canBazooka, canPlasma, canFlame, canSoldier, canMutant, canDog, canCrate, canRadio,
              canCageBamboo, canCageBone, canCageLaser, canCageRust, canCageSlime, canCageIce, canCageGibbet, canCageAlien,
              canPhysSlide, canPhysSpin, canPhysBounce, canPhysHeavy,
-             canCry1, canCry2, canCry3, canCry4, canCry5].forEach(ctx => {
+             canCry1, canCry2, canCry3, canCry4, canCry5,
+             canBanner1, canBanner2, canBanner3, canBanner4, canBanner5, canBanner6].forEach(ctx => {
                 ctx.fillStyle = ctx.createPattern(tCanvas, 'repeat');
                 ctx.fillRect(0, 0, 220, 220);
             });
@@ -1290,6 +1357,97 @@
                     }
                     ctx.restore();
                 }
+            });
+
+            // --- SYMULACJE 6 WARIANTÓW BANNERÓW ODDZIAŁU ---
+            [1, 2, 3, 4, 5, 6].forEach(id => {
+                let sim = bannerSims[id];
+                let ctx = [null, canBanner1, canBanner2, canBanner3, canBanner4, canBanner5, canBanner6][id];
+                if (!ctx || !sim) return;
+
+                if (sim.active) {
+                    sim.timer -= dt;
+                    if (sim.timer <= 0) {
+                        sim.active = false;
+                        setTimeout(() => triggerBannerProto(id), 1500);
+                    }
+                }
+
+                if (sim.active) {
+                    ctx.save();
+                    let numWaves = 2;
+                    for (let w = 0; w < numWaves; w++) {
+                        let phase = ((Date.now() / 900) + w * 0.5) % 1.0;
+                        let radius = 10 + phase * 32;
+                        let alpha = Math.sin(phase * Math.PI) * 0.85;
+                        ctx.fillStyle = `rgba(0, 220, 255, ${alpha})`;
+                        let numPixels = Math.floor(radius * 1.8);
+                        for (let p = 0; p < numPixels; p++) {
+                            let ang = (p / numPixels) * Math.PI * 2;
+                            let px = Math.floor((110 + Math.cos(ang) * radius) / 2) * 2;
+                            let py = Math.floor((115 + Math.sin(ang) * radius * 0.85) / 2) * 2;
+                            ctx.fillRect(px, py, 2, 2);
+                        }
+                    }
+                    ctx.restore();
+                }
+
+                drawProtoHero(ctx, 110, 120, true);
+                drawProtoHero(ctx, 140, 130, false);
+
+                ctx.save();
+                ctx.translate(104, 110);
+                if (id === 1) { // 1. Proporzec Zwiadowczy (Mini)
+                    ctx.fillStyle = '#778899'; ctx.fillRect(-1, -16, 2, 16);
+                    ctx.fillStyle = '#cccccc'; ctx.fillRect(-1, -18, 2, 2);
+                    ctx.fillStyle = '#b5a675'; ctx.fillRect(-5, -14, 8, 6);
+                    ctx.fillStyle = '#8f8052'; ctx.fillRect(2, -14, 1, 6);
+                } else if (id === 2) { // 2. Proporzec Drużynowy (Short)
+                    ctx.fillStyle = '#778899'; ctx.fillRect(-1, -22, 2, 22);
+                    ctx.fillStyle = '#cccccc'; ctx.fillRect(-1, -24, 2, 2);
+                    ctx.fillStyle = '#556677'; ctx.fillRect(-5, -20, 10, 2);
+                    ctx.fillStyle = '#b5a675'; ctx.fillRect(-4, -18, 8, 10);
+                    ctx.fillRect(-4, -8, 2, 2); ctx.fillRect(2, -8, 2, 2);
+                } else if (id === 3) { // 3. Warhammer Standard (Medium - Kanon w grze)
+                    ctx.fillStyle = '#778899'; ctx.fillRect(-1, -30, 2, 22);
+                    ctx.fillStyle = '#cccccc'; ctx.fillRect(-1, -33, 2, 3);
+                    ctx.fillStyle = '#556677'; ctx.fillRect(-7, -26, 14, 2);
+                    ctx.fillStyle = '#cccccc'; ctx.fillRect(-8, -27, 2, 4); ctx.fillRect(6, -27, 2, 4);
+                    ctx.fillStyle = '#b5a675'; ctx.fillRect(-6, -24, 12, 14);
+                    ctx.fillRect(-6, -10, 2, 2); ctx.fillRect(-2, -10, 2, 3); ctx.fillRect(2, -10, 2, 1);
+                    ctx.fillStyle = '#3a4421'; ctx.fillRect(-2, -19, 4, 4);
+                } else if (id === 4) { // 4. Wydłużona Chorągiew Rycerska (Guidon)
+                    ctx.fillStyle = '#778899'; ctx.fillRect(-1, -36, 2, 28);
+                    ctx.fillStyle = '#cccccc'; ctx.fillRect(-1, -39, 2, 3);
+                    ctx.fillStyle = '#556677'; ctx.fillRect(-5, -32, 10, 2);
+                    ctx.fillStyle = '#b5a675'; ctx.fillRect(-4, -30, 8, 20);
+                    ctx.fillStyle = '#3a4421'; ctx.fillRect(-1, -24, 2, 8);
+                    ctx.clearRect(-2, -10, 4, 4);
+                } else if (id === 5) { // 5. Wysoki Sztandar Legionu (Tall Imperial)
+                    ctx.fillStyle = '#778899'; ctx.fillRect(-1, -42, 2, 34);
+                    ctx.fillStyle = '#cccccc'; ctx.fillRect(-2, -46, 4, 4);
+                    ctx.fillStyle = '#556677'; ctx.fillRect(-8, -38, 16, 3);
+                    ctx.fillStyle = '#b5a675'; ctx.fillRect(-7, -35, 14, 24);
+                    ctx.fillRect(-7, -11, 3, 3); ctx.fillRect(-1, -11, 2, 4); ctx.fillRect(4, -11, 3, 2);
+                    ctx.fillStyle = '#ffd700'; ctx.fillRect(-8, -39, 2, 4); ctx.fillRect(6, -39, 2, 4);
+                    ctx.fillStyle = '#3a4421'; ctx.fillRect(-3, -26, 6, 6);
+                } else if (id === 6) { // 6. Podwójny Wielki Sztandar Bojowy (Grand Twin)
+                    ctx.fillStyle = '#778899'; ctx.fillRect(-1, -46, 2, 38);
+                    ctx.fillStyle = '#cccccc'; ctx.fillRect(-3, -50, 6, 4);
+                    ctx.fillStyle = '#556677'; ctx.fillRect(-10, -42, 20, 3);
+                    ctx.fillStyle = '#b5a675'; ctx.fillRect(-9, -39, 18, 26);
+                    ctx.fillRect(-9, -13, 4, 4); ctx.fillRect(-2, -13, 4, 5); ctx.fillRect(5, -13, 4, 3);
+                    ctx.fillStyle = '#8b0000'; ctx.fillRect(-4, -30, 8, 8); ctx.fillStyle = '#fff'; ctx.fillRect(-2, -28, 4, 4);
+                }
+                ctx.restore();
+
+                ctx.save();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '8px "Press Start 2P", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText("DOWÓDCA", 110, 88);
+                ctx.fillText("REKRUT", 140, 98);
+                ctx.restore();
             });
 
             requestAnimationFrame(renderAll);

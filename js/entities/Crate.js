@@ -35,15 +35,6 @@ export class Crate {
         if (this.isWeaponDropped) {
             for (let s of state.squad) {
                 if (s.hp > 0 && Math.hypot(s.x - this.x, s.y - this.y) < this.radius + s.radius + 4) {
-                    if (this.droppedWeapon === WEAPONS.SPECIAL_AIRSTRIKE) {
-                        s.hasAirstrike = true;
-                        s.accessoryIdx = 5; // Radio
-                        s.updateSprites();
-                        playSound('sfx_click', 0.5);
-                        createParticles(this.x, this.y, '#ff3300', 20, 60);
-                        this.life = 0;
-                        break;
-                    }
                     if (!s.storedWeapon) {
                         s.storedWeapon = s.weapon;
                     }
@@ -149,7 +140,7 @@ export class Crate {
         
         if (this.hp <= 0) {
             this.isDestroyed = true;
-            let choices = [WEAPONS.SPECIAL_PLASMA, WEAPONS.SPECIAL_FLAMETHROWER, WEAPONS.SPECIAL_AIRSTRIKE];
+            let choices = [WEAPONS.SPECIAL_PLASMA, WEAPONS.SPECIAL_FLAMETHROWER];
             this.droppedWeapon = choices[Math.floor(Math.random() * choices.length)];
             
             playSound('sfx_crate_destroy', 0.6);

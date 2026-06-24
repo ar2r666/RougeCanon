@@ -1,6 +1,6 @@
 import { state, stats } from './config.js';
 import { playSound } from './sfx.js';
-import { updateHUD } from './ui.js';
+import { updateHUD, triggerActiveSkill } from './ui.js';
 import { Decoy } from './entities/Decoy.js';
 import { createParticles } from './entities/Particle.js';
 
@@ -15,42 +15,53 @@ export function initInput() {
         }
         if (state.gameState !== 'PLAY') return;
         
-        // Tradycyjny Nalot (z gry)
+        // Skróty klawiszowe dla aktywnych umiejętności Dowódcy
         if (e.code === 'Space') {
-            let radioMan = state.squad.find(s => s.hasAirstrike);
-            if (radioMan) {
-                radioMan.hasAirstrike = false;
-                radioMan.accessoryIdx = 0;
-                radioMan.updateSprites();
-                playSound('sfx_click', 0.7);
-                state.airstrikeTimer = 3.0;
-            }
+            triggerActiveSkill('comm_a1');
+        }
+        if (e.code === 'KeyB') {
+            triggerActiveSkill('comm_b1');
+        }
+        if (e.code === 'KeyV') {
+            triggerActiveSkill('comm_b3');
         }
         
-        // Skróty [1], [2], [3]... dla Doktryn Taktycznych z ekwipunku
+        // Wyzwalanie klawiszami 1,2,3... wszystkich odblokowanych aktywnych umiejętności i doktryn
         let num = parseInt(e.key, 10);
         if (!isNaN(num) && num >= 1 && num <= 9) {
-            let slotIdx = num - 1;
-            if (state.tacticalDoctrines && state.tacticalDoctrines[slotIdx]) {
-                let doc = state.tacticalDoctrines[slotIdx];
-                if (doc.charge >= 100) {
-                    doc.charge = 0; // zużycie ładunku
-                    playSound('sfx_airdrop_start', 0.15); // Specjalny taktyczny jingle
-                    
-                    // Inicjacja efektu Doktryny
-                    if (doc.type === 'airstrike') {
-                        state.airstrikeTimer = 3.0; // Nalot
-                    } else if (doc.type === 'decoy') {
-                        // Spawnowanie fizycznego wabika w punkcie marszu gracza
-                        if (!state.decoys) state.decoys = [];
-                        state.decoys.push(new Decoy(state.targetPoint.x, state.targetPoint.y));
-                        createParticles(state.targetPoint.x, state.targetPoint.y, '#ffff00', 10, 35); // iskry zrzutu
-                        console.warn("Aktywowano Wabik: Decoy rozstawiony w punkcie celownika!");
+            let commander = state.squad && state.squad.find(s => s.soldierClass === 'COMMANDER' && s.hp > 0);
+            let activeSkills = [];
+            if (commander) {
+                if (commander.hasAirstrike) activeSkills.push('comm_a1');
+                if (commander.unlockedSkills && commander.unlockedSkills['comm_a2']) activeSkills.push('comm_a2');
+                if (commander.unlockedSkills && commander.unlockedSkills['comm_b1']) activeSkills.push('comm_b1');
+                if (commander.unlockedSkills && commander.unlockedSkills['comm_b3']) activeSkills.push('comm_b3');
+            }
+
+            if (num <= activeSkills.length) {
+                triggerActiveSkill(activeSkills[num - 1]);
+            } else {
+                let slotIdx = num - 1 - activeSkills.length;
+                if (state.tacticalDoctrines && state.tacticalDoctrines[slotIdx]) {
+                    let doc = state.tacticalDoctrines[slotIdx];
+                    if (doc.charge >= 100) {
+                        doc.charge = 0; // zużycie ładunku
+                        playSound('sfx_airdrop_start', 0.15); // Specjalny taktyczny jingle
+                        
+                        // Inicjacja efektu Doktryny
+                        if (doc.type === 'airstrike') {
+                            state.airstrikeTimer = 3.0; // Nalot
+                        } else if (doc.type === 'decoy') {
+                            if (!state.decoys) state.decoys = [];
+                            state.decoys.push(new Decoy(state.targetPoint.x, state.targetPoint.y));
+                            createParticles(state.targetPoint.x, state.targetPoint.y, '#ffff00', 10, 35);
+                            console.warn("Aktywowano Wabik: Decoy rozstawiony w punkcie celownika!");
+                        }
+                        
+                        updateHUD(); // Błyskawiczne odświeżenie HUD!
+                    } else {
+                        playSound('sfx_click', 0.2); // kliknięcie odmowy (nie naładowana)
                     }
-                    
-                    updateHUD(); // Błyskawiczne odświeżenie HUD!
-                } else {
-                    playSound('sfx_click', 0.2); // kliknięcie odmowy (nie naładowana)
                 }
             }
         }

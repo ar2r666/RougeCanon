@@ -9,19 +9,19 @@ Dokument rozkłada wdrożenie pozostałych **23 umiejętności z nieśmiertelnik
 
 ## DZIEŃ 1: Dokończenie Dowódcy (Commander: Radio & Morale LVL 2-3)
 **Cel:** Domknięcie wsparcia radiowego oraz ostatecznych Czarnych Blaszek Dowódcy.
-* [ ] **Task 1.1:** `[comm_a1]` **Nalot** 
+* [x] **Task 1.1:** `[comm_a1]` **Nalot** 
   * *Logika:* Powiązanie radia z tradycyjnym wezwaniem bombardowania.
   * *Polishing:* SFX szumu krótkofalówki + zielony celownik dywanowy na ziemi.
-* [ ] **Task 1.2:** `[comm_a2]` **Nalot dymny** 
+* [x] **Task 1.2:** `[comm_a2]` **Nalot dymny** 
   * *Logika:* Radio rzuca zasłonę dymną dającą oddziałowi 50% szans na unik pocisków wroga.
   * *Polishing:* SFX syczącego dymu + rozszerzająca się cząsteczkowa szara chmura maskująca.
 * [ ] **Task 1.3:** `[comm_a3]` **Orbitalny Laser Jonowy** *(Black Tag Ultimate)*
   * *Logika:* Wezwanie promienia z kosmosu potężnie rażącego wrogów w obszarze wskaźnika myszy przez 3s.
   * *Polishing:* SFX ciężkiego ładowania energii + błękitno-biały słup plazmy z mignięciem ekranu.
-* [ ] **Task 1.4:** `[comm_b2]` **Charyzma Lidera** 
+* [x] **Task 1.4:** `[comm_b2]` **Charyzma Lidera** 
   * *Logika:* Wszyscy rekruci w składzie zyskują +1 dodatkowy pasek maksymalnego HP (+100% HP).
-  * *Polishing:* Złota obwódka HUD wokół paska zdrowia każdego wzmocnionego rekruta.
-* [ ] **Task 1.5:** `[comm_b3]` **Banner Oddziału** *(Black Tag Ultimate)*
+  * *Polishing:* Złota obwódka HUD wokół dodanego paska zdrowia każdego wzmocnionego rekruta.
+* [x] **Task 1.5:** `[comm_b3]` **Banner Oddziału** *(Black Tag Ultimate)*
   * *Logika:* Ładowanie paska z walki -> 8s nietykalności (0 dmg) i odbijanie pocisków wroga z mocą 200%.
   * *Polishing:* SFX wojskowej fanfary + lśniący złoty bąbel pola siłowego nad całym oddziałem.
 

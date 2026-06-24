@@ -15,7 +15,7 @@ export const CLASS_SKILL_TREES = {
             skills: [
                 { id: "comm_b1", name: "Okrzyk Bojowy", desc: "Co 45s wydaje okrzyk dający +45% do prędkości ruchu i +50% do szybkostrzelności na 6s." },
                 { id: "comm_b2", name: "Charyzma Lidera", desc: "Wszyscy żołnierze w składzie zyskują +1 dodatkowy pasek maksymalnego zdrowia (+100% HP)." },
-                { id: "comm_b3", name: "Banner Oddziału", desc: "Ładowanie paska z walki: po aktywacji daje 8s całkowitej nietykalności (0 dmg) i odbijanie pocisków wroga z mocą 200%." }
+                { id: "comm_b3", name: "Banner Oddziału", desc: "Gotowość co 45s: aktywacja [V] daje 8s całkowitej nietykalności (0 dmg) i odbijanie pocisków wroga z mocą 200%." }
             ]
         }
     },

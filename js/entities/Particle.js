@@ -1,4 +1,5 @@
 import { state } from '../config.js';
+import { playSound } from '../sfx.js';
 
 export class Particle {
     constructor(x, y, color, speed) {
@@ -177,4 +178,164 @@ export class BattleCryEffect {
 export function triggerBattleCryEffect(commander) {
     if (!state.auras) state.auras = [];
     state.auras.push(new BattleCryEffect(commander));
+}
+
+export class SmokeGrenade {
+    constructor(startX, startY, targetX, targetY) {
+        this.x = startX;
+        this.y = startY;
+        this.z = 15;
+        let dist = Math.hypot(targetX - startX, targetY - startY);
+        let ang = Math.atan2(targetY - startY, targetX - startX);
+        let flightTime = 0.55;
+        this.vx = Math.cos(ang) * (dist / flightTime);
+        this.vy = Math.sin(ang) * (dist / flightTime);
+        this.vz = 110; // grawitacyjne wyrzucenie w górę
+        this.life = flightTime;
+        this.isDead = false;
+        this.rot = 0;
+    }
+
+    update(dt) {
+        if (this.isDead) return;
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.z += this.vz * dt;
+        this.vz -= 380 * dt; // grawitacja
+        this.rot += dt * 12;
+        if (this.z < 0) this.z = 0;
+        this.life -= dt;
+        if (this.life <= 0) {
+            this.isDead = true;
+            playSound('sfx_shoot_smoke', 0.45); // SFX eksplozji dymu sfx_shoot_smoke
+            if (!state.smokeClouds) state.smokeClouds = [];
+            state.smokeClouds.push(new SmokeScreenCloud(this.x, this.y));
+        }
+    }
+
+    draw(ctx) {
+        if (this.isDead) return;
+        ctx.save();
+        // Cień pod granatem
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(this.x, this.y, 6, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.translate(this.x, this.y - Math.max(0, this.z));
+        ctx.rotate(this.rot);
+
+        // Pixel Art Granat Dymny (referencja w załączniku)
+        // Korpus (niebieskoszary cylinder 8x14)
+        ctx.fillStyle = '#4f6988';
+        ctx.fillRect(-4, -7, 8, 14);
+        ctx.fillStyle = '#6784a6';
+        ctx.fillRect(-2, -7, 3, 14);
+
+        // Pomarańczowo-żółte pasy
+        ctx.fillStyle = '#e86a17';
+        ctx.fillRect(-4, -4, 8, 2);
+        ctx.fillRect(-4, 3, 8, 2);
+        ctx.fillStyle = '#f5a623';
+        ctx.fillRect(-2, -4, 3, 2);
+        ctx.fillRect(-2, 3, 3, 2);
+
+        // Głowica i zielona łyżka
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(-3, -10, 6, 3);
+        ctx.fillStyle = '#8ab543';
+        ctx.fillRect(1, -11, 4, 8);
+        ctx.fillStyle = '#557823';
+        ctx.fillRect(3, -10, 2, 6);
+        ctx.fillStyle = '#cccccc';
+        ctx.fillRect(-4, -9, 2, 2);
+
+        ctx.restore();
+    }
+}
+
+export class SmokeScreenCloud {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 95; // promień dymu
+        this.life = 8.0;
+        this.maxLife = 8.0;
+        this.smokeBlobs = [];
+        const grayShades = [
+            'rgba(245, 245, 245, 0.75)',
+            'rgba(225, 225, 225, 0.8)',
+            'rgba(205, 205, 205, 0.85)',
+            'rgba(185, 185, 185, 0.88)',
+            'rgba(165, 165, 165, 0.9)',
+            'rgba(145, 145, 145, 0.92)',
+            'rgba(125, 125, 125, 0.92)',
+            'rgba(105, 105, 105, 0.94)',
+            'rgba(85, 85, 85, 0.95)',
+            'rgba(65, 65, 65, 0.95)'
+        ];
+        for (let i = 0; i < 450; i++) {
+            let ang = Math.random() * Math.PI * 2;
+            let d = Math.random() * 88;
+            this.smokeBlobs.push({
+                x: Math.cos(ang) * d,
+                y: Math.sin(ang) * d * 0.75,
+                vx: (Math.random() - 0.5) * 14,
+                vy: (Math.random() - 0.5) * 10,
+                size: 2 + Math.floor(Math.random() * 3), // 2, 3 lub 4 px (drobne retro piksele)
+                color: grayShades[Math.floor(Math.random() * grayShades.length)]
+            });
+        }
+    }
+
+    update(dt) {
+        this.life -= dt;
+        this.smokeBlobs.forEach(b => {
+            b.x += b.vx * dt;
+            b.y += b.vy * dt;
+            if (Math.hypot(b.x, b.y) > this.radius - b.size) {
+                b.vx *= -1;
+                b.vy *= -1;
+            }
+        });
+    }
+
+    draw(ctx) {
+        if (this.life <= 0) return;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        let ratio = this.life / this.maxLife;
+        let alpha = ratio > 0.2 ? Math.min(1, (1 - ratio) * 4.5) : ratio * 5;
+        ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+
+        this.smokeBlobs.forEach(b => {
+            ctx.fillStyle = b.color;
+            ctx.fillRect(Math.floor(b.x/2)*2, Math.floor(b.y/2)*2, b.size * 2.5, b.size * 2.5);
+        });
+
+        ctx.restore();
+    }
+}
+
+export function triggerSmokeGrenadeThrow(commander) {
+    if (!commander) return;
+    if (!state.smokeGrenades) state.smokeGrenades = [];
+    
+    let aimAng = commander.facingLeft ? Math.PI : 0;
+    if (state.aimPoint && Math.hypot(state.aimPoint.x - commander.x, state.aimPoint.y - commander.y) < 2000) {
+        aimAng = Math.atan2(state.aimPoint.y - commander.y, state.aimPoint.x - commander.x);
+    }
+    
+    let dist1 = 110;
+    let dist2 = 145;
+    state.smokeGrenades.push(new SmokeGrenade(
+        commander.x, commander.y,
+        commander.x + Math.cos(aimAng - 0.28) * dist1,
+        commander.y + Math.sin(aimAng - 0.28) * dist1
+    ));
+    state.smokeGrenades.push(new SmokeGrenade(
+        commander.x, commander.y,
+        commander.x + Math.cos(aimAng + 0.28) * dist2,
+        commander.y + Math.sin(aimAng + 0.28) * dist2
+    ));
 }

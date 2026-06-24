@@ -41,7 +41,7 @@ export function playSound(soundKey, volume = 0.25) {
     }
     
     // Utrzymanie zasady maskowania echa dla spójności pola walki
-    if (volume > 0.02) {
+    if (volume > 0.02 && soundKey !== 'sfx_level_up') {
         if (lastPrimaryPlayTime[soundKey] && now - lastPrimaryPlayTime[soundKey] < 120) {
             effectiveVolume = 0.03; 
         } else {
@@ -76,8 +76,8 @@ export function playSound(soundKey, volume = 0.25) {
                 const gainNode = ctx.createGain();
                 gainNode.gain.value = effectiveVolume;
                 
-                // Zróżnicowanie tonacji (Pitch Shifting) - pomijane dla okrzyków dowódcy, by zachować stały głos
-                if (volume > 0.02 && soundKey !== 'sfx_commander_war_scream') {
+                // Zróżnicowanie tonacji (Pitch Shifting) - pomijane dla okrzyków dowódcy oraz awansów, by zachować stały głos i głośność
+                if (volume > 0.02 && soundKey !== 'sfx_commander_war_scream' && soundKey !== 'sfx_level_up') {
                     source.playbackRate.value = 0.85 + Math.random() * 0.35;
                 } else {
                     source.playbackRate.value = 1.0;
@@ -104,7 +104,7 @@ export function playSound(soundKey, volume = 0.25) {
         if (baseAudio) {
             const cloned = baseAudio.cloneNode();
             cloned.volume = effectiveVolume;
-            if (volume > 0.02) {
+            if (volume > 0.02 && soundKey !== 'sfx_commander_war_scream' && soundKey !== 'sfx_level_up') {
                 cloned.playbackRate = 0.85 + Math.random() * 0.35;
             }
             const p = cloned.play();

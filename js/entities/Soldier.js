@@ -35,7 +35,7 @@ export class Soldier {
         this.y = y;
         this.isEnemy = false;
         this.speed = stats.speed;
-        this.maxHp = Math.max(1, 3 - (state.passivePervitinLevel || (state.passivePervitinActive ? 1 : 0)));
+        this.maxHp = Math.max(1, 3 - (state.passivePervitinLevel || (state.passivePervitinActive ? 1 : 0))) + (state.leaderCharismaActive ? 1 : 0);
         this.hp = this.maxHp;
         this.maxArmor = state.kevlarArmorLevel || 0; // 2. KAMIZELKA KEVLAROWA
         this.armor = this.maxArmor;
@@ -189,18 +189,6 @@ export class Soldier {
             return;
         }
 
-        if (this.soldierClass === 'COMMANDER' && this.unlockedSkills && this.unlockedSkills['comm_b1']) {
-            if (this.battleCryTimer === undefined) this.battleCryTimer = 5.0;
-            this.battleCryTimer -= dt;
-            if (this.battleCryTimer <= 0) {
-                this.battleCryTimer = 45.0;
-                state.squadBuffTimer = 6.0;
-                playSound('sfx_commander_war_scream', 0.11);
-                triggerBattleCryEffect(this);
-                createParticles(this.x, this.y, '#f39c12', 20, 50);
-                console.warn(`[OKRZYK BOJOWY] Dowódca wydał okrzyk dający +45% do prędkości ruchu i +50% do szybkostrzelności na 6s!`);
-            }
-        }
 
         if (this.soldierClass === 'MEDIC') {
             if (this.medkitTimer === undefined) this.medkitTimer = 20.0;
@@ -645,6 +633,11 @@ export class Soldier {
         }
 
         ctx.save();
+        if (state.smokeClouds && state.smokeClouds.some(c => c.life > 0 && Math.hypot(this.x - c.x, this.y - c.y) < c.radius)) {
+            ctx.globalAlpha = 0.45;
+        }
+
+        ctx.save();
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.fillRect(this.x - 5, this.y + 10, 10, 2);
         ctx.fillRect(this.x - 7, this.y + 12, 14, 3);
@@ -677,6 +670,27 @@ export class Soldier {
             ctx.scale(-1, 1);
         }
         ctx.imageSmoothingEnabled = false;
+
+        // Baner ala Warhammer umiejscowiony z tyłu jak plecak (rysowany za głową i sylwetką żołnierza)
+        if (state.comm_b3_activeTimer && state.comm_b3_activeTimer > 0 && this.soldierClass === 'COMMANDER') {
+            ctx.save();
+            ctx.translate(-5, -6);
+            // Drzewiec pionowy
+            ctx.fillStyle = '#778899'; ctx.fillRect(0, -26, 2, 32);
+            // Grot na szczycie
+            ctx.fillStyle = '#cccccc'; ctx.fillRect(0, -29, 2, 3);
+            // Poprzeczka z nitami
+            ctx.fillStyle = '#556677'; ctx.fillRect(-6, -22, 14, 2);
+            ctx.fillStyle = '#cccccc'; ctx.fillRect(-7, -23, 2, 4); ctx.fillRect(7, -23, 2, 4);
+            // Płótno Baneru (Khaki retro)
+            ctx.fillStyle = '#b5a675'; ctx.fillRect(-5, -20, 12, 16);
+            // Poszarpany dół płótna
+            ctx.fillRect(-5, -4, 2, 2); ctx.fillRect(-3, -4, 2, 3); ctx.fillRect(-1, -4, 2, 1);
+            ctx.fillRect(1, -4, 2, 2); ctx.fillRect(3, -4, 2, 3); ctx.fillRect(5, -4, 2, 1);
+            // Emblemat w centrum
+            ctx.fillStyle = '#3a4421'; ctx.fillRect(0, -14, 2, 6); ctx.fillRect(-2, -12, 6, 2);
+            ctx.restore();
+        }
 
         if (this.customImageSkin) {
             let frameHeight = this.customImageSkin.height;
@@ -882,6 +896,27 @@ export class Soldier {
             }
         }
 
+        // Efekt wizualny comm_b3 (Banner Oddziału) – pixelartowa fala barierowa bez wypełnienia o dalekim zasięgu (85px)
+        if (state.comm_b3_activeTimer && state.comm_b3_activeTimer > 0) {
+            ctx.save();
+            let numWaves = 3;
+            for (let w = 0; w < numWaves; w++) {
+                let phase = ((Date.now() / 1200) + w / 3) % 1.0;
+                let radius = 15 + phase * 70; // rozchodzi się znacznie dalej (od 15 aż do 85 px)
+                let alpha = Math.sin(phase * Math.PI) * 0.85;
+                ctx.fillStyle = `rgba(0, 220, 255, ${alpha})`;
+                
+                let numPixels = Math.floor(radius * 1.8);
+                for (let p = 0; p < numPixels; p++) {
+                    let ang = (p / numPixels) * Math.PI * 2;
+                    let px = Math.floor((this.x + Math.cos(ang) * radius) / 2) * 2;
+                    let py = Math.floor((this.y - 12 - this.bobY + Math.sin(ang) * radius * 0.85) / 2) * 2;
+                    ctx.fillRect(px, py, 2, 2);
+                }
+            }
+            ctx.restore();
+        }
+
         // Etykieta nazwy
         if (state.squadBuffTimer && state.squadBuffTimer > 0) {
             let pulse = Math.sin(Date.now() / 70) > 0;
@@ -893,14 +928,26 @@ export class Soldier {
         ctx.textAlign = 'center';
         ctx.fillText(this.name, this.x, this.y - 24 - this.bobY);
         
-        // Renderowanie 3-segmentowego paska HP (matryca 2x2 piksele) bezpośrednio pod imieniem
+        // Renderowanie segmentowego paska HP (matryca 2x2 piksele) bezpośrednio pod imieniem
         let blockW = 4;
         let blockH = 2;
         let gap = 2;
-        let startX = this.x - (blockW * 3 + gap * 2) / 2;
+        let numBars = this.maxHp || 3;
+        let totalW = blockW * numBars + gap * (numBars - 1);
+        let startX = this.x - totalW / 2;
         let hpY = this.y - 19 - this.bobY;
+
+        if (state.leaderCharismaActive && numBars > 0) {
+            let lastBarX = Math.floor(startX + (numBars - 1) * (blockW + gap));
+            let fHpY = Math.floor(hpY);
+            ctx.fillStyle = '#ffd700'; // Złota obwódka HUD wokół dodanego paska zdrowia
+            ctx.fillRect(lastBarX - 1, fHpY - 1, blockW + 2, 1);
+            ctx.fillRect(lastBarX - 1, fHpY + blockH, blockW + 2, 1);
+            ctx.fillRect(lastBarX - 1, fHpY, 1, blockH);
+            ctx.fillRect(lastBarX + blockW, fHpY, 1, blockH);
+        }
         
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < numBars; i++) {
             ctx.fillStyle = (i < this.hp) ? '#39ff14' : '#ff0000'; // Neonowy zielony / czerwony
             ctx.fillRect(Math.floor(startX + i * (blockW + gap)), Math.floor(hpY), blockW, blockH);
         }
@@ -932,6 +979,7 @@ export class Soldier {
             ctx.fillStyle = '#ffff00';
             ctx.fillRect(bx, by, Math.floor(barW * prog), barH);
         }
+        ctx.restore();
     }
 
     applyKnockback(kx, ky) {
@@ -940,8 +988,18 @@ export class Soldier {
         this.kbY = (this.kbY || 0) + ky;
     }
 
-    takeDamage(amount) {
+    takeDamage(amount, attacker = null) {
         if (this.hp <= 0) return;
+        
+        // 1. BANNER ODDZIAŁU (Całkowita nietykalność i 200% odbijania pocisków wroga)
+        if (state.comm_b3_activeTimer > 0) {
+            createParticles(this.x, this.y, '#00ffff', 5, 40);
+            playSound('sfx_hit', 0.2);
+            if (attacker && attacker.takeDamage) {
+                attacker.takeDamage(amount * 2, { kills: 0 });
+            }
+            return;
+        }
         
         // 2. KAMIZELKA KEVLAROWA (Absorpcja obrażeń)
         if (this.armor && this.armor > 0) {
@@ -1027,13 +1085,23 @@ export class Soldier {
             console.warn(`[AWANS UMIEJĘTNOŚCI] ${this.name} odblokował: ${skill.name} (${skill.desc})`);
             
             if (skill.id === 'comm_b1') {
-                this.battleCryTimer = 0.01;
+                state.comm_b1_cooldown = 0;
             } else if (skill.id === 'comm_a1') {
                 this.hasAirstrike = true;
                 this.accessoryIdx = 2;
+                state.comm_a1_cooldown = 0;
+            } else if (skill.id === 'comm_a2') {
+                state.comm_a2_cooldown = 0;
             } else if (skill.id === 'comm_b2') {
-                this.maxHp = (this.maxHp || 3) * 2;
-                this.hp = this.maxHp;
+                state.leaderCharismaActive = true;
+                if (state.squad) {
+                    state.squad.forEach(soldier => {
+                        soldier.maxHp = (soldier.maxHp || 3) + 1;
+                        soldier.hp = soldier.maxHp;
+                    });
+                }
+            } else if (skill.id === 'comm_b3') {
+                state.comm_b3_cooldown = 0;
             } else if (skill.id === 'snip_a2') {
                 this.giantKillerBonus = 0.5;
             } else if (skill.id === 'snip_b2') {

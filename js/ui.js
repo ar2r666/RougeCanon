@@ -9,6 +9,7 @@ import { Bush } from './entities/Bush.js';
 import { clearBloodCanvas } from './sprites.js';
 import { playSound, setMute } from './sfx.js';
 import { CLASS_SKILL_TREES } from './promotions.js';
+import { createParticles, triggerBattleCryEffect, triggerSmokeGrenadeThrow } from './entities/Particle.js';
 
 export function spawnSquad() {
     state.squad = [];
@@ -442,18 +443,74 @@ export function updateHUD() {
         lastDisplayedSquad = state.squad.length;
     }
     
+    // Znaczniki aktywnych umiejętności na środku na dole HUD
+    let activeSkillsEl = document.getElementById('activeSkillsDisplay');
+    if (activeSkillsEl && state.squad) {
+        activeSkillsEl.innerHTML = '';
+        let activeSkillsCount = 0;
+        let commander = state.squad.find(s => s.soldierClass === 'COMMANDER' && s.hp > 0);
+        if (commander) {
+            if (commander.hasAirstrike) {
+                activeSkillsCount++;
+                let cd = Math.max(0, state.comm_a1_cooldown || 0);
+                let isReady = cd <= 0;
+                let isActive = (state.airstrikeTimer || 0) > 0;
+                let div = document.createElement('div');
+                div.className = `active-skill-slot${isActive ? ' active-buff' : (isReady ? ' ready' : '')}`;
+                div.innerHTML = `<span>[${activeSkillsCount}] NALOT</span><span>${isActive ? 'AKTYWNY' : (isReady ? 'GOTOWY' : Math.ceil(cd) + 's')}</span>`;
+                div.onclick = () => triggerActiveSkill('comm_a1');
+                activeSkillsEl.appendChild(div);
+            }
+            if (commander.unlockedSkills && commander.unlockedSkills['comm_a2']) {
+                activeSkillsCount++;
+                let cd = Math.max(0, state.comm_a2_cooldown || 0);
+                let isReady = cd <= 0;
+                let isActive = state.smokeClouds && state.smokeClouds.some(c => c.life > 0);
+                let div = document.createElement('div');
+                div.className = `active-skill-slot${isActive ? ' active-buff' : (isReady ? ' ready' : '')}`;
+                div.innerHTML = `<span>[${activeSkillsCount}] GRANATY DYMNE</span><span>${isActive ? 'AKTYWNE' : (isReady ? 'GOTOWE' : Math.ceil(cd) + 's')}</span>`;
+                div.onclick = () => triggerActiveSkill('comm_a2');
+                activeSkillsEl.appendChild(div);
+            }
+            if (commander.unlockedSkills && commander.unlockedSkills['comm_b1']) {
+                activeSkillsCount++;
+                let cd = Math.max(0, state.comm_b1_cooldown || 0);
+                let isReady = cd <= 0;
+                let isBuff = (state.squadBuffTimer || 0) > 0;
+                let div = document.createElement('div');
+                div.className = `active-skill-slot${isBuff ? ' active-buff' : (isReady ? ' ready' : '')}`;
+                div.innerHTML = `<span>[${activeSkillsCount}] OKRZYK BOJOWY</span><span>${isBuff ? 'AKTYWNY (' + Math.ceil(state.squadBuffTimer) + 's)' : (isReady ? 'GOTOWY' : Math.ceil(cd) + 's')}</span>`;
+                div.onclick = () => triggerActiveSkill('comm_b1');
+                activeSkillsEl.appendChild(div);
+            }
+            if (commander.unlockedSkills && commander.unlockedSkills['comm_b3']) {
+                activeSkillsCount++;
+                let cd = Math.max(0, state.comm_b3_cooldown || 0);
+                let isReady = cd <= 0;
+                let isBuff = (state.comm_b3_activeTimer || 0) > 0;
+                let div = document.createElement('div');
+                div.className = `active-skill-slot${isBuff ? ' active-buff' : (isReady ? ' ready' : '')}`;
+                div.innerHTML = `<span>[${activeSkillsCount}] BANNER ODDZIAŁU</span><span>${isBuff ? 'AKTYWNY (' + Math.ceil(state.comm_b3_activeTimer) + 's)' : (isReady ? 'GOTOWY' : Math.ceil(cd) + 's')}</span>`;
+                div.onclick = () => triggerActiveSkill('comm_b3');
+                activeSkillsEl.appendChild(div);
+            }
+        }
+    }
+    
     // Dynamiczna aktualizacja slotów Doktryn Taktycznych w HUD
     let doctrinesEl = document.getElementById('doctrinesDisplay');
     if (doctrinesEl) {
         doctrinesEl.innerHTML = '';
+        let activeSkillsCount = activeSkillsEl ? activeSkillsEl.children.length : 0;
         if (state.tacticalDoctrines && state.tacticalDoctrines.length > 0) {
             state.tacticalDoctrines.forEach((doc, idx) => {
                 let div = document.createElement('div');
                 let isReady = doc.charge >= 100;
                 div.className = `doctrine-slot${isReady ? ' ready' : ''}`;
                 
+                let keyNum = idx + 1 + activeSkillsCount;
                 let chargeText = isReady ? 'GOTOWA' : `${Math.floor(doc.charge)}%`;
-                div.innerHTML = `<span>[${idx + 1}] ${doc.name.toUpperCase()}</span> <span>${chargeText}</span>`;
+                div.innerHTML = `<span>[${keyNum}] ${doc.name.toUpperCase()}</span> <span>${chargeText}</span>`;
                 doctrinesEl.appendChild(div);
             });
         } else {
@@ -684,7 +741,8 @@ function closePromotionScreen() {
     document.getElementById('screens').classList.add('hidden');
     document.getElementById('upgradeScreen').classList.add('hidden');
     state.gameState = 'PLAY';
-    playSound('sfx_airdrop_start', 0.4);
+    updateHUD();
+    playSound('sfx_level_up', 0.5);
 }
 
 export function adminLvlUpRecruit() {
@@ -872,3 +930,40 @@ export function testCustomDoctrinesScreen() {
     });
 }
 window.testCustomDoctrinesScreen = testCustomDoctrinesScreen;
+
+export function triggerActiveSkill(skillId) {
+    if (state.gameState !== 'PLAY' || state.isPaused) return;
+    let commander = state.squad && state.squad.find(s => s.soldierClass === 'COMMANDER' && s.hp > 0);
+    if (!commander) return;
+
+    if (skillId === 'comm_a1' && commander.hasAirstrike && (state.comm_a1_cooldown || 0) <= 0 && (state.airstrikeTimer || 0) <= 0) {
+        state.comm_a1_cooldown = 40.0;
+        state.airstrikeTimer = 3.0;
+        playSound('sfx_click', 0.7);
+        updateHUD();
+    } else if (skillId === 'comm_a2' && commander.unlockedSkills && commander.unlockedSkills['comm_a2'] && (state.comm_a2_cooldown || 0) <= 0) {
+        state.comm_a2_cooldown = 40.0;
+        playSound('sfx_airdrop_start', 0.2);
+        triggerSmokeGrenadeThrow(commander);
+        console.warn(`[GRANATY DYMNE] Dowódca wyrzucił 2 granaty dymne utrzymujące zasłonę dymną przez 8s!`);
+        updateHUD();
+    } else if (skillId === 'comm_b1' && commander.unlockedSkills && commander.unlockedSkills['comm_b1'] && (state.comm_b1_cooldown || 0) <= 0 && (state.squadBuffTimer || 0) <= 0) {
+        state.comm_b1_cooldown = 45.0;
+        state.squadBuffTimer = 6.0;
+        playSound('sfx_commander_war_scream', 0.11);
+        triggerBattleCryEffect(commander);
+        createParticles(commander.x, commander.y, '#f39c12', 20, 50);
+        console.warn(`[OKRZYK BOJOWY] Dowódca wydał okrzyk dający +45% do prędkości ruchu i +50% do szybkostrzelności na 6s!`);
+        updateHUD();
+    } else if (skillId === 'comm_b3' && commander.unlockedSkills && commander.unlockedSkills['comm_b3'] && (state.comm_b3_cooldown || 0) <= 0 && (state.comm_b3_activeTimer || 0) <= 0) {
+        state.comm_b3_cooldown = 45.0;
+        state.comm_b3_activeTimer = 8.0;
+        playSound('sfx_baner', 0.6);
+        state.squad.forEach(s => createParticles(s.x, s.y, '#00ffff', 15, 50));
+        console.warn(`[BANNER ODDZIAŁU] Dowódca aktywował Banner: 8s nietykalności i 200% odbijania pocisków!`);
+        updateHUD();
+    } else {
+        playSound('sfx_click', 0.15);
+    }
+}
+window.triggerActiveSkill = triggerActiveSkill;

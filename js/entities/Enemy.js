@@ -143,50 +143,75 @@ export class Enemy {
                 this.hp = 0;
                 this.die('flame');
             }
-        } else if (closest) {
-            let angle = Math.atan2(closest.y - this.y, closest.x - this.x);
-            this.crawlAngle = angle; 
-            let effectiveSpeed = this.isCrippled ? this.speed * 0.15 : this.speed; // 4. STRZAŁ W NOGI (Czołga się w stronę bohatera o 85% wolniej)
-            let moveX = Math.cos(angle) * effectiveSpeed * dt;
-            this.x += moveX;
-            this.y += Math.sin(angle) * effectiveSpeed * dt;
+        } else {
+            let anySoldierInSmoke = state.squad && state.squad.some(s => s.hp > 0 && state.smokeClouds && state.smokeClouds.some(c => c.life > 0 && Math.hypot(s.x - c.x, s.y - c.y) < c.radius));
+            let insideSmoke = state.smokeClouds && state.smokeClouds.find(c => c.life > 0 && (anySoldierInSmoke || Math.hypot(this.x - c.x, this.y - c.y) < c.radius));
+            if (insideSmoke) {
+                let escapeAng = closest ? Math.atan2(this.y - closest.y, this.x - closest.x) : Math.atan2(this.y - insideSmoke.y, this.x - insideSmoke.x);
+                let effectiveSpeed = this.isCrippled ? this.speed * 0.15 : this.speed * 0.45;
+                let moveX = Math.cos(escapeAng) * effectiveSpeed * dt;
+                this.x += moveX;
+                this.y += Math.sin(escapeAng) * effectiveSpeed * dt;
+                if (Math.abs(moveX) > 0.1) {
+                    this.facingLeft = moveX < 0;
+                }
+            } else if (closest) {
+                let angle = Math.atan2(closest.y - this.y, closest.x - this.x);
+                this.crawlAngle = angle; 
+                let effectiveSpeed = this.isCrippled ? this.speed * 0.15 : this.speed; // 4. STRZAŁ W NOGI (Czołga się w stronę bohatera o 85% wolniej)
+                let moveX = Math.cos(angle) * effectiveSpeed * dt;
+                this.x += moveX;
+                this.y += Math.sin(angle) * effectiveSpeed * dt;
 
-            if (Math.abs(moveX) > 0.1) {
-                this.facingLeft = moveX < 0;
-            }
+                if (Math.abs(moveX) > 0.1) {
+                    this.facingLeft = moveX < 0;
+                }
 
-            // Flocking - rozdzielanie jednostek na polu walki
-            let forceX = 0;
-            let forceY = 0;
-            for (let other of state.enemies) {
-                if (other !== this) {
-                    let d = Math.hypot(other.x - this.x, other.y - this.y);
-                    let sepDist = this.type === 'boss' ? 45 : 35;
-                    if (d < sepDist && d > 0) { 
-                        let push = (sepDist - d) * 3;
-                        let pushAngle = Math.atan2(this.y - other.y, this.x - other.x);
-                        forceX += Math.cos(pushAngle) * push;
-                        forceY += Math.sin(pushAngle) * push;
+                // Flocking - rozdzielanie jednostek na polu walki
+                let forceX = 0;
+                let forceY = 0;
+                for (let other of state.enemies) {
+                    if (other !== this) {
+                        let d = Math.hypot(other.x - this.x, other.y - this.y);
+                        let sepDist = this.type === 'boss' ? 45 : 35;
+                        if (d < sepDist && d > 0) { 
+                            let push = (sepDist - d) * 3;
+                            let pushAngle = Math.atan2(this.y - other.y, this.x - other.x);
+                            forceX += Math.cos(pushAngle) * push;
+                            forceY += Math.sin(pushAngle) * push;
+                        }
                     }
                 }
-            }
-            this.x += forceX * dt;
-            this.y += forceY * dt;
+                this.x += forceX * dt;
+                this.y += forceY * dt;
 
-            // Walka wręcz (Melee)
-            if (minDist < (this.type === 'boss' ? 20 : 15) && this.lastShot <= 0) {
-                let dmgAmount = this.type === 'boss' ? 3 : (this.type === 'commander' ? 2 : 1);
-                closest.takeDamage(dmgAmount, this);
-                this.lastShot = this.type === 'boss' ? 1.5 : 1.0;
+                // Ochronne pole barierowe Banneru Oddziału (comm_b3) – fizyczne powstrzymywanie wrogów przed wejściem za obrys pola
+                if (state.comm_b3_activeTimer && state.comm_b3_activeTimer > 0 && closest) {
+                    let barrierRadius = 85;
+                    if (minDist < barrierRadius && minDist > 0) {
+                        let pushForce = (barrierRadius - minDist) * 18;
+                        let pushAng = Math.atan2(this.y - closest.y, this.x - closest.x);
+                        this.x += Math.cos(pushAng) * pushForce * dt;
+                        this.y += Math.sin(pushAng) * pushForce * dt;
+                        minDist = barrierRadius;
+                    }
+                }
+
+                // Walka wręcz (Melee)
+                if (minDist < (this.type === 'boss' ? 20 : 15) && this.lastShot <= 0) {
+                    let dmgAmount = this.type === 'boss' ? 3 : (this.type === 'commander' ? 2 : 1);
+                    closest.takeDamage(dmgAmount, this);
+                    this.lastShot = this.type === 'boss' ? 1.5 : 1.0;
+                }
+            } else {
+                // Wrogowie gubią cel i rozchodzą się na boki, gdy oddział ukryje się w krzakach!
+                if (this.disperseAngle === undefined) this.disperseAngle = Math.random() * Math.PI * 2;
+                let moveSpeed = this.speed * 0.45;
+                let mx = Math.cos(this.disperseAngle) * moveSpeed * dt;
+                this.x += mx;
+                this.y += Math.sin(this.disperseAngle) * moveSpeed * dt;
+                if (Math.abs(mx) > 0.1) this.facingLeft = mx < 0;
             }
-        } else {
-            // Wrogowie gubią cel i rozchodzą się na boki, gdy oddział ukryje się w krzakach!
-            if (this.disperseAngle === undefined) this.disperseAngle = Math.random() * Math.PI * 2;
-            let moveSpeed = this.speed * 0.45;
-            let mx = Math.cos(this.disperseAngle) * moveSpeed * dt;
-            this.x += mx;
-            this.y += Math.sin(this.disperseAngle) * moveSpeed * dt;
-            if (Math.abs(mx) > 0.1) this.facingLeft = mx < 0;
         }
 
         this.kbX = this.kbX || 0;

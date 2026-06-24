@@ -291,6 +291,13 @@ export const state = {
     airstrikeTimer: 0,
     airstrikeBombTimer: 0,
     airstrikeBombs: [],
+    comm_a1_cooldown: 0,
+    comm_a2_cooldown: 0,
+    smokeGrenades: [],
+    smokeClouds: [],
+    comm_b1_cooldown: 0,
+    comm_b3_cooldown: 0,
+    comm_b3_activeTimer: 0,
     keys: {},
     inputMode: 'pointer',
     aimPoint: { x: 6000, y: 6000 },
@@ -310,6 +317,7 @@ export const state = {
     passiveAmmoBeltLevel: 0,         // 1. PAS AMUNICJI (Szybsze przeładowanie o 20%)
     kevlarArmorLevel: 0,             // 2. KAMIZELKA KEVLAROWA (Pasek z armorem pod HP max 3)
     camoMasterLevel: 0,              // 3. MISTRZ MASKOWANIA (Ukrywanie w krzakach)
+    leaderCharismaActive: false,     // 4. CHARYZMA LIDERA (Dodatkowy pasek zdrowia)
     
     isPaused: false // Flaga wstrzymania aktualizacji logiki
 };

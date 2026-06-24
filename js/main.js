@@ -47,7 +47,6 @@ window.adminSpawnCrate = (type) => {
     let cr = new Crate(leader.x + Math.cos(ang)*dist, leader.y + Math.sin(ang)*dist);
     if (type === 'PLASMA') cr.droppedWeapon = WEAPONS.SPECIAL_PLASMA;
     if (type === 'FLAME') cr.droppedWeapon = WEAPONS.SPECIAL_FLAMETHROWER;
-    if (type === 'AIRSTRIKE') cr.droppedWeapon = WEAPONS.SPECIAL_AIRSTRIKE;
     
     // Zgodnie z wytycznymi: broń leży bezpośrednio na ziemi bez fizycznej skrzynki
     cr.isDestroyed = true;
@@ -109,6 +108,12 @@ function update(dt) {
     }
 
     if (state.squadBuffTimer > 0) state.squadBuffTimer -= dt;
+    if (state.comm_a1_cooldown > 0) state.comm_a1_cooldown -= dt;
+    if (state.comm_a2_cooldown > 0) state.comm_a2_cooldown -= dt;
+    if (state.comm_a2_activeTimer > 0) state.comm_a2_activeTimer -= dt;
+    if (state.comm_b1_cooldown > 0) state.comm_b1_cooldown -= dt;
+    if (state.comm_b3_cooldown > 0) state.comm_b3_cooldown -= dt;
+    if (state.comm_b3_activeTimer > 0) state.comm_b3_activeTimer -= dt;
 
     if (state.airstrikeTimer > 0) {
         state.airstrikeTimer -= dt;
@@ -248,6 +253,14 @@ function update(dt) {
     for (let i = 0; i < state.particles.length; i++) state.particles[i].update(dt);
     for (let i = 0; i < state.explosions.length; i++) state.explosions[i].update(dt);
     if (state.auras) { for (let i = 0; i < state.auras.length; i++) state.auras[i].update(dt); }
+    if (state.smokeGrenades) {
+        for (let i = 0; i < state.smokeGrenades.length; i++) state.smokeGrenades[i].update(dt);
+        state.smokeGrenades = state.smokeGrenades.filter(g => !g.isDead);
+    }
+    if (state.smokeClouds) {
+        for (let i = 0; i < state.smokeClouds.length; i++) state.smokeClouds[i].update(dt);
+        state.smokeClouds = state.smokeClouds.filter(c => c.life > 0);
+    }
     if (state.bushes) {
         for (let i = 0; i < state.bushes.length; i++) state.bushes[i].update(dt);
     }
@@ -501,6 +514,7 @@ function draw() {
     addVisible(state.decoys);
     addVisible(state.medkits);
     addVisible(state.airstrikeBombs);
+    addVisible(state.smokeGrenades);
 
     visibleRenderables.sort((a, b) => {
         let ay = a.y + (a.isHiddenInBush ? 20 : 0);
@@ -508,6 +522,7 @@ function draw() {
         return ay - by;
     });
     
+    if (state.smokeClouds) { for (let i = 0; i < state.smokeClouds.length; i++) state.smokeClouds[i].draw(ctx); }
     for (let i = 0; i < state.explosions.length; i++) state.explosions[i].draw(ctx);
     for (let i = 0; i < state.particles.length; i++) state.particles[i].draw(ctx);
     if (state.auras) { for (let i = 0; i < state.auras.length; i++) state.auras[i].draw(ctx); }
@@ -592,14 +607,7 @@ function draw() {
     }
     ctx.restore();
 
-    // Draw Player range indicator (subtle)
-    if (state.squad.length > 0 && state.gameState === 'PLAY') {
-        let leader = state.squad[0];
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.beginPath();
-        ctx.arc(leader.x, leader.y, stats.range, 0, Math.PI*2);
-        ctx.stroke();
-    }
+
 
     ctx.restore();
 
