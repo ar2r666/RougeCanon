@@ -335,22 +335,73 @@ for (let i = 0; i < 64; i += 2) {
 }
 export const terrainPattern = tCtx.createPattern(terrainCanvas, 'repeat');
 
-// --- PERMANENT SPLATTERS CANVAS (Krew i Zwłoki) ---
-export let bloodCanvas;
-export let bloodCtx;
+// --- PERMANENT SPLATTERS BUFFER (Krew i Zwłoki w lekkiej strukturze bez 576MB VRAM) ---
+export let bloodCanvas = null;
+export let bloodCtx = null;
 
-export function initBloodCanvas() {
-    bloodCanvas = document.createElement('canvas');
-    bloodCanvas.width = 12000; 
-    bloodCanvas.height = 12000;
-    bloodCtx = bloodCanvas.getContext('2d');
-}
+export class SplatterBuffer {
+    constructor() {
+        this.splatters = [];
+        this.stateStack = [];
+        this.currentStyle = '#8b0000';
+        this.tx = 0;
+        this.ty = 0;
+        this.rot = 0;
+    }
+    save() {
+        this.stateStack.push({ style: this.currentStyle, tx: this.tx, ty: this.ty, rot: this.rot });
+    }
+    restore() {
+        if (this.stateStack.length > 0) {
+            let s = this.stateStack.pop();
+            this.currentStyle = s.style;
+            this.tx = s.tx;
+            this.ty = s.ty;
+            this.rot = s.rot;
+        }
+    }
+    get fillStyle() { return this.currentStyle; }
+    set fillStyle(v) { this.currentStyle = v; }
 
-export function clearBloodCanvas() {
-    if (bloodCtx && bloodCanvas) {
-        bloodCtx.clearRect(0, 0, bloodCanvas.width, bloodCanvas.height);
+    translate(x, y) { this.tx += x; this.ty += y; }
+    rotate(a) { this.rot += a; }
+
+    fillRect(x, y, w, h) {
+        if (this.splatters.length > 2500) this.splatters.shift();
+        this.splatters.push({
+            type: 'rect',
+            x: x + this.tx,
+            y: y + this.ty,
+            w: w,
+            h: h,
+            color: this.currentStyle
+        });
+    }
+    drawImage(img, ...args) {
+        if (this.splatters.length > 2500) this.splatters.shift();
+        this.splatters.push({
+            type: 'img',
+            img: img,
+            args: args,
+            tx: this.tx,
+            ty: this.ty,
+            rot: this.rot
+        });
+    }
+    clearRect() {
+        this.splatters = [];
     }
 }
 
-// Inicjalizacja przy załadowaniu modułu
+export function initBloodCanvas() {
+    bloodCanvas = { width: 12000, height: 12000 };
+    bloodCtx = new SplatterBuffer();
+}
+
+export function clearBloodCanvas() {
+    if (bloodCtx) {
+        bloodCtx.clearRect();
+    }
+}
+
 initBloodCanvas();

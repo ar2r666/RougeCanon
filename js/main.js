@@ -471,15 +471,30 @@ function draw() {
         ctx.fillRect(state.camera.x - state.viewport.halfW, state.camera.y - state.viewport.halfH, state.viewport.width, state.viewport.height);
     }
 
-    // Draw Blood & Corpses layer
-    if (bloodCanvas) {
-        // Optymalizacja VRAM: zamiast przesyłać całą 576MB teksturę 12000x12000 co klatkę, renderujemy tylko widoczny obszar kamery
-        let vpW = state.viewport.width + 200;
-        let vpH = state.viewport.height + 200;
-        let sx = Math.max(0, Math.min(bloodCanvas.width - vpW, Math.floor(state.camera.x - state.viewport.halfW - 100)));
-        let sy = Math.max(0, Math.min(bloodCanvas.height - vpH, Math.floor(state.camera.y - state.viewport.halfH - 100)));
-        
-        ctx.drawImage(bloodCanvas, sx, sy, vpW, vpH, sx, sy, vpW, vpH);
+    // Renderowanie warstwy krwi i zwłok ze zbuforowanej lekkiej tablicy cząsteczek
+    if (bloodCtx && bloodCtx.splatters) {
+        const camX = state.camera.x;
+        const camY = state.camera.y;
+        const halfW = state.viewport.halfW + 150;
+        const halfH = state.viewport.halfH + 150;
+
+        for (let i = 0; i < bloodCtx.splatters.length; i++) {
+            let s = bloodCtx.splatters[i];
+            if (s.type === 'rect') {
+                if (Math.abs(s.x - camX) < halfW && Math.abs(s.y - camY) < halfH) {
+                    ctx.fillStyle = s.color;
+                    ctx.fillRect(s.x, s.y, s.w, s.h);
+                }
+            } else if (s.type === 'img' && s.img && s.img.width > 0) {
+                if (Math.abs(s.tx - camX) < halfW && Math.abs(s.ty - camY) < halfH) {
+                    ctx.save();
+                    ctx.translate(s.tx, s.ty);
+                    ctx.rotate(s.rot);
+                    ctx.drawImage(s.img, ...s.args);
+                    ctx.restore();
+                }
+            }
+        }
     }
 
     // Zastąpienie celownika dyskretnym wskaźnikiem ruchu
