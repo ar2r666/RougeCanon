@@ -208,15 +208,17 @@ export class Bullet {
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(5, -0.5, 1, 1);
         } else if (this.isCrit) {
-            // Strzał krytyczny: fioletowa poświata i biały powiększony rdzeń pocisku
-            ctx.shadowBlur = 12;
-            ctx.shadowColor = '#d03be3';
+            // Strzał krytyczny: subtelna fioletowa poświata i biały rdzeń pocisku
+            ctx.fillStyle = 'rgba(208, 59, 227, 0.45)';
+            ctx.fillRect(this.x - 3, this.y - 3, 6, 6);
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(this.x - 2, this.y - 2, 4, 4);
+            ctx.fillRect(this.x - 1.5, this.y - 1.5, 3, 3);
         } else {
-            ctx.shadowBlur = 8;
-            ctx.shadowColor = this.weapon.color;
+            // Drobna, subtelna poświata pocisku w surowej estetyce retro pixel art
+            ctx.globalAlpha = 0.35;
             ctx.fillStyle = this.weapon.color;
+            ctx.fillRect(this.x - 2, this.y - 2, 4, 4);
+            ctx.globalAlpha = 1.0;
             ctx.fillRect(this.x - 1, this.y - 1, 2, 2);
         }
         ctx.restore();
